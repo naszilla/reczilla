@@ -21,3 +21,14 @@ Specify the dataset inside [`experiment.py`](Auto-Surprise/sandbox/experiment.py
 cd Auto-Surprise/sandbox
 python experiment.py
 ```
+
+## Add more datasets
+Look at the methods in [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py), e.g., `get_dating()`, `get_recipes()`. Choose a dataset from our list: https://docs.google.com/spreadsheets/d/1c36DOxVqbMwFe0Wnnoo6lCwH_FUEo6flJtuEGtmeoms/edit#gid=0. Add it to [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py). If you have any questions, ask Sujay.
+
+Note: for now, we are keeping it pretty simple. We only load the interaction matrix of the dataset, which consists of three rows: `user`, `item`, and `rating`. Later on in the project, we will add user features, item features, and more interaction data such as temporal data.
+
+## Add more algorithms
+Our plan is to at least add the algorithms from this paper: https://arxiv.org/abs/1907.06902.
+
+## Run full experiments
+Once we have 20 or 30 datasets, and enough algorithms, we will start preliminary experiments and then build an algorithm selector.
