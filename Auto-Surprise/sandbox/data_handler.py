@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 INBUILT_DATASETS = ['ml-100k', 'ml-1m', 'jester']
-CUSTOM_DATASETS = ['book-crossing', 'dating']
+CUSTOM_DATASETS = ['book-crossing', 'dating', 'recipes']
 TMP_DATASET_DOWNLOAD_DIR = ['data/']
 
 def get_book_crossing():
@@ -23,6 +23,7 @@ def get_book_crossing():
     # Load Book crossing dataset
     df = pd.read_csv('data/book-crossing/BX-Book-Ratings.csv', sep=';', error_bad_lines=False, encoding="latin-1")
     df.columns = ['user', 'item', 'rating']
+    print('shape', df.shape)
 
     reader = Reader(rating_scale=(0, 10))
     data = Dataset.load_from_df(df.sample(n=100000, random_state=7), reader=reader)
@@ -31,6 +32,19 @@ def get_book_crossing():
 def get_dating():
     df = pd.read_csv('data/dating/ratings.dat', sep=',', error_bad_lines=False, encoding="latin-1", header=None)
     df.columns = ['user', 'item', 'rating']
+    print('shape', df.shape)
+
+    reader = Reader(rating_scale=(0, 10))
+    data = Dataset.load_from_df(df.sample(n=100000, random_state=7), reader=reader)
+    return data
+
+def get_recipes():
+    df = pd.read_csv('data/recipes/RAW_interactions.csv', sep=',', error_bad_lines=False, encoding="latin-1", header=None)
+    df.drop(0, inplace=True)
+    df.drop(4, axis='columns', inplace=True)
+    df.drop(2, axis='columns', inplace=True)
+    df.columns = ['user', 'item', 'rating']
+    print('shape', df.shape)
 
     reader = Reader(rating_scale=(0, 10))
     data = Dataset.load_from_df(df.sample(n=100000, random_state=7), reader=reader)
@@ -41,6 +55,8 @@ def get_custom_dataset(dataset_name: str):
         return get_book_crossing()
     elif dataset_name == 'dating':
         return get_dating()
+    elif dataset_name == 'recipes':
+        return get_recipes()
     else:
         raise NotImplementedError(f'Datasets currently supported are: {INBUILT_DATASETS + CUSTOM_DATASETS}')
 

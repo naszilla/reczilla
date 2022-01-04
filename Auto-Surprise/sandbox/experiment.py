@@ -2,8 +2,12 @@ from surprise import Dataset
 from auto_surprise.engine import Engine
 from data_handler import get_data
 
-# Load the dataset
-data = get_data('dating')
+"""
+Load the dataset. Choices:
+'ml-100k', 'ml-1m', 'jester',
+'book-crossing', 'dating', 'recipes'
+"""
+data = get_data('recipes')
 
 # Intitialize auto surprise engine
 engine = Engine(verbose=True)
