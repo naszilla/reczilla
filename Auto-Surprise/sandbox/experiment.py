@@ -5,9 +5,9 @@ from data_handler import get_data
 """
 Load the dataset. Choices:
 'ml-100k', 'ml-1m', 'jester',
-'book-crossing', 'dating', 'recipes'
+'book-crossing', 'dating', 'recipes', 'amazon-reviews-all', 'amazon-reviews-movies', 'amazon-reviews-books', 'twitter-movie-ratings'
 """
-data = get_data('recipes')
+data = get_data('twitter-movie-ratings')
 
 # Intitialize auto surprise engine
 engine = Engine(verbose=True)
