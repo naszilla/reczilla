@@ -30,5 +30,13 @@ Note: for now, we are keeping it pretty simple. We only load the interaction mat
 ## Add more algorithms
 Our plan is to at least add the algorithms from this paper: https://arxiv.org/abs/1907.06902.
 
+New algorithms should be added using the Surprise base class, and they should have a set of legal hyperparameters defined somewhere. An example algorithm is given in [`custom_algorithms.py`](Auto-Surprise/sandbox/custom_algorithms.py). The hyperparameters here are defined using package hyperopt, which seems like a reasonable choice.
+
+The file [`model_handler.py`](Auto-Surprise/sandbox/model_handler.py) prepares the objects `ALL_ALGORITHMS` and  `ALL_SPACES`.
+- `ALL_ALGORITHMS` (dict): each key is an algorithm name and each value is an algorithm (child of surprise.prediction_algorithms.AlgoBase)
+- `ALL_SPACES` (dict): each key is an algorithm name, and each value is a parameter space for the corresponding algorithm (a dict consisting of hyperopt.hp objects)
+
 ## Run full experiments
 Once we have 20 or 30 datasets, and enough algorithms, we will start preliminary experiments and then build an algorithm selector.
+
+The script [`calculate_algorithm_metrics.py`](Auto-Surprise/sandbox/calculate_algorithm_metrics.py) iterates over a list of algorithms and datasets, and calculates some metrics. For each algorithm we sample some random parameter sets using the hyperopt objects defined in [`model_handler.py`](Auto-Surprise/sandbox/model_handler.py).
