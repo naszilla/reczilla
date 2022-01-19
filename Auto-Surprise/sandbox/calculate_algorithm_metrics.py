@@ -19,7 +19,7 @@ def run():
     logger = get_logger(logfile=None)
 
     verbose = False
-    num_samples = 3
+    num_samples = 10
     out_dir = "./metrics"
     dataset_list = ["dating", "book-crossing"]
     algorithm_list = ["constant", "baseline_only", "normal_predictor"]
@@ -61,16 +61,12 @@ def run():
 
                 # sample a parameter set
                 params = hyperopt.pyll.stochastic.sample(space)
-                print("params")
-                print(params)
 
                 # initialize algorithm
                 if params is None:
                     alg = alg_handle()
                 else:
                     alg = alg_handle(**params)
-
-                print(alg)
 
                 # train algorithm
                 alg.fit(train)
@@ -98,7 +94,7 @@ def run():
                 df = df.append(row, ignore_index=True)
 
     # write results df to file
-    out_file = generate_filepath(out_dir, "test", "csv")
+    out_file = generate_filepath(out_dir, "algorithm_metrics", "csv")
 
     logger.info(f"writing results to file: {out_file}...")
 
