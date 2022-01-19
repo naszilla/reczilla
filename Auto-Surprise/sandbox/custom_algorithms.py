@@ -4,6 +4,7 @@ from hyperopt import hp
 LB = 0
 UB = 10
 
+
 class ConstantAlg(AlgoBase):
     """
     template for custom surprise algorithms
@@ -23,6 +24,5 @@ class ConstantAlg(AlgoBase):
 
         return self.constant
 
-CONSTANT_ALG_SPACE = {
-    "constant": hp.uniform("constant", LB, UB)
-}
+
+CONSTANT_ALG_SPACE = {"constant": hp.uniform("constant", LB, UB)}

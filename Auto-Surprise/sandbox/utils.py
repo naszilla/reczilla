@@ -5,6 +5,7 @@ import os
 
 LOG_FORMAT = "[%(asctime)-15s] [%(filename)s:%(funcName)s] : %(message)s"
 
+
 def get_logger(logfile=None):
     logger = logging.getLogger("logs")
     logger.setLevel(logging.DEBUG)

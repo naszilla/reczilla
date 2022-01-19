@@ -20,4 +20,3 @@ for name, space in CUSTOM_HPO_SPACES.items():
     if name in ALL_SPACES:
         raise Exception(f"algorithm name {name} is already a surprise algorithm")
     ALL_SPACES[name] = space
-
