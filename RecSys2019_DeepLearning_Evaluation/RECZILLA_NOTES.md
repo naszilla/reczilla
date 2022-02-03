@@ -62,11 +62,20 @@ There appear to be two evaluators defined:
 
 # New Code
 
-## ParameterTuning.RandomSearch (class)
+## `ParameterTuning.RandomSearch (class)`
 
 This class is a random search over a fixed number of hyperparameter samples. All metrics & hyperparameters are saved to the metadata. But we will write a method to save these params/metrics separately.
 
-## test.py
+## `ParameterTuning.algorithm_handler`
+
+This script contains a single function `algorithm_handler()`, which takes an algorithm name as input and returns:
+- the algorithm class
+- a hyperparameter space for the algorithm
+- a `SearchInputRecommenderArgs` object, which contains params always passed to the alg init and fit functions.
+
+The set of algorithms that can be passed to `algorithm_handler()` are in `ALGORITHM_NAME_LIST`.
+
+## `test.py`
 
 This is a simple driver script, currently just for debugging.
 
