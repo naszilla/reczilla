@@ -23,7 +23,7 @@ All recommender take as first argument in the constructor the URM, content-based
 
 # Use a dataReader to load the data into sparse matrices
 data_reader = Movielens1MReader()
-loaded_dataset = data_reader.load_data()
+loaded_dataset = data_reader.load_data(save_folder_path="./tmp_DATA_MOVIELENS/")
 
 # In the following way you can access the entire URM and the dictionary with all ICMs
 URM_all = loaded_dataset.get_URM_all()
@@ -35,7 +35,7 @@ dataSplitter = DataSplitter_leave_k_out(data_reader, k_out_value=1, use_validati
 
 # The load_data function will split the data and save it in the desired folder.
 # Once the split is saved, further calls to the load_data will load the splitted data ensuring you always use the same split
-dataSplitter.load_data(save_folder_path= "result_experiments/usage_example/data/")
+dataSplitter.load_data(save_folder_path="./tmp_DATA_SPLIT_MOVIELENS/")
 
 # We can access the three URMs with this function and the ICMs (if present in the data Reader)
 URM_train, URM_validation, URM_test = dataSplitter.get_holdout_split()

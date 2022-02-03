@@ -361,7 +361,13 @@ class SearchAbstractClass(object):
 
 
     def _objective_function(self, current_fit_parameters_dict):
-
+        """
+        train and evaluate a model using a set of model parameters.
+        - save model according to param self.save_model
+        - write some log messages if this config is the "best" found so far
+        - evaluate on test set according to param self.evaluate_on_test
+        - update metadata dict
+        """
         try:
 
             self.metadata_dict["hyperparameters_list"][self.model_counter] = current_fit_parameters_dict.copy()
