@@ -121,7 +121,7 @@ class RandomSearch(SearchAbstractClass):
         save_model = "no"  # we never want to save the model
         evaluate_on_test = "all"  # always evaluate on test dataset
         recommender_input_args_last_test = None  # not needed
-        save_metadata = True  # always save metadata. this is how we gather results
+        save_metadata = True  # incrementally save metadata to file. may be useful, not necessary
 
         self._set_search_attributes(
             recommender_input_args,
