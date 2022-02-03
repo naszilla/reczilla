@@ -38,10 +38,27 @@ All recommender take as first argument in the constructor the URM, content-based
 For evaluating a particular set of hyperparameters, we can use this function for inspiration:
 https://github.com/MaurizioFD/RecSys2019_DeepLearning_Evaluation/blob/0fb6b7f5c396f8525316ed66cf9c9fdb03a5fa9b/ParameterTuning/SearchAbstractClass.py#L271
 
+## Evaluation
 
+All model evaluations are carried out by a subclass of the `Evaluation.Evaluator` class. `Evaluator` is the base class, and can't actually be used for evaluation. The specific evaluation is carried out by class function `_run_evaluation_on_selected_users`, defined for each of the subclasses.
+
+There appear to be two evaluators defined:
+- `Evaluation.Evaluator.EvaluatorHoldout`: not sure exactly what this does.
+- `Evaluation.Evaluator.EvaluatorNegativeItemSample`: not sure exactly what this does. 
 ## Data
 
-...
+### `DataReader`
+- each dataset needs to have a reader class, which is a subclass of `DataReader`. 
+- each dataset is loaded using the class function `load_data()`
+- loaded datasets are saved to disk, and the location is specified by the kwarg `save_folder_path`. This is the only argument for `load_data()`
+
+### `DataSplitter`
+- datasplitters are initialized with a `DataReader` object/subclass, and function in a very similar way
+- when a datasplitter is initiated, it saves the full dataset locally. different subfolders are used for each split
+- splits are created using the `load_data()` function, which takes a single kwarg `save_folder_path`. This function tries to find an existing dataset split in `save_folder_path`. If no data is found, it creates a new split and loads it.
+
+`DataSplitter` subclasses:
+- `DataSplitter_leave_k_out`: create a test set that contains k holdout interactions for each user. the validation set contains k*2 interactions (I think..), and the train set contains all remaining interactions.
 
 # New Code
 
@@ -56,5 +73,5 @@ This is a simple driver script, currently just for debugging.
 # TODO
 
 - add random seed to data splitter (in files `Data_manager.split_functions`, and places where this code is used.)
-- write some code to extract data features using this code's API
+- write some code to extract data features using this code's API. would be good to use the existing dataloader as an interface (e.g. dataSplitter.load_data). may be good to write a new class for this ("Dataset"?)
 - add a class method to `ParameterTuning.RandomSearch` that saves a CSV or json with hyperparameters + train/test/validation metrics.
