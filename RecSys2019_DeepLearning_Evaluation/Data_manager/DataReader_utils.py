@@ -94,7 +94,7 @@ import pandas as pd
 
 
 def load_CSV_into_SparseBuilder (filePath, header = False, separator="::", timestamp = False, remove_duplicates = False,
-                                 custom_user_item_rating_columns = None):
+                                 custom_user_item_rating_columns = None, **pandas_kwargs):
 
     URM_all_builder = IncrementalSparseMatrix(auto_create_col_mapper = True, auto_create_row_mapper = True)
     URM_timestamp_builder = IncrementalSparseMatrix(auto_create_col_mapper = True, auto_create_row_mapper = True)
@@ -108,7 +108,7 @@ def load_CSV_into_SparseBuilder (filePath, header = False, separator="::", times
         columns = ['userId', 'itemId', 'interaction']
 
     df_original = pd.read_csv(filepath_or_buffer=filePath, sep=separator, header= 0 if header else None,
-                    dtype=dtype, usecols=custom_user_item_rating_columns)
+                    dtype=dtype, usecols=custom_user_item_rating_columns, **pandas_kwargs)
 
     # If the original file has more columns, keep them but ignore them
     df_original.columns = columns
