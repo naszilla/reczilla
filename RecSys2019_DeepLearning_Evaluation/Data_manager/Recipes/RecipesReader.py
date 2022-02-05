@@ -6,7 +6,7 @@
 @author: Sujay Khandagale
 """
 
-import zipfile, shutil
+import os
 from io import StringIO
 import pandas as pd
 from Data_manager.Dataset import Dataset
@@ -16,7 +16,7 @@ from Data_manager.DataReader_utils import download_from_URL, load_CSV_into_Spars
 
 class RecipesReader(DataReader):
 
-    DATASET_URL = "Data_manager/Recipes/RAW_interactions.csv"
+    DATASET_URL = os.path.join(os.path.dirname(__file__), "RAW_interactions.csv")
     DATASET_SUBFOLDER = "Recipes/"
     AVAILABLE_ICM = []
     DATASET_SPECIFIC_MAPPER = []
