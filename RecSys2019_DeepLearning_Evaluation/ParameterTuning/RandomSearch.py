@@ -10,19 +10,7 @@ NOTE: requires a newer version of scikit-optimize than the original codebase. Us
 
 from ParameterTuning.SearchAbstractClass import SearchAbstractClass
 
-from skopt.sampler import Sobol, Lhs, Halton, Hammersly, Grid
-from skopt.space import Real, Integer, Categorical
-
 import numpy as np
-
-SAMPLER_DICT = {
-    "Sobol": Sobol,
-    "Lhs": Lhs,
-    "Halton": Halton,
-    "Hammersly": Hammersly,
-    "Grid": Grid,
-}
-
 
 class RandomSearch(SearchAbstractClass):
 
@@ -81,47 +69,22 @@ class RandomSearch(SearchAbstractClass):
 
         hyperparam_rs = np.random.RandomState(sample_seed)
 
-        assert (
-            sampler_type in SAMPLER_DICT
-        ), f"sampler type {sampler_type} not recognized. sampler_type must be one of {list(SAMPLER_DICT.keys())}."
-        sampler = SAMPLER_DICT[sampler_type](**sampler_args)
-
-        # validate and create search space. this code is borrowed from SearchAbstractClass
-        skopt_types = [Real, Integer, Categorical]
-
-        hyperparam_names = []
-        hyperparam_spaces = []
-        for name, hyperparam in parameter_search_space.items():
-            if any(isinstance(hyperparam, sko_type) for sko_type in skopt_types):
-                hyperparam_names.append(name)
-                hyperparam_spaces.append(hyperparam)
-            else:
-                raise ValueError(
-                    "{}: Unexpected parameter type: {} - {}".format(
-                        self.ALGORITHM_NAME, str(name), str(hyperparam)
-                    )
-                )
-
-        # sample hyperparameter values
-        hyperparam_sample_list = sampler.generate(
-            hyperparam_spaces, n_samples, random_state=hyperparam_rs
+        # sample random hyperparam values
+        hyperparam_samples = parameter_search_space.random_samples(
+            n_samples,
+            rs=hyperparam_rs,
+            sampler_type=sampler_type,
+            sampler_args=sampler_args,
         )
-
-        # put each hyperparameter sample (a list) into its own dict
-        hyperparam_samples = [
-            {
-                name: hyperparam_sample_list[j][i_param]
-                for i_param, name in enumerate(hyperparam_names)
-            }
-            for j in range(n_samples)
-        ]
 
         resume_from_saved = False  # not implemented
         metric_to_optimize = "MAP"  # not important
         save_model = "no"  # we never want to save the model
         evaluate_on_test = "all"  # always evaluate on test dataset
         recommender_input_args_last_test = None  # not needed
-        save_metadata = True  # incrementally save metadata to file. may be useful, not necessary
+        save_metadata = (
+            True  # incrementally save metadata to file. may be useful, not necessary
+        )
 
         self._set_search_attributes(
             recommender_input_args,
