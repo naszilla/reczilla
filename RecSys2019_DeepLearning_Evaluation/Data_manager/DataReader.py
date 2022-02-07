@@ -54,15 +54,23 @@ class DataReader(object):
 
     _DATA_READER_NAME = "DataReader"
 
-    def __init__(self, reload_from_original_data = False):
+    def __init__(self,
+                 reload_from_original_data="as-needed",  # {"always", "never", "as-needed"}
+                 ):
         super(DataReader, self).__init__()
+
+        assert reload_from_original_data in ["as-needed", "always", "never"], f"invalid value of reload_from_original_data: {reload_from_original_data}"
 
         self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_SPLIT_SUBFOLDER)
         self.DATASET_OFFLINE_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_OFFLINE_SUBFOLDER)
 
         self.reload_from_original_data = reload_from_original_data
-        if self.reload_from_original_data:
-            self._print("reload_from_original_data is True, previously loaded data will be ignored")
+        if self.reload_from_original_data == "always":
+            self._print("reload_from_original_data is 'always', previously loaded data will be ignored.")
+        elif self.reload_from_original_data == "never":
+            self._print("reload_from_original_data is 'never', will not reload original data.")
+        else:
+            self._print("reload_from_original_data is 'as-needed', will only reload original data if it cannot be found.")
 
     def _print(self, message):
         print("{}: {}".format(self._get_dataset_name(), message))
@@ -118,7 +126,10 @@ class DataReader(object):
 
 
         # If save_folder_path contains any path try to load a previously built split from it
-        if save_folder_path is not False and not self.reload_from_original_data:
+        if self.reload_from_original_data in ["as-needed", "always"] and save_folder_path in [None, False]:
+            raise Exception("save_folder_path must be specified unless reload_from_original_data is 'never'")
+
+        if self.reload_from_original_data in ["as-needed", "never"]:
 
             try:
                 loaded_dataset = Dataset()
@@ -133,7 +144,11 @@ class DataReader(object):
 
             except FileNotFoundError:
 
-                self._print("Preloaded data not found, reading from original files...")
+                if self.reload_from_original_data == "never":
+                    self._print("Preloaded data not found and reload_from_original_data = 'never'. Raising exception.")
+                    raise FileNotFoundError
+                else:
+                    self._print("Preloaded data not found, reading from original files...")
 
             except Exception:
 
