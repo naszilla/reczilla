@@ -4,6 +4,11 @@
 Created on 1 Feb 2022
 
 @author: Duncan C McElfresh
+
+code for iterating over the set of recommender algorithms
+- list ALGORITHM_NAME_LIST contains all valid algorithm names
+- function algorithm_handler takes an algorithm name and returns the algorithm class, parameter
+    search space, and args passed to the constructor and init functions
 """
 
 from skopt.space import Real, Integer, Categorical
@@ -38,6 +43,9 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import (
     MatrixFactorization_AsySVD_Cython,
 )
 
+from RecSys2019_DeepLearning_Evaluation.ParameterTuning.ParameterSpace import (
+    ParameterSpace,
+)
 
 ALGORITHM_NAME_LIST = [
     "ItemKNNCF_asymmetric",
@@ -116,6 +124,9 @@ def algorithm_handler(algorithm_name):
 
     space = {}
 
+    # maximum number of points to sample. -1 = no max
+    max_points = -1
+
     # for all KNN algorithms
     # in the original codebase, the constant params were included in the search space. here, we instead add them to
     # the search_input_recommender_args object.
@@ -159,9 +170,9 @@ def algorithm_handler(algorithm_name):
         space.update(BASE_KNN_ARGS)
         search_input_recommender_args.FIT_KEYWORD_ARGS["similarity"] = "dice"
 
-    # no params needed
+    # no params needed. only allow one sample
     if any([alg is c for c in [TopPop, GlobalEffects, Random]]):
-        pass
+        max_points = 1
 
     # other algs
 
@@ -232,6 +243,7 @@ def algorithm_handler(algorithm_name):
         space = {
             "num_factors": Integer(1, 350),
         }
+        max_points = 300
 
     if alg is NMFRecommender:
         space = {
@@ -240,6 +252,7 @@ def algorithm_handler(algorithm_name):
             "init_type": Categorical(["random", "nndsvda"]),
             "beta_loss": Categorical(["frobenius", "kullback-leibler"]),
         }
+        max_points = 2800
 
     if alg is SLIM_BPR_Cython:
         space = {
@@ -267,7 +280,8 @@ def algorithm_handler(algorithm_name):
         space = {
             "l2_norm": Real(low=1e0, high=1e7, prior="log-uniform"),
         }
+        max_points = 1000
         search_input_recommender_args.FIT_KEYWORD_ARGS["topK"] = None
         search_input_recommender_args.FIT_KEYWORD_ARGS["normalize_matrix"] = False
 
-    return alg, space, search_input_recommender_args
+    return alg, ParameterSpace(space), search_input_recommender_args, max_points
