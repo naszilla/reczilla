@@ -81,6 +81,8 @@ This is a simple driver script, currently just for debugging.
 
 # TODO
 
+- add DL algs to algorithm_handler
 - add random seed to data splitter (in files `Data_manager.split_functions`, and places where this code is used.)
-- write some code to extract data features using this code's API. would be good to use the existing dataloader as an interface (e.g. dataSplitter.load_data). may be good to write a new class for this ("Dataset"?)
-- add a class method to `ParameterTuning.RandomSearch` that saves a CSV or json with hyperparameters + train/test/validation metrics.
+- write some code to extract features using this code's API. would be good to use the existing dataloader as an interface (e.g. dataSplitter.load_data). may be good to write a new class for this ("Dataset"?)
+- there are some datasets in subfolders (e.g. `RecSys2019_DeepLearning_Evaluation/Conferences/IJCAI/DMF_our_interface/AmazonMusicReader/AmazonMusicReader.py`). check whether we want to include any of these in our data handler.
+- (maybe) prevent dataIO.save_data() to overwrite certain files. we can also just check this manually. since metadata is rewritten during each call to _objective_function(), it might save time to prevent this rewriting
