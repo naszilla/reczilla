@@ -7,6 +7,8 @@ Created on 10/03/2018
 """
 
 import time, os, traceback
+
+import pandas as pd
 from Base.Incremental_Training_Early_Stopping import Incremental_Training_Early_Stopping
 import numpy as np
 from Base.DataIO import DataIO
@@ -53,9 +55,10 @@ class SearchInputRecommenderArgs(object):
           self.FIT_POSITIONAL_ARGS = FIT_POSITIONAL_ARGS
           self.FIT_KEYWORD_ARGS = FIT_KEYWORD_ARGS
 
-
-
-
+        # these will be initialized when calling instance methods
+        self.dataIO = None
+        self.output_file_name_root = None
+        self.metadata_dict = None
 
     def copy(self):
 
@@ -493,3 +496,79 @@ class SearchAbstractClass(object):
         self.model_counter += 1
 
         return current_result
+
+    def load_metadata(self):
+        """attempt to read metadata and return as a dict"""
+        if self.dataIO is None:
+            self._write_log("{} attribute dataIO is not defined".format(self.ALGORITHM_NAME))
+            return {}
+        if self.output_file_name_root is None:
+            self._write_log("{} attribute output_file_name_root is not defined".format(self.ALGORITHM_NAME))
+            return {}
+        return self.dataIO.load_data(file_name=self.output_file_name_root + "_metadata")
+
+    def write_metadata_to_csv(self):
+        """
+        write certain parts of the metadata dict to csv
+        """
+
+        if self.metadata_dict is None:
+            raise Exception("metadata_dict has not been initialized")
+
+        # assume that all metadata lists have the same length
+        n_cases = len(self.metadata_dict["hyperparameter_list"])
+
+        # gather all parameter names
+        param_names = set()
+        for param_dict in self.metadata_dict["hyperparameters_list"]:
+            param_names.update(param_dict.keys())
+
+        # gather all metric names. assume that each result dict has the same set of keys
+        metric_names = list(self.metadata_dict["result_on_test_list"][0].keys())
+
+        # create a CSV with cols for each parameter, runtime, and metric
+        # for each param, add prefix "param_". for each metric, add prefix "metric_"
+
+        # make a set of cols for parameters and metrics
+        param_col_dict = {"param_" + name: [None] * n_cases for name in param_names}
+
+        metric_col_dict = {"test_metric_" + name: [None] * n_cases for name in metric_names}
+        metric_col_dict.update({"val_metric_" + name: [None] * n_cases for name in metric_names})
+        # TODO: collect train metrics
+
+        # populate the cols
+        for i in range(n_cases):
+            # parameters
+            if self.metadata_dict["hyperparameters_list"][i] is not None:
+                for param in param_names:
+                    param_col_dict[param][i] = self.metadata_dict["hyperparameters_list"][i].get(param, None)
+
+            # test results
+            if self.metadata_dict["result_on_test_list"][i] is not None:
+                for metric in metric_names:
+                    metric_col_dict["test_metric_" + metric][i] = self.metadata_dict["result_on_test_list"][i].get(metric, None)
+
+            # val results
+            if self.metadata_dict["result_on_validation_list"][i] is not None:
+                for metric in metric_names:
+                    metric_col_dict["val_metric_" + metric][i] = self.metadata_dict["result_on_validation_list"][i].get(metric, None)
+
+            # TODO: collect train metrics
+
+        # build df
+        col_dict = {}
+        col_dict.update(param_col_dict)
+        col_dict.update(metric_col_dict)
+        df = pd.DataFrame(col_dict)
+
+        # add some cols that come directly from metadata dict
+        for col in ["time_on_train_list", "time_on_validation_list", "time_on_test_list"]:
+            df.loc[:, col] = self.metadata_dict[col]
+
+        # write CSV
+        df.to_csv(self.output_file_name_root + "_metadata.csv")
+
+        self._write_log("{} wrote metadata csv to {}".format(
+            self.ALGORITHM_NAME,
+            self.output_file_name_root + "_metadata.csv")
+        )
