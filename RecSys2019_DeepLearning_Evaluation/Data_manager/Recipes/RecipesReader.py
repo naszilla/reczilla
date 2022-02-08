@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-# TODO: fetch dataset from online source
+TODO: the URL is to an unpublished dataset on Duncan's figshare site. change to public after checking licenses
 
 @author: Sujay Khandagale
 """
@@ -16,7 +16,7 @@ from Data_manager.DataReader_utils import download_from_URL, load_CSV_into_Spars
 
 class RecipesReader(DataReader):
 
-    DATASET_URL = os.path.join(os.path.dirname(__file__), "RAW_interactions.csv")
+    DATASET_URL = "https://figshare.com/ndownloader/files/33995063?private_link=456a101191852d37131e"
     DATASET_SUBFOLDER = "Recipes/"
     AVAILABLE_ICM = []
     DATASET_SPECIFIC_MAPPER = []
