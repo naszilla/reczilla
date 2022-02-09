@@ -12,6 +12,7 @@ import pandas as pd
 from Base.Incremental_Training_Early_Stopping import Incremental_Training_Early_Stopping
 import numpy as np
 from Base.DataIO import DataIO
+from Base.Evaluation.Evaluator import get_result_string
 
 class SearchInputRecommenderArgs(object):
 
@@ -277,15 +278,21 @@ class SearchAbstractClass(object):
 
         start_time = time.time()
 
-        # Evaluate recommender and get results for the first cutoff
-        result_dict, _ = self.evaluator_validation.evaluateRecommender(recommender_instance)
-        result_dict = result_dict[list(result_dict.keys())[0]]
+        # Evaluate recommender and get results for all cutoffs
+        result_dict, _ = self.evaluator_validation.evaluateRecommender(
+            recommender_instance
+        )
+        result_string = get_result_string(result_dict, n_decimals=7)
 
         evaluation_time = time.time() - start_time
 
-        result_string = get_result_string_evaluate_on_validation(result_dict, n_decimals=7)
-
-        return result_dict, result_string, recommender_instance, train_time, evaluation_time
+        return (
+            result_dict,
+            result_string,
+            recommender_instance,
+            train_time,
+            evaluation_time,
+        )
 
 
 
@@ -377,7 +384,10 @@ class SearchAbstractClass(object):
 
             result_dict, result_string, recommender_instance, train_time, evaluation_time = self._evaluate_on_validation(current_fit_parameters_dict)
 
-            current_result = - result_dict[self.metric_to_optimize]
+            # use only the first cutoff to log result
+            result_dict_first_cutoff = result_dict[list(result_dict.keys())[0]]
+
+            current_result = -result_dict_first_cutoff[self.metric_to_optimize]
 
             # If the recommender uses Earlystopping, get the selected number of epochs
             if isinstance(recommender_instance, Incremental_Training_Early_Stopping):
@@ -401,9 +411,12 @@ class SearchAbstractClass(object):
             if self.metadata_dict["result_on_validation_best"] is None:
                 new_best_config_found = True
             else:
-                best_solution_val = self.metadata_dict["result_on_validation_best"][self.metric_to_optimize]
-                new_best_config_found = best_solution_val < result_dict[self.metric_to_optimize]
-
+                best_solution_val = self.metadata_dict["result_on_validation_best"][
+                    self.metric_to_optimize
+                ]
+                new_best_config_found = (
+                    best_solution_val < result_dict_first_cutoff[self.metric_to_optimize]
+                )
 
             if new_best_config_found:
 
@@ -453,7 +466,7 @@ class SearchAbstractClass(object):
             if new_best_config_found:
                 self.metadata_dict["hyperparameters_best"] = current_fit_parameters_dict.copy()
                 self.metadata_dict["hyperparameters_best_index"] = self.model_counter
-                self.metadata_dict["result_on_validation_best"] = result_dict.copy()
+                self.metadata_dict["result_on_validation_best"] = result_dict_first_cutoff.copy()
 
             if (new_best_config_found and self.evaluate_on_test in ["best"]) or self.evaluate_on_test in ["all"]:
                 self.metadata_dict["result_on_test_best"] = result_dict_test.copy()
@@ -516,7 +529,7 @@ class SearchAbstractClass(object):
             raise Exception("metadata_dict has not been initialized")
 
         # assume that all metadata lists have the same length
-        n_cases = len(self.metadata_dict["hyperparameter_list"])
+        n_cases = len(self.metadata_dict["hyperparameters_list"])
 
         # gather all parameter names
         param_names = set()
