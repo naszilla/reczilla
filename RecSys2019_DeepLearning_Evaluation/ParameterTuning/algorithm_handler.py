@@ -43,9 +43,7 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import (
     MatrixFactorization_AsySVD_Cython,
 )
 
-from RecSys2019_DeepLearning_Evaluation.ParameterTuning.ParameterSpace import (
-    ParameterSpace,
-)
+from ParameterTuning.ParameterSpace import ParameterSpace
 
 ALGORITHM_NAME_LIST = [
     "ItemKNNCF_asymmetric",
