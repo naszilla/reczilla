@@ -8,5 +8,6 @@ from Data_manager.MovieTweetings.MovieTweetingsReader import *
 from Data_manager.Recipes.RecipesReader import *
 from Data_manager.Goodreads.GoodreadsReader import *
 from Data_manager.Flixster.FlixsterReader import *
-data_reader = FlixsterReader()
+from Data_manager.CiaoDVD.CiaoDVDReader import *
+data_reader = CiaoDVDReader()
 dataset = data_reader.load_data()
