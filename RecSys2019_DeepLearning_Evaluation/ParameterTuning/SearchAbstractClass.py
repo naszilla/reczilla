@@ -28,33 +28,32 @@ class SearchInputRecommenderArgs(object):
                    ):
 
 
-          super(SearchInputRecommenderArgs, self).__init__()
+        super(SearchInputRecommenderArgs, self).__init__()
 
-          if CONSTRUCTOR_POSITIONAL_ARGS is None:
-              CONSTRUCTOR_POSITIONAL_ARGS = []
+        if CONSTRUCTOR_POSITIONAL_ARGS is None:
+            CONSTRUCTOR_POSITIONAL_ARGS = []
 
-          if CONSTRUCTOR_KEYWORD_ARGS is None:
-              CONSTRUCTOR_KEYWORD_ARGS = {}
+        if CONSTRUCTOR_KEYWORD_ARGS is None:
+            CONSTRUCTOR_KEYWORD_ARGS = {}
 
-          if FIT_POSITIONAL_ARGS is None:
-              FIT_POSITIONAL_ARGS = []
+        if FIT_POSITIONAL_ARGS is None:
+            FIT_POSITIONAL_ARGS = []
 
-          if FIT_KEYWORD_ARGS is None:
-              FIT_KEYWORD_ARGS = {}
+        if FIT_KEYWORD_ARGS is None:
+            FIT_KEYWORD_ARGS = {}
+
+        assert isinstance(CONSTRUCTOR_POSITIONAL_ARGS, list), "CONSTRUCTOR_POSITIONAL_ARGS must be a list"
+        assert isinstance(CONSTRUCTOR_KEYWORD_ARGS, dict), "CONSTRUCTOR_KEYWORD_ARGS must be a dict"
+
+        assert isinstance(FIT_POSITIONAL_ARGS, list), "FIT_POSITIONAL_ARGS must be a list"
+        assert isinstance(FIT_KEYWORD_ARGS, dict), "FIT_KEYWORD_ARGS must be a dict"
 
 
-          assert isinstance(CONSTRUCTOR_POSITIONAL_ARGS, list), "CONSTRUCTOR_POSITIONAL_ARGS must be a list"
-          assert isinstance(CONSTRUCTOR_KEYWORD_ARGS, dict), "CONSTRUCTOR_KEYWORD_ARGS must be a dict"
+        self.CONSTRUCTOR_POSITIONAL_ARGS = CONSTRUCTOR_POSITIONAL_ARGS
+        self.CONSTRUCTOR_KEYWORD_ARGS = CONSTRUCTOR_KEYWORD_ARGS
 
-          assert isinstance(FIT_POSITIONAL_ARGS, list), "FIT_POSITIONAL_ARGS must be a list"
-          assert isinstance(FIT_KEYWORD_ARGS, dict), "FIT_KEYWORD_ARGS must be a dict"
-
-
-          self.CONSTRUCTOR_POSITIONAL_ARGS = CONSTRUCTOR_POSITIONAL_ARGS
-          self.CONSTRUCTOR_KEYWORD_ARGS = CONSTRUCTOR_KEYWORD_ARGS
-
-          self.FIT_POSITIONAL_ARGS = FIT_POSITIONAL_ARGS
-          self.FIT_KEYWORD_ARGS = FIT_KEYWORD_ARGS
+        self.FIT_POSITIONAL_ARGS = FIT_POSITIONAL_ARGS
+        self.FIT_KEYWORD_ARGS = FIT_KEYWORD_ARGS
 
         # these will be initialized when calling instance methods
         self.dataIO = None
