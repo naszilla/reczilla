@@ -6,5 +6,7 @@ from Data_manager.MarketBiasAmazon.MarketBiasAmazonReader import *
 from Data_manager.MarketBiasModCloth.MarketBiasModClothReader import *
 from Data_manager.MovieTweetings.MovieTweetingsReader import *
 from Data_manager.Recipes.RecipesReader import *
-data_reader = RecipesReader()
-data_reader.load_data()
+from Data_manager.Goodreads.GoodreadsReader import *
+from Data_manager.Flixster.FlixsterReader import *
+data_reader = FlixsterReader()
+dataset = data_reader.load_data()
