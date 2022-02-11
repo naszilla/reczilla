@@ -519,68 +519,54 @@ class SearchAbstractClass(object):
             return {}
         return self.dataIO.load_data(file_name=self.output_file_name_root + "_metadata")
 
-    def write_metadata_to_csv(self):
+    def write_metadata_to_csv(self, output_dir=None):
         """
         write certain parts of the metadata dict to csv
         """
-
-        if self.metadata_dict is None:
-            raise Exception("metadata_dict has not been initialized")
-
-        # assume that all metadata lists have the same length
-        n_cases = len(self.metadata_dict["hyperparameters_list"])
-
-        # gather all parameter names
-        param_names = set()
-        for param_dict in self.metadata_dict["hyperparameters_list"]:
-            param_names.update(param_dict.keys())
-
-        # gather all metric names. assume that each result dict has the same set of keys
-        metric_names = list(self.metadata_dict["result_on_test_list"][0].keys())
-
-        # create a CSV with cols for each parameter, runtime, and metric
-        # for each param, add prefix "param_". for each metric, add prefix "metric_"
-
-        # make a set of cols for parameters and metrics
-        param_col_dict = {"param_" + name: [None] * n_cases for name in param_names}
-
-        metric_col_dict = {"test_metric_" + name: [None] * n_cases for name in metric_names}
-        metric_col_dict.update({"val_metric_" + name: [None] * n_cases for name in metric_names})
-        # TODO: collect train metrics
-
-        # populate the cols
-        for i in range(n_cases):
-            # parameters
-            if self.metadata_dict["hyperparameters_list"][i] is not None:
-                for param in param_names:
-                    param_col_dict[param][i] = self.metadata_dict["hyperparameters_list"][i].get(param, None)
-
-            # test results
-            if self.metadata_dict["result_on_test_list"][i] is not None:
-                for metric in metric_names:
-                    metric_col_dict["test_metric_" + metric][i] = self.metadata_dict["result_on_test_list"][i].get(metric, None)
-
-            # val results
-            if self.metadata_dict["result_on_validation_list"][i] is not None:
-                for metric in metric_names:
-                    metric_col_dict["val_metric_" + metric][i] = self.metadata_dict["result_on_validation_list"][i].get(metric, None)
-
-            # TODO: collect train metrics
-
-        # build df
-        col_dict = {}
-        col_dict.update(param_col_dict)
-        col_dict.update(metric_col_dict)
-        df = pd.DataFrame(col_dict)
-
-        # add some cols that come directly from metadata dict
-        for col in ["time_on_train_list", "time_on_validation_list", "time_on_test_list"]:
-            df.loc[:, col] = self.metadata_dict[col]
-
-        # write CSV
-        df.to_csv(self.output_file_name_root + "_metadata.csv")
-
-        self._write_log("{} wrote metadata csv to {}".format(
-            self.ALGORITHM_NAME,
-            self.output_file_name_root + "_metadata.csv")
-        )
+        raise NotImplementedError  # still in progress...
+        # if self.metadata_dict is None:
+        #     raise Exception("metadata_dict has not been initialized")
+        #
+        # # assume that all metadata lists have the same length
+        # n_cases = len(self.metadata_dict["hyperparameters_list"])
+        #
+        # # gather all parameter names
+        # param_names = set()
+        # for param_dict in self.metadata_dict["hyperparameters_list"]:
+        #     param_names.update(param_dict.keys())
+        #
+        # # collect a list of dicts, appending prefixes to each col as needed
+        # row_list = [{} for _ in range(n_cases)]
+        # for i in range(n_cases):
+        #     # parameters
+        #     if self.metadata_dict["hyperparameters_list"][i] is not None:
+        #         for param_name, val in self.metadata_dict["hyperparameters_list"][i].items():
+        #             row_list[i]["param_" + param_name] = val
+        #
+        #     # test results - collect for each cutoff
+        #     if self.metadata_dict["result_on_test_list"][i] is not None:
+        #         for cutoff, result_dict in self.metadata_dict["result_on_test_list"][i].items():
+        #             for metric, val in result_dict.items():
+        #                 row_list[i][f"test_metric_cut{cutoff}_" + metric] = val
+        #
+        #     # validation results - collect for each cutoff
+        #     if self.metadata_dict["result_on_validation_list"][i] is not None:
+        #         for cutoff, result_dict in self.metadata_dict["result_on_validation_list"][i].items():
+        #             for metric, val in result_dict.items():
+        #                 row_list[i][f"val_metric_cut{cutoff}_" + metric] = val
+        #
+        #     # TODO: collect train metrics
+        #
+        # # build df
+        # df = pd.DataFrame(row_list)
+        #
+        # # add some cols that come directly from metadata dict
+        # for col in ["time_on_train_list", "time_on_validation_list", "time_on_test_list"]:
+        #     df.loc[:, col] = self.metadata_dict[col]
+        #
+        # # write CSV to a diff
+        # self.dataIO.save_df_to_csv(
+        #     self.output_file_name_root + "_metadata.csv",
+        #     df,
+        #     output_dir=output_dir,
+        # )
