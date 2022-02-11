@@ -33,6 +33,6 @@ def run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("data-dir", help="directory where data will be downloaded")
+    parser.add_argument("--data-dir", help="directory where data will be downloaded")
     args = parser.parse_args()
     run(args)
