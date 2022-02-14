@@ -137,6 +137,8 @@ def algorithm_handler(algorithm_name):
     if algorithm_name.endswith("KNNCF_asymmetric"):
         space.update(BASE_KNN_ARGS)
         space["asymmetric_alpha"] = Real(low=0, high=2, prior="uniform")
+        # remove normalize - this is a constant for this model
+        del space["normalize"]
         search_input_recommender_args.FIT_KEYWORD_ARGS["normalize"] = True
         search_input_recommender_args.FIT_KEYWORD_ARGS["similarity"] = "asymmetric"
 
@@ -148,8 +150,10 @@ def algorithm_handler(algorithm_name):
                 "tversky_beta": Real(low=0, high=2, prior="uniform"),
             }
         )
-        search_input_recommender_args.FIT_KEYWORD_ARGS["similarity"] = "tversky"
+        # remove normalize - this is a constant for this model
+        del space["normalize"]
         search_input_recommender_args.FIT_KEYWORD_ARGS["normalize"] = True
+        search_input_recommender_args.FIT_KEYWORD_ARGS["similarity"] = "tversky"
 
     if algorithm_name.endswith("KNNCF_euclidean"):
         space.update(BASE_KNN_ARGS)
