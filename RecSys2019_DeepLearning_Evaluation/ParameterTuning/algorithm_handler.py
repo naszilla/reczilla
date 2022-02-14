@@ -13,6 +13,7 @@ code for iterating over the set of recommender algorithms
 
 from skopt.space import Real, Integer, Categorical
 from ParameterTuning.SearchAbstractClass import SearchInputRecommenderArgs
+from ParameterTuning.ParameterSpace import ParameterSpace
 
 
 ######################################################################
@@ -54,11 +55,16 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import (
 ##########                                                  ##########
 ######################################################################
 
-from Conferences.IJCAI.NeuRec_our_interface.UNeuRecWrapper import UNeuRec_RecommenderWrapper
-from Conferences.IJCAI.NeuRec_our_interface.INeuRecWrapper import INeuRec_RecommenderWrapper
+from Conferences.IJCAI.NeuRec_our_interface.UNeuRecWrapper import (
+    UNeuRec_RecommenderWrapper,
+)
+from Conferences.IJCAI.NeuRec_our_interface.INeuRecWrapper import (
+    INeuRec_RecommenderWrapper,
+)
+from Conferences.RecSys.SpectralCF_our_interface.SpectralCF_RecommenderWrapper import (
+    SpectralCF_RecommenderWrapper,
+)
 
-
-from ParameterTuning.ParameterSpace import ParameterSpace
 
 ALGORITHM_NAME_LIST = [
     "ItemKNNCF_asymmetric",
@@ -87,8 +93,9 @@ ALGORITHM_NAME_LIST = [
     "SLIM_BPR_Cython",
     "SLIMElasticNetRecommender",
     "EASE_R_Recommender",
-    "INeuRec_RecommenderWrapper",
-    "UNeuRec_RecommenderWrapper",
+    "INeuRec_RecommenderWrapper",  # see run_IJCAI_18_NeuRec.py
+    "UNeuRec_RecommenderWrapper",  # see run_IJCAI_18_NeuRec.py
+    "SpectralCF_RecommenderWrapper",  # see run_RecSys_18_SpectralCF.py
 ]
 
 BASE_KNN_ARGS = {
@@ -312,7 +319,9 @@ def algorithm_handler(algorithm_name):
     if alg is UNeuRec_RecommenderWrapper or alg is INeuRec_RecommenderWrapper:
         # TODO: make sure this is a reasonable parameter space
         space = {
-            "num_neurons": Integer(3, 500),  # number of neurons in the first four layers
+            "num_neurons": Integer(
+                3, 500
+            ),  # number of neurons in the first four layers
             "num_factors": Integer(2, 100),  # number of neurons in the last two layers
             "dropout_percentage": Real(low=0.0, high=0.3),
             "learning_rate": Real(low=1e-6, high=1e-1, prior="log-uniform"),
@@ -321,5 +330,14 @@ def algorithm_handler(algorithm_name):
         search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = 100
         search_input_recommender_args.FIT_KEYWORD_ARGS["batch_size"] = 1024
 
+    if alg is SpectralCF_RecommenderWrapper:
+        space = {
+            "batch_size": Categorical([128, 256, 512, 1024, 2048]),
+            "embedding_size": Categorical([4, 8, 16, 32]),
+            "decay": Real(low=1e-5, high=1e-1, prior="log-uniform"),
+            "learning_rate": Real(low=1e-5, high=1e-2, prior="log-uniform"),
+            "k": Integer(low=1, high=6),
+        }
+        search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = 1000
 
     return alg, ParameterSpace(space), search_input_recommender_args, max_points
