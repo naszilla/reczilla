@@ -55,7 +55,7 @@ for dataset_name in dataset_list:
         output_file_name_root = alg_name
 
         # get a recommender class, hyperparameter search space, and search_input_recommender_args from the algorithm handler
-        alg, parameter_search_space, search_input_recommender_args, max_points = algorithm_handler("ItemKNNCF_jaccard")
+        alg, parameter_search_space, search_input_recommender_args, max_points = algorithm_handler(alg_name)
 
         # add the training dataset to recommender_input_args (this is then passed to the alg constructor...)
         search_input_recommender_args.CONSTRUCTOR_POSITIONAL_ARGS = [URM_train]
