@@ -173,6 +173,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
                resume_from_saved = False,
                recommender_input_args_last_test = None,
                evaluate_on_test = "best",
+               raise_exceptions=False,
                ):
         """
 
@@ -204,7 +205,8 @@ class SearchBayesianSkopt(SearchAbstractClass):
                                     save_metadata,
                                     save_model,
                                     evaluate_on_test,
-                                    n_cases)
+                                    n_cases,
+                                    raise_exceptions)
 
 
         self.parameter_search_space = parameter_search_space

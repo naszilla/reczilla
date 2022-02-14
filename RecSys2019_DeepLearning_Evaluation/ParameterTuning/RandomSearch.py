@@ -60,6 +60,7 @@ class RandomSearch(SearchAbstractClass):
         sampler_type="Sobol",
         sampler_args={},
         sample_seed=0,
+        raise_exceptions=False,
     ):
         """
         search for the best set of hyperparameters using multiple random draws from the hyperparameter space
@@ -97,6 +98,7 @@ class RandomSearch(SearchAbstractClass):
             save_model,
             evaluate_on_test,
             n_samples,
+            raise_exceptions,
         )
 
         # generate n_cases random hyperparameter draws

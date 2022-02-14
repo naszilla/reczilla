@@ -59,6 +59,7 @@ class SearchInputRecommenderArgs(object):
         self.dataIO = None
         self.output_file_name_root = None
         self.metadata_dict = None
+        self.raise_exceptions = False
 
     def copy(self):
 
@@ -160,8 +161,12 @@ class SearchAbstractClass(object):
                                save_metadata,
                                save_model,
                                evaluate_on_test,
-                               n_cases):
+                               n_cases,
+                               raise_exceptions,
+                               ):
 
+        assert raise_exceptions in [True, False], "raise_exceptions must be True or False"
+        self.raise_exceptions = raise_exceptions
 
         if save_model not in self._SAVE_MODEL_VALUES:
            raise ValueError("{}: parameter save_model must be in '{}', provided was '{}'.".format(self.ALGORITHM_NAME, self._SAVE_MODEL_VALUES, save_model))
@@ -480,24 +485,26 @@ class SearchAbstractClass(object):
             # If getting a interrupt, terminate without saving the exception
             raise e
 
-        except:
+        except Exception as e:
             # Catch any error: Exception, Tensorflow errors etc...
+            if self.raise_exceptions:
+                raise e
+            else:
+                traceback_string = traceback.format_exc()
 
-            traceback_string = traceback.format_exc()
+                self._write_log("{}: Config {} Exception. Config: {} - Exception: {}\n".format(self.ALGORITHM_NAME,
+                                                                                      self.model_counter,
+                                                                                      current_fit_parameters_dict,
+                                                                                      traceback_string))
 
-            self._write_log("{}: Config {} Exception. Config: {} - Exception: {}\n".format(self.ALGORITHM_NAME,
-                                                                                  self.model_counter,
-                                                                                  current_fit_parameters_dict,
-                                                                                  traceback_string))
-
-            self.metadata_dict["exception_list"][self.model_counter] = traceback_string
+                self.metadata_dict["exception_list"][self.model_counter] = traceback_string
 
 
-            # Assign to this configuration the worst possible score
-            # Being a minimization problem, set it to the max value of a float
-            current_result = + self.INVALID_CONFIG_VALUE
+                # Assign to this configuration the worst possible score
+                # Being a minimization problem, set it to the max value of a float
+                current_result = + self.INVALID_CONFIG_VALUE
 
-            traceback.print_exc()
+                traceback.print_exc()
 
 
 
