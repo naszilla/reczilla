@@ -68,6 +68,8 @@ class Mult_VAE_RecommenderWrapper(BaseRecommender, Incremental_Training_Early_St
             batch_size = 500,
             total_anneal_steps = 200000,
             anneal_cap = 0.2,
+            lam=0.0,
+            lr=1e-3,
             p_dims = None,
             temp_file_folder=None,
             **earlystopping_kwargs):
@@ -95,7 +97,7 @@ class Mult_VAE_RecommenderWrapper(BaseRecommender, Incremental_Training_Early_St
         tf.reset_default_graph()
 
 
-        self.vae = MultiVAE(self.p_dims, lam=0.0, random_seed=98765)
+        self.vae = MultiVAE(self.p_dims, lam=lam, lr=lr, random_seed=98765)
         self.saver, self.logits_var, self.loss_var, self.train_op_var, self.merged_var = self.vae.build_graph()
 
 

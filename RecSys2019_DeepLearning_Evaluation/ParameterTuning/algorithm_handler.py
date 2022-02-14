@@ -64,7 +64,9 @@ from Conferences.IJCAI.NeuRec_our_interface.INeuRecWrapper import (
 from Conferences.RecSys.SpectralCF_our_interface.SpectralCF_RecommenderWrapper import (
     SpectralCF_RecommenderWrapper,
 )
-
+from Conferences.WWW.MultiVAE_our_interface.MultiVAE_RecommenderWrapper import (
+    Mult_VAE_RecommenderWrapper,
+)
 
 ALGORITHM_NAME_LIST = [
     "ItemKNNCF_asymmetric",
@@ -96,6 +98,7 @@ ALGORITHM_NAME_LIST = [
     "INeuRec_RecommenderWrapper",  # see run_IJCAI_18_NeuRec.py
     "UNeuRec_RecommenderWrapper",  # see run_IJCAI_18_NeuRec.py
     "SpectralCF_RecommenderWrapper",  # see run_RecSys_18_SpectralCF.py
+    "Mult_VAE_RecommenderWrapper",  # see run_WWW_18_Mult_VAE.py
 ]
 
 BASE_KNN_ARGS = {
@@ -331,6 +334,7 @@ def algorithm_handler(algorithm_name):
         search_input_recommender_args.FIT_KEYWORD_ARGS["batch_size"] = 1024
 
     if alg is SpectralCF_RecommenderWrapper:
+        # TODO: make sure this is a reasonable parameter space
         space = {
             "batch_size": Categorical([128, 256, 512, 1024, 2048]),
             "embedding_size": Categorical([4, 8, 16, 32]),
@@ -339,5 +343,22 @@ def algorithm_handler(algorithm_name):
             "k": Integer(low=1, high=6),
         }
         search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = 1000
+
+    if alg is Mult_VAE_RecommenderWrapper:
+        # TODO: make sure this is a reasonable parameter space
+        space = {
+            "total_anneal_steps": Integer(1000, 1000000),
+            "lam": Real(
+                1e-10, 1e-1, prior="log-uniform"
+            ),  # strength of l2 regularization
+            "lr": Real(1e-6, 1e-2, prior="log-uniform"),  # learning rate
+        }
+
+        search_input_recommender_args.FIT_KEYWORD_ARGS[
+            "p_dims"
+        ] = None  # TODO: this uses default. define a reasonable parameter range
+        # search_input_recommender_args.FIT_KEYWORD_ARGS["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
+        search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = 1000
+        search_input_recommender_args.FIT_KEYWORD_ARGS["batch_size"] = 500
 
     return alg, ParameterSpace(space), search_input_recommender_args, max_points
