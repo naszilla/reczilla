@@ -124,7 +124,7 @@ class SearchAbstractClass(object):
 
         self.recommender_class = recommender_class
         self.verbose = verbose
-        self.log_file = None
+        self.log_file_name = None
 
         self.results_test_best = {}
         self.parameter_dictionary_best = {}
@@ -182,7 +182,7 @@ class SearchAbstractClass(object):
         if not os.path.exists(self.output_folder_path):
             os.makedirs(self.output_folder_path)
 
-        self.log_file = open(self.output_folder_path + self.output_file_name_root + "_{}.txt".format(self.ALGORITHM_NAME), "a")
+        self.log_file_name = self.output_folder_path + self.output_file_name_root + "_{}.txt".format(self.ALGORITHM_NAME)
 
         if save_model == "last" and recommender_input_args_last_test is None:
             self._write_log("{}: parameter save_model is 'last' but no recommender_input_args_last_test provided, saving best model on train data alone.".format(self.ALGORITHM_NAME))
@@ -249,9 +249,10 @@ class SearchAbstractClass(object):
 
         self._print(string)
 
-        if self.log_file is not None:
-            self.log_file.write(string)
-            self.log_file.flush()
+        if self.log_file_name is not None:
+            with open(self.log_file_name, "a") as f:
+                f.write(string)
+                f.flush()
 
 
     def _fit_model(self, current_fit_parameters):
