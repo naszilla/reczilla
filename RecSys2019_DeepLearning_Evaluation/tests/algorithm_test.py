@@ -17,6 +17,7 @@ from Base.Evaluation.Evaluator import EvaluatorHoldout
 N_HYPERPARAM_SAMPLES = 2
 N_USERS = 100
 N_ITEMS = 50
+EPOCHS = 5
 DENSITY = 0.01
 
 SEED = 0
@@ -81,12 +82,17 @@ class TestCollabAlgorithms(unittest.TestCase):
                     TestCollabAlgorithms.URM_train
                 ]
 
+                # use a small number of epochs
+                if "epochs" in search_input_recommender_args.FIT_KEYWORD_ARGS:
+                    search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = EPOCHS
+
                 # create a search object for the random parameter search
                 # we need to re-initialize this for each algorithm
                 parameterSearch = RandomSearch(
                     alg,
                     evaluator_validation=TestCollabAlgorithms.evaluator_validation,
                     evaluator_test=TestCollabAlgorithms.evaluator_test,
+                    verbose=False,
                 )
 
                 # run a random parameter search
@@ -99,6 +105,7 @@ class TestCollabAlgorithms(unittest.TestCase):
                     sampler_type="Sobol",
                     sampler_args={},
                     sample_seed=SEED,
+                    raise_exceptions=True,  # by default exceptions are caught and saved. we want to raise them
                 )
 
 
