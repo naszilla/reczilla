@@ -17,11 +17,16 @@ from ParameterTuning.SearchAbstractClass import SearchInputRecommenderArgs
 
 ######################################################################
 ##########                                                  ##########
-##########                  PURE COLLABORATIVE              ##########
+##########                  USER-INDEPENDENT                ##########
 ##########                                                  ##########
 ######################################################################
 from Base.NonPersonalizedRecommender import TopPop, Random, GlobalEffects
 
+######################################################################
+##########                                                  ##########
+##########                  PURE COLLABORATIVE              ##########
+##########                                                  ##########
+######################################################################
 # KNN
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
@@ -42,6 +47,16 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import (
     MatrixFactorization_FunkSVD_Cython,
     MatrixFactorization_AsySVD_Cython,
 )
+
+######################################################################
+##########                                                  ##########
+##########              NEURAL NETWORK METHODS              ##########
+##########                                                  ##########
+######################################################################
+
+from Conferences.IJCAI.NeuRec_our_interface.UNeuRecWrapper import UNeuRec_RecommenderWrapper
+from Conferences.IJCAI.NeuRec_our_interface.INeuRecWrapper import INeuRec_RecommenderWrapper
+
 
 from ParameterTuning.ParameterSpace import ParameterSpace
 
@@ -72,6 +87,8 @@ ALGORITHM_NAME_LIST = [
     "SLIM_BPR_Cython",
     "SLIMElasticNetRecommender",
     "EASE_R_Recommender",
+    "INeuRec_RecommenderWrapper",
+    "UNeuRec_RecommenderWrapper",
 ]
 
 BASE_KNN_ARGS = {
@@ -291,5 +308,18 @@ def algorithm_handler(algorithm_name):
         max_points = 1000
         search_input_recommender_args.FIT_KEYWORD_ARGS["topK"] = None
         search_input_recommender_args.FIT_KEYWORD_ARGS["normalize_matrix"] = False
+
+    if alg is UNeuRec_RecommenderWrapper or alg is INeuRec_RecommenderWrapper:
+        # TODO: make sure this is a reasonable parameter space
+        space = {
+            "num_neurons": Integer(3, 500),  # number of neurons in the first four layers
+            "num_factors": Integer(2, 100),  # number of neurons in the last two layers
+            "dropout_percentage": Real(low=0.0, high=0.3),
+            "learning_rate": Real(low=1e-6, high=1e-1, prior="log-uniform"),
+            "regularization_rate": Real(low=1e-4, high=1e1, prior="log-uniform"),
+        }
+        search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = 100
+        search_input_recommender_args.FIT_KEYWORD_ARGS["batch_size"] = 1024
+
 
     return alg, ParameterSpace(space), search_input_recommender_args, max_points
