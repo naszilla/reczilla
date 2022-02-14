@@ -129,7 +129,7 @@ def algorithm_handler(algorithm_name):
     space = {}
 
     # maximum number of points to sample. -1 = no max
-    max_points = -1
+    max_points = 1e10
 
     # for all KNN algorithms
     # in the original codebase, the constant params were included in the search space. here, we instead add them to

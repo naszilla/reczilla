@@ -48,6 +48,14 @@ class ParameterSpace:
         use sampler functions from skopt.sampler to generate random samples
 
         """
+        if self.param_dict == {}:
+            if n != 1:
+                raise Exception("no hyperparameters. n must be 1")
+
+            return [{}]
+
+        if sampler_args is None:
+            sampler_args = {}
 
         assert (
             sampler_type in SAMPLER_DICT
