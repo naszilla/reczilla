@@ -48,6 +48,7 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import (
     MatrixFactorization_FunkSVD_Cython,
     MatrixFactorization_AsySVD_Cython,
 )
+from Conferences.IJCAI.DELF_our_interface.DELFWrapper import DELF_MLP_RecommenderWrapper, DELF_EF_RecommenderWrapper
 
 ######################################################################
 ##########                                                  ##########
@@ -99,6 +100,8 @@ ALGORITHM_NAME_LIST = [
     "UNeuRec_RecommenderWrapper",  # see run_IJCAI_18_NeuRec.py
     "SpectralCF_RecommenderWrapper",  # see run_RecSys_18_SpectralCF.py
     "Mult_VAE_RecommenderWrapper",  # see run_WWW_18_Mult_VAE.py
+    "DELF_MLP_RecommenderWrapper",  # see run_IJCAI_17_DELF.py
+    "DELF_EF_RecommenderWrapper",  # see run_IJCAI_17_DELF.py
 ]
 
 BASE_KNN_ARGS = {
@@ -360,5 +363,20 @@ def algorithm_handler(algorithm_name):
         # search_input_recommender_args.FIT_KEYWORD_ARGS["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
         search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = 1000
         search_input_recommender_args.FIT_KEYWORD_ARGS["batch_size"] = 500
+
+    if alg is DELF_EF_RecommenderWrapper or alg is DELF_MLP_RecommenderWrapper:
+        # TODO: make sure this is a reasonable parameter space. see DELFWrapper._DELF_RecommenderWrapper.fit()
+        # TODO: we should understand what these parameters are, at a high level...
+        num_factors = 64
+        space = {
+         'learning_rate': Real(1e-6, 1e-2, prior="log-uniform"),
+         'num_negatives': Integer(3, 4),  # TODO: not sure what this is
+         }
+        search_input_recommender_args.FIT_KEYWORD_ARGS["learner"] = "adam"
+        search_input_recommender_args.FIT_KEYWORD_ARGS["verbose"] = False
+        search_input_recommender_args.FIT_KEYWORD_ARGS["layers"] = (num_factors * 4, num_factors * 2, num_factors)
+        search_input_recommender_args.FIT_KEYWORD_ARGS["regularization_layers"] = (0, 0, 0)
+        search_input_recommender_args.FIT_KEYWORD_ARGS["epochs"] = 500
+        search_input_recommender_args.FIT_KEYWORD_ARGS["batch_size"] = 256
 
     return alg, ParameterSpace(space), search_input_recommender_args, max_points
