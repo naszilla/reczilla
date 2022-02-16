@@ -28,38 +28,38 @@ class SearchInputRecommenderArgs(object):
                    ):
 
 
-          super(SearchInputRecommenderArgs, self).__init__()
+        super(SearchInputRecommenderArgs, self).__init__()
 
-          if CONSTRUCTOR_POSITIONAL_ARGS is None:
-              CONSTRUCTOR_POSITIONAL_ARGS = []
+        if CONSTRUCTOR_POSITIONAL_ARGS is None:
+            CONSTRUCTOR_POSITIONAL_ARGS = []
 
-          if CONSTRUCTOR_KEYWORD_ARGS is None:
-              CONSTRUCTOR_KEYWORD_ARGS = {}
+        if CONSTRUCTOR_KEYWORD_ARGS is None:
+            CONSTRUCTOR_KEYWORD_ARGS = {}
 
-          if FIT_POSITIONAL_ARGS is None:
-              FIT_POSITIONAL_ARGS = []
+        if FIT_POSITIONAL_ARGS is None:
+            FIT_POSITIONAL_ARGS = []
 
-          if FIT_KEYWORD_ARGS is None:
-              FIT_KEYWORD_ARGS = {}
+        if FIT_KEYWORD_ARGS is None:
+            FIT_KEYWORD_ARGS = {}
+
+        assert isinstance(CONSTRUCTOR_POSITIONAL_ARGS, list), "CONSTRUCTOR_POSITIONAL_ARGS must be a list"
+        assert isinstance(CONSTRUCTOR_KEYWORD_ARGS, dict), "CONSTRUCTOR_KEYWORD_ARGS must be a dict"
+
+        assert isinstance(FIT_POSITIONAL_ARGS, list), "FIT_POSITIONAL_ARGS must be a list"
+        assert isinstance(FIT_KEYWORD_ARGS, dict), "FIT_KEYWORD_ARGS must be a dict"
 
 
-          assert isinstance(CONSTRUCTOR_POSITIONAL_ARGS, list), "CONSTRUCTOR_POSITIONAL_ARGS must be a list"
-          assert isinstance(CONSTRUCTOR_KEYWORD_ARGS, dict), "CONSTRUCTOR_KEYWORD_ARGS must be a dict"
+        self.CONSTRUCTOR_POSITIONAL_ARGS = CONSTRUCTOR_POSITIONAL_ARGS
+        self.CONSTRUCTOR_KEYWORD_ARGS = CONSTRUCTOR_KEYWORD_ARGS
 
-          assert isinstance(FIT_POSITIONAL_ARGS, list), "FIT_POSITIONAL_ARGS must be a list"
-          assert isinstance(FIT_KEYWORD_ARGS, dict), "FIT_KEYWORD_ARGS must be a dict"
-
-
-          self.CONSTRUCTOR_POSITIONAL_ARGS = CONSTRUCTOR_POSITIONAL_ARGS
-          self.CONSTRUCTOR_KEYWORD_ARGS = CONSTRUCTOR_KEYWORD_ARGS
-
-          self.FIT_POSITIONAL_ARGS = FIT_POSITIONAL_ARGS
-          self.FIT_KEYWORD_ARGS = FIT_KEYWORD_ARGS
+        self.FIT_POSITIONAL_ARGS = FIT_POSITIONAL_ARGS
+        self.FIT_KEYWORD_ARGS = FIT_KEYWORD_ARGS
 
         # these will be initialized when calling instance methods
         self.dataIO = None
         self.output_file_name_root = None
         self.metadata_dict = None
+        self.raise_exceptions = False
 
     def copy(self):
 
@@ -124,7 +124,7 @@ class SearchAbstractClass(object):
 
         self.recommender_class = recommender_class
         self.verbose = verbose
-        self.log_file = None
+        self.log_file_name = None
 
         self.results_test_best = {}
         self.parameter_dictionary_best = {}
@@ -161,8 +161,12 @@ class SearchAbstractClass(object):
                                save_metadata,
                                save_model,
                                evaluate_on_test,
-                               n_cases):
+                               n_cases,
+                               raise_exceptions,
+                               ):
 
+        assert raise_exceptions in [True, False], "raise_exceptions must be True or False"
+        self.raise_exceptions = raise_exceptions
 
         if save_model not in self._SAVE_MODEL_VALUES:
            raise ValueError("{}: parameter save_model must be in '{}', provided was '{}'.".format(self.ALGORITHM_NAME, self._SAVE_MODEL_VALUES, save_model))
@@ -178,7 +182,7 @@ class SearchAbstractClass(object):
         if not os.path.exists(self.output_folder_path):
             os.makedirs(self.output_folder_path)
 
-        self.log_file = open(self.output_folder_path + self.output_file_name_root + "_{}.txt".format(self.ALGORITHM_NAME), "a")
+        self.log_file_name = self.output_folder_path + self.output_file_name_root + "_{}.txt".format(self.ALGORITHM_NAME)
 
         if save_model == "last" and recommender_input_args_last_test is None:
             self._write_log("{}: parameter save_model is 'last' but no recommender_input_args_last_test provided, saving best model on train data alone.".format(self.ALGORITHM_NAME))
@@ -245,9 +249,10 @@ class SearchAbstractClass(object):
 
         self._print(string)
 
-        if self.log_file is not None:
-            self.log_file.write(string)
-            self.log_file.flush()
+        if self.log_file_name is not None:
+            with open(self.log_file_name, "a") as f:
+                f.write(string)
+                f.flush()
 
 
     def _fit_model(self, current_fit_parameters):
@@ -481,24 +486,26 @@ class SearchAbstractClass(object):
             # If getting a interrupt, terminate without saving the exception
             raise e
 
-        except:
+        except Exception as e:
             # Catch any error: Exception, Tensorflow errors etc...
+            if self.raise_exceptions:
+                raise e
+            else:
+                traceback_string = traceback.format_exc()
 
-            traceback_string = traceback.format_exc()
+                self._write_log("{}: Config {} Exception. Config: {} - Exception: {}\n".format(self.ALGORITHM_NAME,
+                                                                                      self.model_counter,
+                                                                                      current_fit_parameters_dict,
+                                                                                      traceback_string))
 
-            self._write_log("{}: Config {} Exception. Config: {} - Exception: {}\n".format(self.ALGORITHM_NAME,
-                                                                                  self.model_counter,
-                                                                                  current_fit_parameters_dict,
-                                                                                  traceback_string))
-
-            self.metadata_dict["exception_list"][self.model_counter] = traceback_string
+                self.metadata_dict["exception_list"][self.model_counter] = traceback_string
 
 
-            # Assign to this configuration the worst possible score
-            # Being a minimization problem, set it to the max value of a float
-            current_result = + self.INVALID_CONFIG_VALUE
+                # Assign to this configuration the worst possible score
+                # Being a minimization problem, set it to the max value of a float
+                current_result = + self.INVALID_CONFIG_VALUE
 
-            traceback.print_exc()
+                traceback.print_exc()
 
 
 
@@ -520,68 +527,54 @@ class SearchAbstractClass(object):
             return {}
         return self.dataIO.load_data(file_name=self.output_file_name_root + "_metadata")
 
-    def write_metadata_to_csv(self):
+    def write_metadata_to_csv(self, output_dir=None):
         """
         write certain parts of the metadata dict to csv
         """
-
-        if self.metadata_dict is None:
-            raise Exception("metadata_dict has not been initialized")
-
-        # assume that all metadata lists have the same length
-        n_cases = len(self.metadata_dict["hyperparameters_list"])
-
-        # gather all parameter names
-        param_names = set()
-        for param_dict in self.metadata_dict["hyperparameters_list"]:
-            param_names.update(param_dict.keys())
-
-        # gather all metric names. assume that each result dict has the same set of keys
-        metric_names = list(self.metadata_dict["result_on_test_list"][0].keys())
-
-        # create a CSV with cols for each parameter, runtime, and metric
-        # for each param, add prefix "param_". for each metric, add prefix "metric_"
-
-        # make a set of cols for parameters and metrics
-        param_col_dict = {"param_" + name: [None] * n_cases for name in param_names}
-
-        metric_col_dict = {"test_metric_" + name: [None] * n_cases for name in metric_names}
-        metric_col_dict.update({"val_metric_" + name: [None] * n_cases for name in metric_names})
-        # TODO: collect train metrics
-
-        # populate the cols
-        for i in range(n_cases):
-            # parameters
-            if self.metadata_dict["hyperparameters_list"][i] is not None:
-                for param in param_names:
-                    param_col_dict[param][i] = self.metadata_dict["hyperparameters_list"][i].get(param, None)
-
-            # test results
-            if self.metadata_dict["result_on_test_list"][i] is not None:
-                for metric in metric_names:
-                    metric_col_dict["test_metric_" + metric][i] = self.metadata_dict["result_on_test_list"][i].get(metric, None)
-
-            # val results
-            if self.metadata_dict["result_on_validation_list"][i] is not None:
-                for metric in metric_names:
-                    metric_col_dict["val_metric_" + metric][i] = self.metadata_dict["result_on_validation_list"][i].get(metric, None)
-
-            # TODO: collect train metrics
-
-        # build df
-        col_dict = {}
-        col_dict.update(param_col_dict)
-        col_dict.update(metric_col_dict)
-        df = pd.DataFrame(col_dict)
-
-        # add some cols that come directly from metadata dict
-        for col in ["time_on_train_list", "time_on_validation_list", "time_on_test_list"]:
-            df.loc[:, col] = self.metadata_dict[col]
-
-        # write CSV
-        df.to_csv(self.output_file_name_root + "_metadata.csv")
-
-        self._write_log("{} wrote metadata csv to {}".format(
-            self.ALGORITHM_NAME,
-            self.output_file_name_root + "_metadata.csv")
-        )
+        raise NotImplementedError  # still in progress...
+        # if self.metadata_dict is None:
+        #     raise Exception("metadata_dict has not been initialized")
+        #
+        # # assume that all metadata lists have the same length
+        # n_cases = len(self.metadata_dict["hyperparameters_list"])
+        #
+        # # gather all parameter names
+        # param_names = set()
+        # for param_dict in self.metadata_dict["hyperparameters_list"]:
+        #     param_names.update(param_dict.keys())
+        #
+        # # collect a list of dicts, appending prefixes to each col as needed
+        # row_list = [{} for _ in range(n_cases)]
+        # for i in range(n_cases):
+        #     # parameters
+        #     if self.metadata_dict["hyperparameters_list"][i] is not None:
+        #         for param_name, val in self.metadata_dict["hyperparameters_list"][i].items():
+        #             row_list[i]["param_" + param_name] = val
+        #
+        #     # test results - collect for each cutoff
+        #     if self.metadata_dict["result_on_test_list"][i] is not None:
+        #         for cutoff, result_dict in self.metadata_dict["result_on_test_list"][i].items():
+        #             for metric, val in result_dict.items():
+        #                 row_list[i][f"test_metric_cut{cutoff}_" + metric] = val
+        #
+        #     # validation results - collect for each cutoff
+        #     if self.metadata_dict["result_on_validation_list"][i] is not None:
+        #         for cutoff, result_dict in self.metadata_dict["result_on_validation_list"][i].items():
+        #             for metric, val in result_dict.items():
+        #                 row_list[i][f"val_metric_cut{cutoff}_" + metric] = val
+        #
+        #     # TODO: collect train metrics
+        #
+        # # build df
+        # df = pd.DataFrame(row_list)
+        #
+        # # add some cols that come directly from metadata dict
+        # for col in ["time_on_train_list", "time_on_validation_list", "time_on_test_list"]:
+        #     df.loc[:, col] = self.metadata_dict[col]
+        #
+        # # write CSV to a diff
+        # self.dataIO.save_df_to_csv(
+        #     self.output_file_name_root + "_metadata.csv",
+        #     df,
+        #     output_dir=output_dir,
+        # )

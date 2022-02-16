@@ -76,6 +76,7 @@ class SearchSingleCase(SearchAbstractClass):
                resume_from_saved = False,
                save_model = "best",
                evaluate_on_test = "best",
+               raise_exceptions=False
                ):
 
 
@@ -92,7 +93,9 @@ class SearchSingleCase(SearchAbstractClass):
                                     save_metadata,
                                     save_model,
                                     evaluate_on_test,
-                                    n_cases)
+                                    n_cases,
+                                    raise_exceptions,
+                                    )
 
 
 

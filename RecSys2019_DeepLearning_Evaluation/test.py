@@ -22,7 +22,7 @@ for dataset_name in dataset_list:
 
     data_reader = dataset_handler(dataset_name)()
 
-    dataset_dir = "./results/{}/".format(dataset_name)
+    dataset_dir = "./results/{}/original_data/".format(dataset_name)
     loaded_dataset = data_reader.load_data(save_folder_path=dataset_dir)
 
     # In the following way you can access the entire URM and the dictionary with all ICMs
@@ -32,7 +32,7 @@ for dataset_name in dataset_list:
     # This splitter requires the DataReader object and the number of elements to holdout
     dataSplitter = DataSplitter_leave_k_out(data_reader)
 
-    split_dir = "./results/{}/split/".format(dataset_name)
+    split_dir = "./results/{}/split_data/".format(dataset_name)
     dataSplitter.load_data(save_folder_path=split_dir)
 
     # We can access the three URMs with this function and the ICMs (if present in the data Reader)
@@ -49,13 +49,13 @@ for dataset_name in dataset_list:
     for alg_name in alg_list:
 
         # output folder - where metadata and/or models will be written
-        result_folder = "./results/{}/".format(dataset_name)
+        result_folder = "./results/{}/search_output/".format(dataset_name)
 
         # name of output file
-        output_file_name_root = alg_name + "_randomsearch"
+        output_file_name_root = alg_name
 
         # get a recommender class, hyperparameter search space, and search_input_recommender_args from the algorithm handler
-        alg, parameter_search_space, search_input_recommender_args, max_points = algorithm_handler("ItemKNNCF_jaccard")
+        alg, parameter_search_space, search_input_recommender_args, max_points = algorithm_handler(alg_name)
 
         # add the training dataset to recommender_input_args (this is then passed to the alg constructor...)
         search_input_recommender_args.CONSTRUCTOR_POSITIONAL_ARGS = [URM_train]
@@ -80,4 +80,3 @@ for dataset_name in dataset_list:
             sample_seed=0,
         )
 
-        parameterSearch.write_metadata_to_csv()

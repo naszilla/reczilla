@@ -24,6 +24,8 @@ All recommender take as first argument in the constructor the URM, content-based
 - **User Rating Matrix (URM)** of shape |n users|x|n items| containing the user-item interactions, either implicit (1-0) or explicit (any value)
 - **Item Content Matrix (ICM)** of shape |n items|x|n item features| containing the item features, again with any numerical value
 - **User Content Matrix (UCM)** of shape |n users|x|n users features| containing the item features, again with any numerical value
+- all matrices appear to be in CSR format (https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html)
+- assuming missing values are 0s
 
 ### Algorithm Parameters
 
