@@ -9,5 +9,7 @@ from Data_manager.Recipes.RecipesReader import *
 from Data_manager.Goodreads.GoodreadsReader import *
 from Data_manager.Flixster.FlixsterReader import *
 from Data_manager.CiaoDVD.CiaoDVDReader import *
-data_reader = CiaoDVDReader()
+from Data_manager.Anime.AnimeReader import *
+from Data_manager.LastFM.LastFMReader import *
+data_reader = LastFMReader()
 dataset = data_reader.load_data()

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+TODO: the URL is to an unpublished dataset on Duncan's figshare site. change to public after checking licenses
 
 @author: Sujay Khandagale
 """
 
-import shutil, os
-from io import StringIO
+import os, zipfile, shutil
 import pandas as pd
 from Data_manager.Dataset import Dataset
 from Data_manager.DataReader import DataReader
 from Data_manager.DataReader_utils import download_from_URL, load_CSV_into_SparseBuilder
 
 
-class GoodreadsReader(DataReader):
+class AnimeReader(DataReader):
 
-    DATASET_URL = "https://figshare.com/ndownloader/files/34038896?private_link=2fa4daf07bcda933fce8"
-    DATASET_SUBFOLDER = "Goodreads/"
+    DATASET_URL = "https://figshare.com/ndownloader/files/34086440?private_link=5dd2a06011f6bb6aca88"
+    DATASET_SUBFOLDER = "Anime/"
     AVAILABLE_ICM = []
     DATASET_SPECIFIC_MAPPER = []
 
@@ -33,31 +33,23 @@ class GoodreadsReader(DataReader):
 
         self._print("Loading original data")
 
-        csv_path =  self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
+        zipFile_path =  self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
 
         try:
 
-            df = pd.read_csv(csv_path + "goodreads_interactions.csv")
+            dataFile = zipfile.ZipFile(zipFile_path + "Anime.zip")
 
-        except:
+        except (FileNotFoundError, zipfile.BadZipFile):
 
-            print("Goodreads: Unable to find data csv file. Downloading...")
+            print("Anime: Unable to fild data zip file. Downloading...")
 
-            if not os.path.exists(csv_path):
-                os.makedirs(csv_path)
+            download_from_URL(self.DATASET_URL, zipFile_path, "Anime.zip")
 
-            download_from_URL(self.DATASET_URL, csv_path, "goodreads_interactions.csv")
-            df = pd.read_csv(csv_path + "goodreads_interactions.csv")
+            dataFile = zipfile.ZipFile(zipFile_path + "Anime.zip")
 
-        df = df[['user_id', 'book_id', 'rating']]
-        df.columns = ['user_id', 'item_id', 'rating']
+        URM_path = dataFile.extract("rating.csv", path=zipFile_path + "decompressed/")
 
-        URM_path = StringIO()
-
-        df.to_csv(URM_path, index=False)
-        URM_path.seek(0)
-
-        URM_all, item_original_ID_to_index, user_original_ID_to_index = load_CSV_into_SparseBuilder(URM_path, header=True, separator=",", timestamp=False, remove_duplicates=True)
+        URM_all, item_original_ID_to_index, user_original_ID_to_index = load_CSV_into_SparseBuilder(URM_path, separator=",", header=True, remove_duplicates=True)
 
         loaded_URM_dict = {"URM_all": URM_all}
 
@@ -75,7 +67,7 @@ class GoodreadsReader(DataReader):
 
         self._print("cleaning temporary files")
 
-        shutil.rmtree(csv_path, ignore_errors=True)
+        shutil.rmtree(zipFile_path + "decompressed", ignore_errors=True)
 
         self._print("loading complete")
 

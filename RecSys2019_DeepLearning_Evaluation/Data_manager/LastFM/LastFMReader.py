@@ -3,20 +3,20 @@
 """
 
 @author: Sujay Khandagale
+
+TODO: should we normalize the number of listens?
 """
 
-import shutil, os
-from io import StringIO
-import pandas as pd
+import zipfile, shutil
 from Data_manager.Dataset import Dataset
 from Data_manager.DataReader import DataReader
 from Data_manager.DataReader_utils import download_from_URL, load_CSV_into_SparseBuilder
 
 
-class GoodreadsReader(DataReader):
+class LastFMReader(DataReader):
 
-    DATASET_URL = "https://figshare.com/ndownloader/files/34038896?private_link=2fa4daf07bcda933fce8"
-    DATASET_SUBFOLDER = "Goodreads/"
+    DATASET_URL = "https://files.grouplens.org/datasets/hetrec2011/hetrec2011-lastfm-2k.zip"
+    DATASET_SUBFOLDER = "LastFM/"
     AVAILABLE_ICM = []
     DATASET_SPECIFIC_MAPPER = []
 
@@ -33,31 +33,24 @@ class GoodreadsReader(DataReader):
 
         self._print("Loading original data")
 
-        csv_path =  self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
+        zipFile_path =  self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
 
         try:
 
-            df = pd.read_csv(csv_path + "goodreads_interactions.csv")
+            dataFile = zipfile.ZipFile(zipFile_path + "hetrec2011-lastfm-2k.zip")
 
-        except:
+        except (FileNotFoundError, zipfile.BadZipFile):
 
-            print("Goodreads: Unable to find data csv file. Downloading...")
+            print("LastFM: Unable to fild data zip file. Downloading...")
 
-            if not os.path.exists(csv_path):
-                os.makedirs(csv_path)
+            download_from_URL(self.DATASET_URL, zipFile_path, "hetrec2011-lastfm-2k.zip")
 
-            download_from_URL(self.DATASET_URL, csv_path, "goodreads_interactions.csv")
-            df = pd.read_csv(csv_path + "goodreads_interactions.csv")
+            dataFile = zipfile.ZipFile(zipFile_path + "hetrec2011-lastfm-2k.zip")
 
-        df = df[['user_id', 'book_id', 'rating']]
-        df.columns = ['user_id', 'item_id', 'rating']
 
-        URM_path = StringIO()
+        URM_path = dataFile.extract("user_artists.dat", path=zipFile_path + "decompressed/")
 
-        df.to_csv(URM_path, index=False)
-        URM_path.seek(0)
-
-        URM_all, item_original_ID_to_index, user_original_ID_to_index = load_CSV_into_SparseBuilder(URM_path, header=True, separator=",", timestamp=False, remove_duplicates=True)
+        URM_all, item_original_ID_to_index, user_original_ID_to_index = load_CSV_into_SparseBuilder(URM_path, separator="\t", header=True, remove_duplicates=True)
 
         loaded_URM_dict = {"URM_all": URM_all}
 
@@ -75,7 +68,7 @@ class GoodreadsReader(DataReader):
 
         self._print("cleaning temporary files")
 
-        shutil.rmtree(csv_path, ignore_errors=True)
+        shutil.rmtree(zipFile_path + "decompressed", ignore_errors=True)
 
         self._print("loading complete")
 
