@@ -9,6 +9,41 @@ from Base.BaseRecommender import BaseRecommender
 import surprise
 from surprise.trainset import Trainset
 
+
+class PatchedTrainset(Trainset):
+    """
+    Subclass of trainset to fix apparent bug in knows_user and knows_item in Surprise.
+    """
+    def knows_user(self, uid):
+        """Indicate if the user is part of the trainset.
+
+        A user is part of the trainset if the user has at least one rating.
+
+        Args:
+            uid(int): The (inner) user id. See :ref:`this
+                note<raw_inner_note>`.
+        Returns:
+            ``True`` if user is part of the trainset, else ``False``.
+        """
+
+        #return uid in self.ur
+        return uid in self.ur and len(self.ur[uid]) > 0
+
+    def knows_item(self, iid):
+        """Indicate if the item is part of the trainset.
+
+        An item is part of the trainset if the item was rated at least once.
+
+        Args:
+            iid(int): The (inner) item id. See :ref:`this
+                note<raw_inner_note>`.
+        Returns:
+            ``True`` if item is part of the trainset, else ``False``.
+        """
+
+        #return iid in self.ir
+        return iid in self.ir and len(self.ir[iid]) > 0
+
 def URM_to_surprise_trainset(URM_train):
     """
     Convert dataset representation to surprise representation.
@@ -25,10 +60,15 @@ def URM_to_surprise_trainset(URM_train):
     ur = defaultdict(list)
     ir = defaultdict(list)
     for user_id, item_id, rating in zip(rows, cols, URM_train.data):
+        if not user_id in ur.keys():
+            ur[user_id] = []
+        if not item_id in ir.keys():
+            ir[item_id] = []
         ur[user_id].append((item_id, rating))
         ir[item_id].append((user_id, rating))
 
-    return Trainset(ur, ir, n_users, n_items, n_ratings, rating_scale, raw2inner_id_users, raw2inner_id_items)
+    #return Trainset(ur, ir, n_users, n_items, n_ratings, rating_scale, raw2inner_id_users, raw2inner_id_items)
+    return PatchedTrainset(ur, ir, n_users, n_items, n_ratings, rating_scale, raw2inner_id_users, raw2inner_id_items)
 
 
 class SurpriseAlgoWrapper(BaseRecommender):
@@ -36,9 +76,9 @@ class SurpriseAlgoWrapper(BaseRecommender):
     Generic wrapper for a SurpriseAlgorithms algorithm. Enables use of a SurpriseAlgorithms algorithm using the BaseRecommender class
     template.
     """
-    def __init__(self, URM_train, verbose = True):
-        super(SurpriseAlgoWrapper, self).__init__(URM_train, verbose = verbose)
 
+    def __init__(self, URM_train, verbose=True):
+        super(SurpriseAlgoWrapper, self).__init__(URM_train, verbose=verbose)
 
     def fit(self, **alg_kwargs):
         """
@@ -54,7 +94,7 @@ class SurpriseAlgoWrapper(BaseRecommender):
         # Fit model
         self.surprise_model.fit(trainset)
 
-    def _compute_item_score(self, user_id_array, items_to_compute = None, warn_nonparallel=False):
+    def _compute_item_score(self, user_id_array, items_to_compute=None, warn_nonparallel=False):
         """
         Compute an array of item scores. Note that SurpriseAlgorithms algorithms do not provide predictions in a parallelized
         manner. This function provides a generic wrapper around the surprise estimate() method into the
@@ -77,12 +117,67 @@ class SurpriseAlgoWrapper(BaseRecommender):
 
         return item_scores
 
-    def save_model(self, folder_path, file_name = None):
+    def save_model(self, folder_path, file_name=None):
         raise NotImplementedError("SurpriseAlgoWrapper: save_model not implemented")
+
 
 class CoClustering(SurpriseAlgoWrapper):
     """Wrapper around surprise.CoClustering"""
     SURPRISE_CLASS = surprise.CoClustering
+
+    def __init__(self, URM_train, verbose=True):
+        super(CoClustering, self).__init__(URM_train, verbose=verbose)
+
+        self.unk_items = np.argwhere(np.array(URM_train.sum(axis=0)).squeeze() == 0).squeeze()
+        self.unk_users = np.argwhere(np.array(URM_train.sum(axis=1)).squeeze() == 0).squeeze()
+
+    def _compute_item_score(self, user_id_array, items_to_compute=None):
+        """
+        Provides a parallelized method for co-clustering. Note that there is an apparent bug in the original
+        implementation in its handling of unknown items and scores, so the predictions for those cases will be
+        inconsistent.
+
+        :param user_id_array:       array containing the user indices whose recommendations need to be computed
+        :param items_to_compute:    array containing the items whose scores are to be computed.
+                                        If None, all items are computed, otherwise discarded items will have as score -np.inf
+        :return:                    array (len(user_id_array), n_items) with the score.
+        """
+        item_id_array = np.array(range(self.n_items)) if not items_to_compute else items_to_compute
+
+        uc = self.surprise_model.cltr_u[user_id_array]
+        ic = self.surprise_model.cltr_i[item_id_array]
+
+        item_scores = (self.surprise_model.avg_cocltr[np.ix_(uc, ic)] +
+                       np.expand_dims(
+                           self.surprise_model.user_mean[user_id_array] -
+                           self.surprise_model.avg_cltr_u[uc],
+                           axis=-1) +
+                       np.expand_dims(
+                           self.surprise_model.item_mean[item_id_array] -
+                           self.surprise_model.avg_cltr_i[ic],
+                           axis=0))
+
+        unk_user_mask = np.in1d(user_id_array, self.unk_users)
+        unk_item_mask = np.in1d(item_id_array, self.unk_items)
+
+        #item_scores[unk_user_mask, :] = np.expand_dims(self.surprise_model.cltr_i[item_id_array], axis=0)
+        #item_scores[:, unk_item_mask] = np.expand_dims(self.surprise_model.cltr_u[user_id_array], axis=1)
+        item_scores[unk_user_mask, :] = np.expand_dims(self.surprise_model.item_mean[item_id_array], axis=0)
+        item_scores[:, unk_item_mask] = np.expand_dims(self.surprise_model.user_mean[user_id_array], axis=1)
+
+        item_scores[np.ix_(unk_user_mask, unk_item_mask)] = self.surprise_model.trainset.global_mean
+
+        # check_scores = np.zeros((len(user_id_array), len(item_id_array)))
+        # for user_idx, user in enumerate(user_id_array):
+        #     for item_idx, item in enumerate(item_id_array):
+        #         check_scores[user_idx, item_idx] = self.surprise_model.estimate(user, item)
+        #
+        # diff_mat = np.abs(item_scores-check_scores)
+        # print(np.max(diff_mat))
+        # print(np.max(diff_mat[:, ~unk_item_mask]))
+
+        return item_scores
+
 
 class SlopeOne(SurpriseAlgoWrapper):
     """Wrapper around surprise.SlopeOne"""
