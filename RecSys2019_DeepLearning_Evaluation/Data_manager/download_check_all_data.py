@@ -22,7 +22,7 @@ def run(args):
 
         try:
             # attempt to load the dataset, unless it is already downloaded
-            data_reader = reader_class(reload_from_original_data="as-needed")
+            data_reader = reader_class(reload_from_original_data="as-needed", verbose=False)
             loaded_dataset = data_reader.load_data(save_folder_path=data_folder)
 
             # make sure that URM_all is available and has positive dimensions
@@ -35,9 +35,12 @@ def run(args):
             del loaded_dataset
             del URM_all
 
+            print(f"SUCCESS - {reader_class.__name__}: read dataset")
         except Exception as e:
-            print(f"exception raised while loading dataset {reader_class.__name__}. skipping this dataset")
+
+            print(f"FAILURE - {reader_class.__name__}: exception raised while loading dataset. skipping this dataset")
             print(f"EXCEPTION: {e}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
