@@ -12,9 +12,24 @@ Some of the algorithms require compiling Cython files. Compile these using:
 python run_compile_all_cython.py
 ```
 
-# General Info
+# Unittests & New Algs/Datasets
 
-This code is not perfectly documented, so here is some general info I've gathered from the code and READMEs.
+## Datasets
+
+We keep track of all datasets using file `RecSys2019_DeepLearning_Evaluation/dataset_handler.py`. All datasets are stored in the list `DATASET_READER_LIST`. Datasets should be retrieved by name, using function `dataset_handler.dataset_handler()`.
+
+**To add a new dataset**, do the following:
+1. Add an import statement for the datareader to file `dataset_handler.py`. The datareader must be a subclass of `Data_manager.DataReader`.
+2. Add the datareader object to the list `dataset_handler.DATASET_READER_LIST`.
+
+## Algorithms
+
+We keep track of all algorithms using the file `RecSys2019_DeepLearning_Evaluation/algorithm_handler.py`. The algorithm handler is a bit more complicated than the dataset handler, because we need to specify parameter spaces and early stopping params for each algorithm. (**NOTE:** to clean this up, we can make parameter spaces attributes of the algorithm classes.)
+
+
+# Codebase
+
+The codebase we are building on is not perfectly documented, so here is some general info I've gathered from the code and READMEs.
 
 ## Algorithms
 
@@ -77,15 +92,14 @@ This script contains a single function `algorithm_handler()`, which takes an alg
 
 The set of algorithms that can be passed to `algorithm_handler()` are in `ALGORITHM_NAME_LIST`.
 
-## `test.py`
 
-This is a simple driver script, currently just for debugging.
 
 # TODO
 
 - add DL algs to algorithm_handler
 - add random seed to data splitter (in files `Data_manager.split_functions`, and places where this code is used.)
+- save train metrics to metadata for each sample, rather than for only one. this will be helpful for checking overfitting
 - write some code to extract features using this code's API. would be good to use the existing dataloader as an interface (e.g. dataSplitter.load_data). may be good to write a new class for this ("Dataset"?)
 - there are some datasets in subfolders (e.g. `RecSys2019_DeepLearning_Evaluation/Conferences/IJCAI/DMF_our_interface/AmazonMusicReader/AmazonMusicReader.py`). check whether we want to include any of these in our data handler.
 - (maybe) prevent dataIO.save_data() to overwrite certain files. we can also just check this manually. since metadata is rewritten during each call to _objective_function(), it might save time to prevent this rewriting
-- save train metrics to metadata for each sample, rather than for only one. this will be helpful for checking overfitting 
+- (maybe) make hyperparameter spaces class arttributes for each algorithm, rather than specifying them separately in `algorithm_handler.py`
