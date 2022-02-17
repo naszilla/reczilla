@@ -20,16 +20,24 @@ def run(args):
             f"attempting to download dataset: {reader_class.__name__} to directory {data_folder}"
         )
 
-        # attempt to load the dataset, unless it is already downloaded
-        data_reader = reader_class(reload_from_original_data="as-needed")
-        loaded_dataset = data_reader.load_data(save_folder_path=data_folder)
+        try:
+            # attempt to load the dataset, unless it is already downloaded
+            data_reader = reader_class(reload_from_original_data="as-needed")
+            loaded_dataset = data_reader.load_data(save_folder_path=data_folder)
 
-    # make sure that URM_all is available and has positive dimensions
-    URM_all = loaded_dataset.get_URM_all()
+            # make sure that URM_all is available and has positive dimensions
+            URM_all = loaded_dataset.get_URM_all()
 
-    assert URM_all.shape[0] > 0, f"URM_all does not have nonzero dimension (0)"
-    assert URM_all.shape[1] > 0, f"URM_all does not have nonzero dimension (1)"
+            assert URM_all.shape[0] > 0, f"URM_all does not have nonzero dimension (0)"
+            assert URM_all.shape[1] > 0, f"URM_all does not have nonzero dimension (1)"
 
+            del data_reader
+            del loaded_dataset
+            del URM_all
+
+        except Exception as e:
+            print(f"exception raised while loading dataset {reader_class.__name__}. skipping this dataset")
+            print(f"EXCEPTION: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
