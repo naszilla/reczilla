@@ -80,19 +80,18 @@ class SurpriseAlgoWrapper(BaseRecommender):
     def __init__(self, URM_train, verbose=True):
         super(SurpriseAlgoWrapper, self).__init__(URM_train, verbose=verbose)
 
+        self.trainset = URM_to_surprise_trainset(self.URM_train)
+
     def fit(self, **alg_kwargs):
         """
         :param alg_kwargs: Keyword args to be used to initialize SurpriseAlgorithms algorithm
         :return: None
         """
-
-        trainset = URM_to_surprise_trainset(self.URM_train)
-
         # Initialize surprise algorithm class
         self.surprise_model = self.SURPRISE_CLASS(**alg_kwargs)
 
         # Fit model
-        self.surprise_model.fit(trainset)
+        self.surprise_model.fit(self.trainset)
 
     def _compute_item_score(self, user_id_array, items_to_compute=None, warn_nonparallel=False):
         """
@@ -182,6 +181,65 @@ class CoClustering(SurpriseAlgoWrapper):
 class SlopeOne(SurpriseAlgoWrapper):
     """Wrapper around surprise.SlopeOne"""
     SURPRISE_CLASS = surprise.SlopeOne
+
+    def __init__(self, URM_train, verbose=True):
+        super(SlopeOne, self).__init__(URM_train, verbose=verbose)
+
+        self.unk_items = np.argwhere(np.array(URM_train.sum(axis=0)).squeeze() == 0).squeeze()
+        self.unk_users = np.argwhere(np.array(URM_train.sum(axis=1)).squeeze() == 0).squeeze()
+
+        # From CoClustering implementation
+        user_mean = np.zeros(self.trainset.n_users, np.double)
+        item_mean = np.zeros(self.trainset.n_items, np.double)
+        for u in self.trainset.all_users():
+            user_mean[u] = np.mean([r for (_, r) in self.trainset.ur[u]])
+        for i in self.trainset.all_items():
+            item_mean[i] = np.mean([r for (_, r) in self.trainset.ir[i]])
+
+        self.item_mean = item_mean
+        self.user_mean = user_mean
+
+
+    def _compute_item_score(self, user_id_array, items_to_compute=None):
+        """
+        Compute an array of item scores. Note that SurpriseAlgorithms algorithms do not provide predictions in a parallelized
+        manner. This function provides a generic wrapper around the surprise estimate() method into the
+        _compute_item_score from BaseRecommender. If faster execution is required, implement a parallelized method for
+        the chosen SurpriseAlgorithms algorithm and override this method.
+
+        :param user_id_array:       array containing the user indices whose recommendations need to be computed
+        :param items_to_compute:    array containing the items whose scores are to be computed.
+                                        If None, all items are computed, otherwise discarded items will have as score -np.inf
+        :return:                    array (len(user_id_array), n_items) with the score.
+        """
+        item_id_array = range(self.n_items) if not items_to_compute else items_to_compute
+        unk_user_mask = np.in1d(user_id_array, self.unk_users)
+        unk_item_mask = np.in1d(item_id_array, self.unk_items)
+
+        freq_mask = self.surprise_model.freq[item_id_array, :] > 0
+        has_rating_mask = self.URM_train[user_id_array, :].astype('bool')
+        masked_devs = (freq_mask *
+                       np.nan_to_num(self.surprise_model.dev[item_id_array, :], posinf=np.inf, neginf=-np.inf)).T
+        sums = has_rating_mask @ masked_devs
+        counts = (has_rating_mask @ freq_mask.T.astype('double'))
+        item_scores = (np.nan_to_num(sums / counts, posinf=np.inf, neginf=-np.inf)
+                       + np.expand_dims(self.user_mean[user_id_array], axis=-1))
+
+        # check_scores = np.zeros(item_scores.shape)
+        # for user_idx, user in enumerate(user_id_array):
+        #     for item_idx, item in enumerate(item_id_array):
+        #         if not (unk_user_mask[user_idx] or unk_item_mask[item_idx]):
+        #             check_scores[user_idx, item_idx] = self.surprise_model.estimate(user, item)
+
+        # Fill in missing users and items
+        item_scores[unk_user_mask, :] = np.expand_dims(self.item_mean[item_id_array], axis=0)
+        item_scores[:, unk_item_mask] = np.expand_dims(self.user_mean[user_id_array], axis=1)
+        item_scores[np.ix_(unk_user_mask, unk_item_mask)] = self.surprise_model.trainset.global_mean
+
+        # print(np.max((item_scores - check_scores)[:, ~unk_item_mask]))
+        # print(np.sum(np.isnan(item_scores)))
+
+        return item_scores
 
 # Can't deal with missing items/users (apparent limitation in original implementation)
 # class SurpriseNMF(SurpriseAlgoWrapper):
