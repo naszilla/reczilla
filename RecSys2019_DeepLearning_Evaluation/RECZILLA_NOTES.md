@@ -26,6 +26,11 @@ We keep track of all datasets using file `RecSys2019_DeepLearning_Evaluation/dat
 
 We keep track of all algorithms using the file `RecSys2019_DeepLearning_Evaluation/algorithm_handler.py`. The algorithm handler is a bit more complicated than the dataset handler, because we need to specify parameter spaces and early stopping params for each algorithm. (**NOTE:** to clean this up, we can make parameter spaces attributes of the algorithm classes.)
 
+**To add a new algorithm**, do the following:
+1. Add an import statement for the algorithm to the file `algorithm_handler.py`. The algorithm must be a subclass of `Base.BaseRecommender` (or a subclass of one its many subclasses, such as `BaseSimilarityMatrixRecommender`).
+2. Add the algorithm class name to list `algorithm_handler.ALGORITHM_NAME_LIST`.
+3. To add a hyperparameter space, add an `elif` clause to function `algorithm_handler.algorithm_handler`. Define the hyperparameter space in dictionary `space`, and add any kwargs that should be passed to the algorithm's `fit()` function to dict `fit_keyword_args`.
+4. Test that the algorithm works by running `tests.algorithm_test`. This will test all algorithms listed in `algorithm_handler.ALGORITHM_NAME_LIST`.
 
 # Codebase
 
