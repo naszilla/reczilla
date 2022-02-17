@@ -56,10 +56,14 @@ class DataReader(object):
 
     def __init__(self,
                  reload_from_original_data="as-needed",  # {"always", "never", "as-needed"}
+                 verbose=True,
                  ):
         super(DataReader, self).__init__()
 
         assert reload_from_original_data in ["as-needed", "always", "never"], f"invalid value of reload_from_original_data: {reload_from_original_data}"
+        assert verbose in [True, False], "verbose parameter must be True or False"
+
+        self.verbose = verbose
 
         self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_SPLIT_SUBFOLDER)
         self.DATASET_OFFLINE_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_OFFLINE_SUBFOLDER)
@@ -73,7 +77,8 @@ class DataReader(object):
             self._print("reload_from_original_data is 'as-needed', will only reload original data if it cannot be found.")
 
     def _print(self, message):
-        print("{}: {}".format(self._get_dataset_name(), message))
+        if self.verbose:
+            print("{}: {}".format(self._get_dataset_name(), message))
 
     def _get_dataset_name(self):
         return self._get_dataset_name_root().replace("/", "_")[:-1]
