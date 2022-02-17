@@ -1,10 +1,9 @@
 from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
-from Data_manager.DataSplitter_k_fold_random import DataSplitter_k_fold_random
 from Base.Evaluation.Evaluator import EvaluatorHoldout
 
 from ParameterTuning.RandomSearch import RandomSearch
 
-from ParameterTuning.algorithm_handler import algorithm_handler
+from algorithm_handler import algorithm_handler
 from dataset_handler import dataset_handler
 
 

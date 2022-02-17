@@ -8,9 +8,7 @@ import numpy as np
 import scipy.sparse
 
 from ParameterTuning.RandomSearch import RandomSearch
-from ParameterTuning.algorithm_handler import algorithm_handler, ALGORITHM_NAME_LIST
-from dataset_handler import dataset_handler
-from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
+from algorithm_handler import algorithm_handler, ALGORITHM_NAME_LIST
 from Base.Evaluation.Evaluator import EvaluatorHoldout
 
 
