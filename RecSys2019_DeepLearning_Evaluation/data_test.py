@@ -11,5 +11,6 @@ from Data_manager.Flixster.FlixsterReader import *
 from Data_manager.CiaoDVD.CiaoDVDReader import *
 from Data_manager.Anime.AnimeReader import *
 from Data_manager.LastFM.LastFMReader import *
-data_reader = LastFMReader()
+from Data_manager.GoogleLocalReviews.GoogleLocalReviewsReader import *
+data_reader = GoogleLocalReviewsReader()
 dataset = data_reader.load_data()

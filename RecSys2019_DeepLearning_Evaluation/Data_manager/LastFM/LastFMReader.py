@@ -33,7 +33,7 @@ class LastFMReader(DataReader):
 
         self._print("Loading original data")
 
-        zipFile_path =  self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
+        zipFile_path = self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
 
         try:
 
@@ -46,7 +46,6 @@ class LastFMReader(DataReader):
             download_from_URL(self.DATASET_URL, zipFile_path, "hetrec2011-lastfm-2k.zip")
 
             dataFile = zipfile.ZipFile(zipFile_path + "hetrec2011-lastfm-2k.zip")
-
 
         URM_path = dataFile.extract("user_artists.dat", path=zipFile_path + "decompressed/")
 
@@ -64,7 +63,6 @@ class LastFMReader(DataReader):
                                  item_original_ID_to_index= item_original_ID_to_index,
                                  is_implicit = self.IS_IMPLICIT,
                                  )
-
 
         self._print("cleaning temporary files")
 
