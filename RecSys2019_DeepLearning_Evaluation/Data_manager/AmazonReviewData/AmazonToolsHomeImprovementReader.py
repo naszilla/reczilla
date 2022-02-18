@@ -5,6 +5,8 @@
 @author: Sujay Khandagale
 """
 
+
+
 from Data_manager.AmazonReviewData._AmazonReviewDataReader import _AmazonReviewDataReader
 
 
@@ -37,14 +39,13 @@ class AmazonToolsHomeImprovementReader(_AmazonReviewDataReader):
 
 
         URM_path = self._get_URM_review_path(data_folder = dataset_split_folder,
-                                             file_name = "ratings_Tools_and_Home_Improvement.csv",
-                                             file_url = self.DATASET_URL_RATING)
+                                            file_name = "ratings_Tools_and_Home_Improvement.csv",
+                                            file_url = self.DATASET_URL_RATING)
 
 
         loaded_dataset = self._load_from_original_file_all_amazon_datasets(URM_path,
-                                                                           metadata_path = metadata_path,
-                                                                           reviews_path = None)
+                                                                        metadata_path = metadata_path,
+                                                                        reviews_path = None)
 
         return loaded_dataset
-
-
+    

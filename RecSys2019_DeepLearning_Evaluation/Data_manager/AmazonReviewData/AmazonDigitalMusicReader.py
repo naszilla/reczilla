@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on 10/01/18
 
-@author: Maurizio Ferrari Dacrema
+@author: Sujay Khandagale
 """
 
 
@@ -11,13 +10,12 @@ Created on 10/01/18
 from Data_manager.AmazonReviewData._AmazonReviewDataReader import _AmazonReviewDataReader
 
 
-
-class AmazonMusicReader(_AmazonReviewDataReader):
+class AmazonDigitalMusicReader(_AmazonReviewDataReader):
 
     DATASET_URL_RATING = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Digital_Music.csv"
     DATASET_URL_METADATA = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Digital_Music.json.gz"
 
-    DATASET_SUBFOLDER = "AmazonReviewData/AmazonMusic/"
+    DATASET_SUBFOLDER = "AmazonReviewData/AmazonDigitalMusic/"
     AVAILABLE_ICM = ["ICM_metadata"]
 
 
@@ -41,14 +39,13 @@ class AmazonMusicReader(_AmazonReviewDataReader):
 
 
         URM_path = self._get_URM_review_path(data_folder = dataset_split_folder,
-                                             file_name = "ratings_Digital_Music.csv",
-                                             file_url = self.DATASET_URL_RATING)
+                                            file_name = "ratings_Digital_Music.csv",
+                                            file_url = self.DATASET_URL_RATING)
 
 
         loaded_dataset = self._load_from_original_file_all_amazon_datasets(URM_path,
-                                                                           metadata_path = metadata_path,
-                                                                           reviews_path = None)
+                                                                        metadata_path = metadata_path,
+                                                                        reviews_path = None)
 
         return loaded_dataset
-
-
+    

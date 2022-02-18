@@ -10,12 +10,12 @@
 from Data_manager.AmazonReviewData._AmazonReviewDataReader import _AmazonReviewDataReader
 
 
-class AmazonSoftwareReader(_AmazonReviewDataReader):
+class AmazonLatinMusicReader(_AmazonReviewDataReader):
 
-    DATASET_URL_RATING = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Software.csv"
-    DATASET_URL_METADATA = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Software.json.gz"
+    DATASET_URL_RATING = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Latin_Music.csv"
+    DATASET_URL_METADATA = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Latin_Music.json.gz"
 
-    DATASET_SUBFOLDER = "AmazonReviewData/AmazonSoftware/"
+    DATASET_SUBFOLDER = "AmazonReviewData/AmazonLatinMusic/"
     AVAILABLE_ICM = ["ICM_metadata"]
 
 
@@ -33,13 +33,13 @@ class AmazonSoftwareReader(_AmazonReviewDataReader):
 
 
         metadata_path = self._get_ICM_metadata_path(data_folder = dataset_split_folder,
-                                                    compressed_file_name = "meta_Software.json.gz",
-                                                    decompressed_file_name = "meta_Software.json",
+                                                    compressed_file_name = "meta_Latin_Music.json.gz",
+                                                    decompressed_file_name = "meta_Latin_Music.json",
                                                     file_url = self.DATASET_URL_METADATA)
 
 
         URM_path = self._get_URM_review_path(data_folder = dataset_split_folder,
-                                            file_name = "ratings_Software.csv",
+                                            file_name = "ratings_Latin_Music.csv",
                                             file_url = self.DATASET_URL_RATING)
 
 

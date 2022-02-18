@@ -10,12 +10,12 @@
 from Data_manager.AmazonReviewData._AmazonReviewDataReader import _AmazonReviewDataReader
 
 
-class AmazonSoftwareReader(_AmazonReviewDataReader):
+class AmazonAmazonFireTVReader(_AmazonReviewDataReader):
 
-    DATASET_URL_RATING = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Software.csv"
-    DATASET_URL_METADATA = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Software.json.gz"
+    DATASET_URL_RATING = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Amazon_Fire_TV.csv"
+    DATASET_URL_METADATA = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Amazon_Fire_TV.json.gz"
 
-    DATASET_SUBFOLDER = "AmazonReviewData/AmazonSoftware/"
+    DATASET_SUBFOLDER = "AmazonReviewData/AmazonAmazonFireTV/"
     AVAILABLE_ICM = ["ICM_metadata"]
 
 
@@ -33,13 +33,13 @@ class AmazonSoftwareReader(_AmazonReviewDataReader):
 
 
         metadata_path = self._get_ICM_metadata_path(data_folder = dataset_split_folder,
-                                                    compressed_file_name = "meta_Software.json.gz",
-                                                    decompressed_file_name = "meta_Software.json",
+                                                    compressed_file_name = "meta_Amazon_Fire_TV.json.gz",
+                                                    decompressed_file_name = "meta_Amazon_Fire_TV.json",
                                                     file_url = self.DATASET_URL_METADATA)
 
 
         URM_path = self._get_URM_review_path(data_folder = dataset_split_folder,
-                                            file_name = "ratings_Software.csv",
+                                            file_name = "ratings_Amazon_Fire_TV.csv",
                                             file_url = self.DATASET_URL_RATING)
 
 
