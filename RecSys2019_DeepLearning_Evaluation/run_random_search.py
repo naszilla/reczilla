@@ -31,7 +31,7 @@ def run(args):
 
     # initialize data reader
     data_reader = dataset_handler(args.datareader_name)(
-        reload_from_original_data="never", verbose=True
+        reload_from_original_data="as-needed", verbose=True
     )
     if args.original_data_dir != "":
         # we only need to laod the data to create a new split
