@@ -28,10 +28,6 @@ class FrappeReader(DataReader):
     DATASET_SPECIFIC_MAPPER = []
 
 
-    def __init__(self):
-        super(FrappeReader, self).__init__()
-
-
     def _get_dataset_name_root(self):
         return self.DATASET_SUBFOLDER
 

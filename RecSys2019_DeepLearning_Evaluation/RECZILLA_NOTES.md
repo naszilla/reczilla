@@ -88,7 +88,7 @@ There appear to be two evaluators defined:
 
 This class is a random search over a fixed number of hyperparameter samples. All metrics & hyperparameters are saved to the metadata. But we will write a method to save these params/metrics separately.
 
-## `ParameterTuning.algorithm_handler`
+## `algorithm_handler`
 
 This script contains a single function `algorithm_handler()`, which takes an algorithm name as input and returns:
 - the algorithm class

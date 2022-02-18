@@ -84,7 +84,7 @@ class RandomSearch(SearchAbstractClass):
         evaluate_on_test = "all"  # always evaluate on test dataset
         recommender_input_args_last_test = None  # not needed
         save_metadata = (
-            True  # incrementally save metadata to file. may be useful, not necessary
+            True  # incrementally save metadata to file. this is how we record results
         )
 
         self._set_search_attributes(
