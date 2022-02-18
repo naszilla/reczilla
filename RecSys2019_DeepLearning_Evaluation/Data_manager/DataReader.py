@@ -186,3 +186,8 @@ class DataReader(object):
         loaded_dataset.print_statistics()
         return loaded_dataset
 
+
+class GenericDataReader(DataReader):
+
+    def _get_dataset_name(self):
+        return self.__class__.__name__
