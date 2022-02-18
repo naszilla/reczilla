@@ -49,6 +49,9 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import (
     MatrixFactorization_AsySVD_Cython,
 )
 
+# Surprise Algorithms
+from SurpriseAlgorithms.Wrappers import CoClustering, SlopeOne
+
 ######################################################################
 ##########                                                  ##########
 ##########              NEURAL NETWORK METHODS              ##########
@@ -111,6 +114,8 @@ ALGORITHM_NAME_LIST = [
     "DELF_EF_RecommenderWrapper",  # see run_IJCAI_17_DELF.py
     # "ConvNCF_RecommenderWrapper",  # see run_IJCAI_18_ConvNCF.py  # TODO: there are some bugs in this implementation.
     "MFBPR_Wrapper",  # see run_IJCAI_18_ConvNCF_CNN_embedding.py
+    "CoClustering",
+    "SlopeOne"
 ]
 
 BASE_KNN_ARGS = {
@@ -431,6 +436,22 @@ def algorithm_handler(algorithm_name):
             fit_keyword_args["batch_size"] = 512
             fit_keyword_args["epochs"] = 500
             fit_keyword_args["path_partial_results"] = "./TMP/"  # TODO: we shouldn't be defining paths here.
+
+        elif alg is CoClustering:
+            # TODO: Verify these parameter values make sense
+            space = {
+                "n_cltr_u": Integer(3, 20),
+                "n_cltr_i": Integer(3, 20),
+            }
+
+            fit_keyword_args.update({
+                "n_epochs": 20,
+                "random_state": None
+            })
+
+        elif alg is SlopeOne:
+            space = {}
+            max_points = 1
 
         else:
             raise Exception(f"algorithm_handler can't handle {algorithm_name}")

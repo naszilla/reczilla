@@ -219,10 +219,14 @@ class SlopeOne(SurpriseAlgoWrapper):
         freq_mask = self.surprise_model.freq[item_id_array, :] > 0
         has_rating_mask = self.URM_train[user_id_array, :].astype('bool')
         masked_devs = (freq_mask *
-                       np.nan_to_num(self.surprise_model.dev[item_id_array, :], posinf=np.inf, neginf=-np.inf)).T
+                       np.nan_to_num(self.surprise_model.dev[item_id_array, :])).T
+        # masked_devs = (freq_mask *
+        #                np.nan_to_num(self.surprise_model.dev[item_id_array, :], posinf=np.inf, neginf=-np.inf)).T
         sums = has_rating_mask @ masked_devs
         counts = (has_rating_mask @ freq_mask.T.astype('double'))
-        item_scores = (np.nan_to_num(sums / counts, posinf=np.inf, neginf=-np.inf)
+        # item_scores = (np.nan_to_num(sums / counts, posinf=np.inf, neginf=-np.inf)
+        #                + np.expand_dims(self.user_mean[user_id_array], axis=-1))
+        item_scores = (np.nan_to_num(sums / counts)
                        + np.expand_dims(self.user_mean[user_id_array], axis=-1))
 
         # check_scores = np.zeros(item_scores.shape)
