@@ -82,6 +82,14 @@ There appear to be two evaluators defined:
 `DataSplitter` subclasses:
 - `DataSplitter_leave_k_out`: create a test set that contains k holdout interactions for each user. the validation set contains k*2 interactions (I think..), and the train set contains all remaining interactions.
 
+### Storing Original Data
+
+Original datasets are downloaded and stored to `./Data_manager_split_datasets`. This path is hard-coded as attribute `DATASET_SPLIT_ROOT_FOLDER` in `Data_manager/DataReader.py`.
+
+This original data is usually downloaded when we call `load_data()` on a datareader object, which in turn calls the hidden function `_load_from_original_file()`. This function is defined differently for each datareader.
+
+- **TODO:** (maybe) change this so that original data is downloaded to a directory of our choice, rather than `./Data_manager_split_datasets`.
+
 # New Code
 
 ## `ParameterTuning.RandomSearch (class)`
@@ -98,6 +106,21 @@ This script contains a single function `algorithm_handler()`, which takes an alg
 The set of algorithms that can be passed to `algorithm_handler()` are in `ALGORITHM_NAME_LIST`.
 
 
+# Using Google Cloud Computing Platform
+
+1. Create a VM instance (Compute Engine > VM Instances > Create Instance)
+2. Select machine configuration (CPU & memory)
+3. Select boot disk. Default size is 10gb; if dealing with large datasets, select a larger disk. (Downloading the original versions of all reczilla datasets requires more than the default 10gb.)
+
+## Resizing a disk
+
+If the current disk is too small, resizing it is easy (https://cloud.google.com/sdk/gcloud/reference/compute/disks/resize).
+
+```
+gcloud compute disks resize <DISK NAME> --size=<NEW SIZE>
+```
+
+After running this command, you can simply restart the instance and GCP will automatically reallocate storage to the main partition. You can also use `growpart`, but I haven't had success using this with GCP.
 
 # TODO
 
