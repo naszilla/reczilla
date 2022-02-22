@@ -105,26 +105,9 @@ This script contains a single function `algorithm_handler()`, which takes an alg
 
 The set of algorithms that can be passed to `algorithm_handler()` are in `ALGORITHM_NAME_LIST`.
 
-
-# Using Google Cloud Computing Platform
-
-1. Create a VM instance (Compute Engine > VM Instances > Create Instance)
-2. Select machine configuration (CPU & memory)
-3. Select boot disk. Default size is 10gb; if dealing with large datasets, select a larger disk. (Downloading the original versions of all reczilla datasets requires more than the default 10gb.)
-
-## Resizing a disk
-
-If the current disk is too small, resizing it is easy (https://cloud.google.com/sdk/gcloud/reference/compute/disks/resize).
-
-```
-gcloud compute disks resize <DISK NAME> --size=<NEW SIZE>
-```
-
-After running this command, you can simply restart the instance and GCP will automatically reallocate storage to the main partition. You can also use `growpart`, but I haven't had success using this with GCP.
-
 # TODO
 
-- add DL algs to algorithm_handler
+- add random seed to all algorithms that use randomness
 - add random seed to data splitter (in files `Data_manager.split_functions`, and places where this code is used.)
 - save train metrics to metadata for each sample, rather than for only one. this will be helpful for checking overfitting
 - write some code to extract features using this code's API. would be good to use the existing dataloader as an interface (e.g. dataSplitter.load_data). may be good to write a new class for this ("Dataset"?)
