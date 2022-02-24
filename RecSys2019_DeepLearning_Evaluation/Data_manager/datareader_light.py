@@ -1,4 +1,8 @@
-# a function for reading a dataset that has already been loaded/saved by a DataReader object
+"""
+function for reading a dataset that has already been loaded/saved by a DataReader object
+
+this is a "light" implementation of the DataReader functionality
+"""
 import os
 
 from Data_manager.Dataset import Dataset
