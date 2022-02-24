@@ -12,17 +12,40 @@ Some of the algorithms require compiling Cython files. Compile these using:
 python run_compile_all_cython.py
 ```
 
-# Unittests & New Algs/Datasets
+# Data
 
-## Datasets
+## Preparing Datasets
 
-We keep track of all datasets using file `RecSys2019_DeepLearning_Evaluation/dataset_handler.py`. All datasets are stored in the list `DATASET_READER_LIST`. Datasets should be retrieved by name, using function `dataset_handler.dataset_handler()`.
+Before using recsys datasets with this codebase, we need to build the following obejcts for each:
+- Dataset attributes (metadata)
+- **User Rating Matrix (URM)** of shape |n users|x|n items| containing the user-item interactions, either implicit (1-0) or explicit (any value)
+- [optional] **Item Content Matrix (ICM)** of shape |n items|x|n item features| containing the item features, again with any numerical value
+- [optional] **User Content Matrix (UCM)** of shape |n users|x|n users features| containing the item features, again with any numerical value
+
+Each of these items are built by the dataset's DataReader object (`Data_manager.DataReader.DataReader`). For each dataset, the DataReader object reads the original data (by downloading it, or looking for a file locally), and then constructing the metadata and URM, and the ICM and UCM if they are available.
+
+The metadata/URM/UCM/ICM are then written as zip files to a directory specified by the DataReader function `load_data()`. The script `Data_manager/download_check_all_data.py` downloads all datasets defined in `dataset_handler.py`, and runs a basic sanity check on them (see next section).
+
+The files that are written by each dataloader can include:
+- `dataset_global_attributes.zip`
+- `dataset_URM.zip` 
+- [optional] `dataset_ICM_mappers.zip`
+- [optional] `dataset_UCM_mappers.zip`
+- [optional] `dataset_additional_mappers.zip`
+
+## Keeping Track of Datasets
+
+We keep track of all datasets using script `dataset_handler.py`. All datasets are stored in the list `DATASET_READER_LIST`. Datasets should be retrieved by name, using function `dataset_handler.dataset_handler()`.
 
 **To add a new dataset**, do the following:
 1. Add an import statement for the datareader to file `dataset_handler.py`. The datareader must be a subclass of `Data_manager.DataReader`.
 2. Add the datareader object to the list `dataset_handler.DATASET_READER_LIST`.
 
-## Algorithms
+## Reading Prepared Datasets
+
+After a dataset has been loaded and saved using its DataReader object (with function `DataReader.load_data()`), then we can easily read the prepared data using a Dataset object (`Data_manager.Dataset.Dataset`). The function `Dataset.load_data` will attempt to read each of the zip files written by the DataReader.
+
+# Algorithms
 
 We keep track of all algorithms using the file `RecSys2019_DeepLearning_Evaluation/algorithm_handler.py`. The algorithm handler is a bit more complicated than the dataset handler, because we need to specify parameter spaces and early stopping params for each algorithm. (**NOTE:** to clean this up, we can make parameter spaces attributes of the algorithm classes.)
 

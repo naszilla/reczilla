@@ -8,7 +8,7 @@
 
 **Note:** You can use the machine image "reczilla-v2" which already includes the data, github repo, and python environment for this project. (See below.)
 
-## Machine Image: reczilla-v2
+## Machine Image: reczilla-v4
 
 The directory `/home/shared` contains all datasets and code for the reczilla project. Everyone should have read/write/execute permissions on `/home/shared`. if not, you can change whatever you'd like with sudo. 
 
