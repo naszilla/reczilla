@@ -82,6 +82,10 @@ There appear to be two evaluators defined:
 `DataSplitter` subclasses:
 - `DataSplitter_leave_k_out`: create a test set that contains k holdout interactions for each user. the validation set contains k*2 interactions (I think..), and the train set contains all remaining interactions.
 
+### Data Splitting Functions
+
+The datasplitter objects may be more complicated than we need. Instead, we might just use the splitting functions in `Data_manager.split_functions`. The functions in each of these files take a URM (sparse matrix) as input, and return a train/test/validation split (up to three other sparse matrices).
+
 ### Storing Original Data
 
 Original datasets are downloaded and stored to `./Data_manager_split_datasets`. This path is hard-coded as attribute `DATASET_SPLIT_ROOT_FOLDER` in `Data_manager/DataReader.py`.

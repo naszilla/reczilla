@@ -10,7 +10,48 @@
 
 ## Machine Image: reczilla-v2
 
-The directory `/home/shared` contains all datasets and code for the reczilla project. Everyone should have read/write/execute permissions on `/home/shared`. if not, you can change whatever you'd like with sudo.  
+The directory `/home/shared` contains all datasets and code for the reczilla project. Everyone should have read/write/execute permissions on `/home/shared`. if not, you can change whatever you'd like with sudo. 
+
+### Github ssh Credentials
+
+In order to pull/push from/to the reczilla github repo, you'll need github credentials on the GCP instance. Here are two options, Option 1 is preferred.
+
+#### Option 1: ssh agent forwarding
+
+1. If you don't already have an ssh keypair that authenticates you with github, [create one and add it to your account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
+
+2. Test your ssh key with github:
+
+```commandline
+ssh -T git@github.com
+```
+
+If authentication is successful, you should see a message like:
+
+```commandline
+> Hi <username>! You've successfully authenticated, but GitHub does not
+> provide shell access.
+```
+
+If authentication fails, [here are some troubleshooting tips](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/testing-your-ssh-connection).
+
+3. When you ssh into a GCP instance, add the ssh flag "-A" to pass your ssh credentials, like this:
+```
+gcloud compute ssh --ssh-flag="-A" <instance name> --zone=<zone> --project=<project> 
+```
+
+#### Option 2: use root ssh key
+
+All users should be able to authenticate with gituhb as reczilla-dev using a private key owned by user "root", in `/home/shared/.ssh`. The following block in `/etc/ssh/ssh_config` points to this key:
+
+```commandline
+Host github.com
+        HostName github.com
+        User git
+        IdentityFile /home/shared/.ssh/id_ed25519 
+```
+
+**NOTE:** Since this ssh key is owned by root, you need to use `sudo` with all git commands that require authentication. 
 
 ### Code
 
@@ -31,7 +72,7 @@ To activate the reczilla env:
 ```conda activate reczilla```
 
 
-### `/home/shared/data`
+### /home/shared/data
 
 Contains all downloaded data. To check all datasets, and download any new datasets, run the following from the `reczilla` environment
 
