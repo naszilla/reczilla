@@ -166,9 +166,12 @@ class DataSplitter_leave_k_out(_DataSplitter):
 
         self._assert_is_initialized()
 
-        return self.SPLIT_URM_DICT["URM_train"].copy(),\
-               self.SPLIT_URM_DICT["URM_validation"].copy(),\
-               self.SPLIT_URM_DICT["URM_test"].copy()
+        if self.use_validation_set:
+            return self.SPLIT_URM_DICT["URM_train"].copy(),\
+                   self.SPLIT_URM_DICT["URM_validation"].copy(),\
+                   self.SPLIT_URM_DICT["URM_test"].copy()
+
+        return self.SPLIT_URM_DICT["URM_train"].copy(), self.SPLIT_URM_DICT["URM_test"].copy()
 
 
     def _split_data_from_original_dataset(self, save_folder_path):

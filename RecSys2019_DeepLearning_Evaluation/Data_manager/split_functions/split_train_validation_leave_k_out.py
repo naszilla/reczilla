@@ -85,8 +85,8 @@ def split_train_leave_k_out_user_wise(URM, k_out = 1, use_validation_set = True,
 
 
         #Train interactions
-        user_interaction_items_train = user_interaction_items[k_out*2:]
-        user_interaction_data_train = user_interaction_data[k_out*2:]
+        user_interaction_items_train = user_interaction_items[k_out*2 if use_validation_set else k_out:]
+        user_interaction_data_train = user_interaction_data[k_out*2 if use_validation_set else k_out:]
 
         URM_train_builder.add_data_lists([user_id]*len(user_interaction_items_train), user_interaction_items_train, user_interaction_data_train)
 
