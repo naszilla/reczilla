@@ -186,7 +186,7 @@ class DataReader(object):
         loaded_dataset.print_statistics()
         return loaded_dataset
 
-
+# NOTE: this class is obsolete, will be removed in a future commit. instead, use function datareader_light
 class GenericDataReader(DataReader):
 
     def _get_dataset_name(self):
