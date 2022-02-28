@@ -93,3 +93,44 @@ gcloud compute disks resize <DISK NAME> --size=<NEW SIZE>
 
 After running this command, you can simply restart the instance and GCP will automatically reallocate storage to the main partition. You can also use `growpart`, but I haven't had success using this with GCP.
 
+## Launching instances and submitting jobs from CLI
+
+Soon we will be running lots of experiments, so here is the start of automation for it. First, make sure you have gcloud installed on your computer. Also, make sure you have ssh keys set up as explained above (e.g., make sure `ssh -T git@github.com` works).
+
+The following command will start a new instance using the `reczilla-v5` machine image and with read/write permissions to our GCP buckets.
+
+```commandline
+gcloud beta compute instances create test-1 --zone=us-central1-a \
+--project=research-collab-naszilla --source-machine-image=reczilla-v5 \
+--service-account default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com \
+--scopes=https://www.googleapis.com/auth/devstorage.read_write
+```
+
+To ssh into the image and copy a file to a bucket:
+
+```commandline
+gcloud compute ssh --ssh-flag="-A" test-1 --zone=us-central1-a --project=research-collab-naszilla
+
+gsutil cp test.out gs://reczilla-results
+```
+
+Here is the start of a script we will use soon to help launch experiments
+```bash
+function test_gcp_commands() {
+  instance_name=test-2
+  source_machine_image=reczilla-v5
+  service_account=default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com
+  zone=us-central1-a
+  project=research-collab-naszilla
+
+  # launch an instance
+  gcloud beta compute instances create $instance_name --zone=$zone --project=$project \
+  --source-machine-image=$source_machine_image \
+  --service-account=$service_account --scopes=https://www.googleapis.com/auth/devstorage.read_write
+
+  # ssh and perform a simple operation
+  gcloud compute ssh --ssh-flag="-A" $instance_name --zone=$zone --project=$project \
+  --command="cd /home/shared/reczilla/RecSys2019_DeepLearning_Evaluation; \
+  cp test.py gcp-test-command-worked.out"
+}
+```
