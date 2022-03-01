@@ -73,6 +73,14 @@ class DataSplitter_k_fold_random(_DataSplitter):
         # DataSplitter object without load data, to be used to get the subfolder paths
         self._dataSplitter_object_empty = self.dataSplitter_class(self.dataReader_object, **self.dataSplitter_kwargs)
 
+        self.init_kwargs = {"dataSplitter_class": dataSplitter_class,
+                            "dataSplitter_kwargs": dataSplitter_kwargs,
+                            "preload_all": preload_all,
+                            "n_folds": n_folds,
+                            "forbid_new_split": forbid_new_split,
+                            "force_new_split": force_new_split
+                            }
+
 
     def _assert_is_initialized(self):
          assert self.FOLD_DATA_SPLITTER_LIST is not None, "{}: Unable to load data split. The split has not been generated yet, call the load_data function to do so.".format(self.DATA_SPLITTER_NAME)
@@ -201,6 +209,9 @@ class DataSplitter_k_fold_random_fromDataSplitter(DataSplitter_k_fold_random):
 
 
         if save_folder_path:
+
+            self.save_data_splitter_class(save_folder_path)
+
             split_parameters_dict = {"n_folds": self.n_folds,
                                  }
 

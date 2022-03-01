@@ -7,6 +7,7 @@ Created on 30/11/18
 """
 
 import traceback, os
+import pickle
 from Data_manager.DataReader import DataReader
 
 class DataSplitter(object):
@@ -57,6 +58,7 @@ class DataSplitter(object):
         self.dataReader_object = dataReader_object
         self.forbid_new_split = forbid_new_split
         self.force_new_split = force_new_split
+        self.init_kwargs = None
 
 
     def get_dataReader_object(self):
@@ -124,6 +126,24 @@ class DataSplitter(object):
 
         return save_folder_path
 
+
+    @classmethod
+    def load_data_splitter_class(self, save_folder_path):
+
+        class_file_path = save_folder_path + "data_splitter_class"
+        with open(class_file_path, 'rb') as f:
+            splitter_class, init_kwargs = pickle.load(f)
+
+        return splitter_class, init_kwargs
+
+
+    def save_data_splitter_class(self, save_folder_path):
+
+        assert self.init_kwargs is not None
+
+        class_file_path = save_folder_path + "data_splitter_class"
+        with open(class_file_path, 'wb') as f:
+            pickle.dump((self.__class__, self.init_kwargs), f)
 
 
     def load_data(self, save_folder_path = None):

@@ -78,6 +78,13 @@ class DataSplitter_leave_k_out(_DataSplitter):
 
         super(DataSplitter_leave_k_out, self).__init__(dataReader_object, forbid_new_split=forbid_new_split, force_new_split=force_new_split)
 
+        self.init_kwargs = {"k_out_value": k_out_value,
+                            "forbid_new_split": forbid_new_split,
+                            "force_new_split": force_new_split,
+                            "use_validation_set": use_validation_set,
+                            "leave_random_out": leave_random_out
+                            }
+
 
 
     def _get_split_subfolder_name(self):
@@ -241,6 +248,8 @@ class DataSplitter_leave_k_out(_DataSplitter):
     def _save_split(self, save_folder_path):
 
         if save_folder_path:
+
+            self.save_data_splitter_class(save_folder_path)
 
             if self.allow_cold_users:
                 allow_cold_users_suffix = "allow_cold_users"
