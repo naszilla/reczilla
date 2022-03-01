@@ -6,7 +6,7 @@ git pull
 # init conda and activate the reczilla environment
 source /home/shared/miniconda3/bin/activate
 conda init
-conda actaivate reczilla
+conda activate reczilla
 
 # run the experiment
 cd /home/shared/reczilla/RecSys2019_DeepLearning_Evaluation
