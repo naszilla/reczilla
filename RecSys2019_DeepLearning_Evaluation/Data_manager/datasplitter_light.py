@@ -13,6 +13,8 @@ all npz files are written by numpy, and all zip files are written by the Base.Da
 """
 import os
 import glob
+from pathlib import Path
+
 from scipy.sparse import save_npz, load_npz
 
 from Data_manager.Dataset import Dataset
@@ -26,7 +28,7 @@ SPLIT_TYPES = [
 
 
 def write_split(
-    dataset: Dataset, split_type: str, out_directory: str, split_args: dict = {}
+    dataset: Dataset, split_type: str, out_directory: str,
 ):
     """
     split a dataset and write all files to out_directory.
@@ -40,8 +42,12 @@ def write_split(
         os.makedirs(out_directory)
     else:
         # if it does exist, make sure it is an empty directory
-        assert os.path.isdir(out_directory), f"out_directory is not a directory: {out_directory}"
-        assert len(os.listdir(out_directory)) == 0, f"out_directory is not empty: {out_directory}"
+        assert os.path.isdir(
+            out_directory
+        ), f"out_directory is not a directory: {out_directory}"
+        assert (
+            len(os.listdir(out_directory)) == 0
+        ), f"out_directory is not empty: {out_directory}"
 
     # objects that we will write
     write_objects = {}
@@ -50,23 +56,13 @@ def write_split(
 
         # split the dataset.
         # the function split_train_leave_k_out_user_wise has different return structure depending on its args
-        if "use_validation_set" in split_args:
-            assert split_args["use_validation_set"] in [True, False]
-            if split_args["use_validation_set"]:
-                (
-                    write_objects["URM_train"],
-                    write_objects["URM_validation"],
-                    write_objects["URM_test"],
-                ) = split_train_leave_k_out_user_wise(
-                    dataset.get_URM_all(), **split_args
-                )
-            else:
-                (
-                    write_objects["URM_train"],
-                    write_objects["URM_test"],
-                ) = split_train_leave_k_out_user_wise(
-                    dataset.get_URM_all(), **split_args
-                )
+        (
+            write_objects["URM_train"],
+            write_objects["URM_validation"],
+            write_objects["URM_test"],
+        ) = split_train_leave_k_out_user_wise(
+            dataset.get_URM_all(), use_validation_set=True
+        )
 
     else:
         raise Exception(f"we don't handle this split type: {split_type}")
@@ -74,19 +70,26 @@ def write_split(
     # write each object that was defined. different files are written differently
     for x in ["URM_train", "URM_test", "URM_validation"]:
         if x in write_objects:
-            save_npz(os.path.join(out_directory, x + ".npz"), write_objects[x], compressed=True)
+            save_npz(
+                os.path.join(out_directory, x + ".npz"),
+                write_objects[x],
+                compressed=True,
+            )
             print(f"object {x} written to directory {out_directory}")
+        else:
+            print(f"object not written {x}")
 
+    print("datasplitter finished")
     # TODO: handle UCM/ICM
 
 
-def read_split(directory):
+def read_split(directory: Path):
     """return a dictionary of all files written by write_split"""
 
     object_dict = {}
-    for x in ["URM_train.npz", "URM_test.npz", "URM_validation.npz"]:
+    for x in ["URM_train", "URM_test", "URM_validation"]:
         # look for the file
-        files = glob.glob(os.path.join(directory, x))
+        files = glob.glob(str(directory.joinpath(x + ".npz")))
         if len(files) > 0:
             object_dict[x] = load_npz(files[0])
             print(f"loaded object {x} from file: {files[0]}")
