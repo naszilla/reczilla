@@ -14,7 +14,7 @@ dataSplitter = DataSplitter_leave_k_out(data_reader, k_out_value=1, use_validati
 
 dataSplitter.load_data(save_folder_path=f"./test_load_save_{data_reader.DATASET_SUBFOLDER}")
 
-# The code hereon loads a split without knowing its original splitter class
+# The code hereon loads a split without knowing its original splitter class and datareader class
 
 dataReader_object, splitter_class, splitter_kwargs = DataSplitter.load_data_reader_splitter_class(f"./test_load_save_{data_reader.DATASET_SUBFOLDER}")
 
