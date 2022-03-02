@@ -249,7 +249,7 @@ class DataSplitter_leave_k_out(_DataSplitter):
 
         if save_folder_path:
 
-            self.save_data_splitter_class(save_folder_path)
+            self.save_data_reader_splitter_class(save_folder_path)
 
             if self.allow_cold_users:
                 allow_cold_users_suffix = "allow_cold_users"

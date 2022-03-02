@@ -128,22 +128,24 @@ class DataSplitter(object):
 
 
     @classmethod
-    def load_data_splitter_class(self, save_folder_path):
+    def load_data_reader_splitter_class(self, save_folder_path):
 
-        class_file_path = save_folder_path + "data_splitter_class"
+        class_file_path = save_folder_path + "data_reader_splitter_class"
+
         with open(class_file_path, 'rb') as f:
-            splitter_class, init_kwargs = pickle.load(f)
+            dataReader_object, splitter_class, init_kwargs = pickle.load(f)
 
-        return splitter_class, init_kwargs
+        return dataReader_object, splitter_class, init_kwargs
 
 
-    def save_data_splitter_class(self, save_folder_path):
+    def save_data_reader_splitter_class(self, save_folder_path):
 
         assert self.init_kwargs is not None
 
-        class_file_path = save_folder_path + "data_splitter_class"
+        class_file_path = save_folder_path + "data_reader_splitter_class"
+
         with open(class_file_path, 'wb') as f:
-            pickle.dump((self.__class__, self.init_kwargs), f)
+            pickle.dump((self.dataReader_object, self.__class__, self.init_kwargs), f)
 
 
     def load_data(self, save_folder_path = None):

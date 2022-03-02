@@ -210,7 +210,7 @@ class DataSplitter_k_fold_random_fromDataSplitter(DataSplitter_k_fold_random):
 
         if save_folder_path:
 
-            self.save_data_splitter_class(save_folder_path)
+            self.save_data_reader_splitter_class(save_folder_path)
 
             split_parameters_dict = {"n_folds": self.n_folds,
                                  }
