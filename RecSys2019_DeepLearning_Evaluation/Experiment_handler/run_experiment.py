@@ -10,9 +10,6 @@ and they are deterministic since we pass random seeds to the split function.
 import argparse
 import os
 from pathlib import Path
-
-from Data_manager.datareader_light import datareader_light
-from Data_manager.datasplitter_light import write_split
 from Experiment_handler.Experiment import Experiment
 
 
@@ -20,10 +17,15 @@ def run(args):
 
     # run experiment
     experiment = Experiment(Path(args.result_dir), args.experiment_name)
-    split_dir = experiment.prepare_split(
-        args.data_dir, args.dataset_name, args.split_type
+    experiment.prepare_dataset(args.data_dir, args.dataset_name)
+    experiment.prepare_split(args.dataset_name, args.split_type)
+    experiment.run_experiment(
+        args.dataset_name,
+        args.split_type,
+        args.alg_name,
+        args.num_samples,
+        args.alg_seed,
     )
-    experiment.run_experiment(split_dir, args.alg_name, args.num_samples, args.alg_seed)
 
 
 if __name__ == "__main__":

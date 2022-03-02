@@ -9,11 +9,19 @@ from pathlib import Path
 from typing import List
 
 from Base.Evaluation.Evaluator import EvaluatorHoldout
-from Data_manager.datareader_light import datareader_light
-from Data_manager.datasplitter_light import read_split, write_split
+from Data_manager.DataReader import GenericDataReader
+from Data_manager.DataSplitter import DataSplitter
+from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
+from Data_manager.DataSplitter_k_fold_random import DataSplitter_k_fold_random
 from ParameterTuning.RandomSearch import RandomSearch
 from Utils.reczilla_utils import get_logger, time_to_str
 from algorithm_handler import algorithm_handler
+from dataset_handler import dataset_handler
+
+SPLITTER_DICT = {
+    "DataSplitter_leave_k_out": DataSplitter_leave_k_out,
+    "DataSplitter_k_fold_random": DataSplitter_k_fold_random,
+}
 
 
 class Experiment(object):
@@ -57,65 +65,105 @@ class Experiment(object):
         else:
             self.logger.info(f"found result directory: {self.result_directory}")
 
-        self.prepared_split_list = []
+        self.prepared_split_dict = {}  # keys = dataset names, values = split names
+        self.dataset_dict = {}  # keys = dataset names, values = reader objects
         self.result_list = []
 
-    # TODO: update this after Sujay and Jonathan update the split methods
+    def get_dataset_path(self, dataset_name):
+        """get path of results for a particluar dataset"""
+        return self.result_directory.joinpath(dataset_name)
+
+    def get_split_path(self, dataset_name, split_name):
+        """get path of results for a particluar dataset and split"""
+        return self.result_directory.joinpath(dataset_name, split_name)
+
+    def get_alg_path(self, dataset_name, split_name, alg_name):
+        """get path of results for a particluar dataset and split and algorithm"""
+        return self.result_directory.joinpath(dataset_name, split_name, alg_name)
+
+    def prepare_dataset(self, data_dir, dataset_name):
+        """keep track of the dataset and reader object"""
+        if dataset_name in self.dataset_dict:
+            self.logger.info(f"dataset already prepared: {dataset_name}")
+
+        # -- make sure dataset exists --
+        # never reload the original dataset (reload_from_original_data="never")
+        self.dataset_dict[dataset_name] = dataset_handler(dataset_name)(
+            reload_from_original_data="never"
+        )
+
+        # make sure the data exists in data_dir/dataset_name
+        _ = self.dataset_dict[dataset_name].load_data(
+            save_folder_path=os.path.join(data_dir, dataset_name) + os.sep
+        )  # TODO: adding os.sep at the end of every path is really annoying
+
+        # initialize split dict for this dataset
+        self.prepared_split_dict[dataset_name] = {}
+        self.logger.info(
+            f"initialized dataset in {str(self.get_dataset_path(dataset_name))}"
+        )
+
     # TODO: add random seed to splitter, and keep track of this seed (maybe in the name of the split?)
-    def prepare_split(self, data_dir, dataset_name, split_type):
+    # TODO: keep track of split params somehow...
+    def prepare_split(self, dataset_name, split_type, split_args: dict = None):
         """
         check whether a split already exists. if it does not exist, create it.
         """
-        # # make sure the data and result directories exist
-        # result_dir = Path(args.result_dir).resolve()
-        # assert '~' not in args.result_dir, f"home directory not allowed in result-dir: {str(result_dir)}"
-        # assert result_dir.exists(), f"result-dir does not exist: {str(result_dir)}"
-        #
-        # data_dir = Path(args.data_dir).resolve()
-        # assert '~' not in args.data_dir, f"home directory not allowed in data-dir: {str(data_dir)}"
-        # assert data_dir.exists(), f"data-dir does not exist: {str(data_dir)}"
-        #
+        if split_args is None:
+            split_args = {}
 
-        split_dir = self.result_directory.joinpath(dataset_name, split_type)
+        # dataset must be initialized
+        assert (
+            dataset_name in self.dataset_dict
+        ), f"dataset '{dataset_name}' must be  initialized with prepare_dataset()"
+
+        split_path = self.get_split_path(dataset_name, split_type)
 
         # if the split directory has already been prepared, skip it
-        if split_dir in self.prepared_split_list:
-            self.logger.info(f"split has already been prepared: {str(split_dir)}")
+        if str(split_path) in self.prepared_split_dict[dataset_name]:
+            self.logger.info(f"split has already been prepared: {str(split_path)}")
 
-        # check whether the split exists
-        if split_dir.exists():
-            try:
-                data_dict = read_split(split_dir)
-                # make sure all URMs exist
-                for x in ["URM_train", "URM_test", "URM_validation"]:
-                    assert x in data_dict, f"object not found in data_dict: {x}"
-                self.logger.info(f"split already exists in directory {str(split_dir)}.")
-                self.prepared_split_list.append(split_dir)
-                return split_dir
-            except Exception as e:
-                self.logger.info(
-                    f"found split directory, but could not read split data: {str(split_dir)}"
-                )
-                self.logger.info(f"exception: {e}")
+        # first, attempt to read the split. if it does not exist, then create it
+        try:
 
-        self.logger.info("creating split...")
+            data_reader, splitter_class, init_kwargs = DataSplitter.load_data_reader_splitter_class(
+                split_path
+            )
+            data_splitter = splitter_class(data_reader, **init_kwargs)
+            data_splitter.load_data(str(split_path) + os.sep)  # TODO: it's really annoying to add the path sep every time
+            self.logger.info(f"found a split in directory {str(split_path)}")
 
-        dataset_dir = Path(data_dir).joinpath(dataset_name)
-        assert dataset_dir.exists(), f"dataset directory not found: {str(dataset_dir)}"
+        except FileNotFoundError:
 
-        # read dataset
-        dataset = datareader_light(str(dataset_dir) + os.sep)
+            self.logger.info(
+                f"split not found in directory {str(split_path)}. creating a new split."
+            )
 
-        # generate data split and write to temporary directory
-        write_split(dataset, split_type, str(split_dir))
-        self.logger.info(f"created split in {str(split_dir)}")
+            if split_type not in SPLITTER_DICT:
+                raise Exception(f"split_type not recognized: {split_type}")
 
-        self.prepared_split_list.append(split_dir)
-        return split_dir
+            data_splitter = SPLITTER_DICT[split_type](
+                self.dataset_dict[dataset_name], **split_args
+            )
+
+            # write the split in the result subfolder
+            data_splitter.load_data(str(split_path) + os.sep)  # it's super annoying to add a path sep at the end of each path
+            self.logger.info(f"new split created.")
+
+        assert (
+            "URM_test" in data_splitter.SPLIT_URM_DICT
+        ), f"URM_test not found in split: {dataset_name}/{split_type}"
+        assert (
+            "URM_train" in data_splitter.SPLIT_URM_DICT
+        ), f"URM_train not found in split: {dataset_name}/{split_type}"
+
+        self.prepared_split_dict[dataset_name][split_type] = data_splitter
+        self.logger.info(f"initialized split {dataset_name}/{split_type}")
 
     def run_experiment(
         self,
-        split_dir: Path,
+        dataset_name: str,
+        split_name: str,
         alg_name: str,
         num_samples: int,
         alg_seed: int,
@@ -124,23 +172,32 @@ class Experiment(object):
         """
         run an experiment, writing the results in the appropriate metadata files
         """
-
         assert (
-            split_dir in self.prepared_split_list
+            dataset_name in self.dataset_dict
+        ), f"dataset {dataset_name} has not been prepared. call prepare_dataset first"
+        assert (
+            split_name in self.prepared_split_dict[dataset_name]
         ), f"split has not been prepared. call prepare_split first."
 
         if cutoff_list is None:
             cutoff_list = [1, 5, 10, 50]
 
-        # read the split data
-        data_dict = read_split(split_dir)
-
         # prepare evaluators
-        evaluator_validation = EvaluatorHoldout(
-            data_dict["URM_validation"], cutoff_list=cutoff_list, exclude_seen=False
-        )
+        # TODO: we might want to use the DataSplitter function get_holdout_split, but this has a different return value depending on class-specific params. which is annoying. so we will access the split dict directly
+        urm_dict = self.prepared_split_dict[dataset_name][split_name].SPLIT_URM_DICT
+
+        if "URM_validation" in urm_dict:
+            self.logger.info(
+                f"WARNING: URM_validation not found in URM_dict for split {dataset_name}/{split_name}"
+            )
+            evaluator_validation = EvaluatorHoldout(
+                urm_dict["URM_validation"], cutoff_list=cutoff_list, exclude_seen=False
+            )
+        else:
+            evaluator_validation = None
+
         evaluator_test = EvaluatorHoldout(
-            data_dict["URM_test"], cutoff_list=cutoff_list, exclude_seen=False
+            urm_dict["URM_test"], cutoff_list=cutoff_list, exclude_seen=False
         )
 
         # get a recommender class, hyperparameter search space, and search_input_recommender_args from the algorithm handler
@@ -153,7 +210,7 @@ class Experiment(object):
 
         # add the training dataset to recommender_input_args (this is then passed to the alg constructor...)
         search_input_recommender_args.CONSTRUCTOR_POSITIONAL_ARGS = [
-            data_dict["URM_train"]
+            urm_dict["URM_train"]
         ]
 
         # create a search object for the random parameter search
@@ -164,7 +221,7 @@ class Experiment(object):
             evaluator_test=evaluator_test,
         )
 
-        experiment_result_dir = split_dir.joinpath(alg_name)
+        experiment_result_dir = self.get_alg_path(dataset_name, split_name, alg_name)
 
         self.logger.info(
             f"starting experiment, writing results to {str(experiment_result_dir)}"

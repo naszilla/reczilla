@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import sys
 sys.path.append('..')
@@ -16,6 +18,6 @@ dataSplitter.load_data(save_folder_path=f"./test_load_save_{data_reader.DATASET_
 
 # The code hereon loads a split without knowing its original splitter class and datareader class
 
-dataReader_object, splitter_class, splitter_kwargs = DataSplitter.load_data_reader_splitter_class(f"./test_load_save_{data_reader.DATASET_SUBFOLDER}")
+dataReader_object, splitter_class, splitter_kwargs = DataSplitter.load_data_reader_splitter_class(Path(f"./test_load_save_{data_reader.DATASET_SUBFOLDER}"))
 
 newSplitter = splitter_class(dataReader_object, **splitter_kwargs)
