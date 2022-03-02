@@ -8,6 +8,8 @@ Created on 30/11/18
 
 import traceback, os
 import pickle
+from pathlib import Path
+
 from Data_manager.DataReader import DataReader
 
 class DataSplitter(object):
@@ -128,11 +130,11 @@ class DataSplitter(object):
 
 
     @classmethod
-    def load_data_reader_splitter_class(self, save_folder_path):
+    def load_data_reader_splitter_class(self, save_folder_path: Path):
 
-        class_file_path = save_folder_path + "data_reader_splitter_class"
+        class_file_path = save_folder_path.joinpath("data_reader_splitter_class")
 
-        with open(class_file_path, 'rb') as f:
+        with open(str(class_file_path), 'rb') as f:
             dataReader_object, splitter_class, init_kwargs = pickle.load(f)
 
         return dataReader_object, splitter_class, init_kwargs
