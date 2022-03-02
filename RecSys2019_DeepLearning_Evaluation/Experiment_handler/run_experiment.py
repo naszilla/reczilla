@@ -11,6 +11,7 @@ import argparse
 import os
 from pathlib import Path
 from Experiment_handler.Experiment import Experiment
+from Utils.reczilla_utils import config_to_sequence
 
 
 def run(args):
@@ -30,54 +31,75 @@ def run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+
+    subparsers = parser.add_subparsers(dest="subparser_name")
+
+    # command line parser
+    cli_parser = subparsers.add_parser("cli")
+    cli_parser.add_argument(
         "--data-dir",
         type=str,
         help="directory containing downloaded datasets",
         required=True,
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--dataset-name",
         type=str,
         help="name of dataset. this must be a subdirectory of data-dir",
         required=True,
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--split-type", type=str, help="name of datasplitter to use.", required=True,
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--split-seed",
         type=int,
         default=0,
         help="random seed passed to datasplitter. only used for random splits.",
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--alg-seed",
         type=int,
         default=0,
         help="random seed passed to the recommender algorithm. only for random algorithms.",
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--alg-name", type=str, help="name of the algorithm to use.", required=True,
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--num-samples",
         type=int,
         help="number of hyperparameter samples.",
         required=True,
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--result-dir",
         type=str,
         help="directory where result dir structure will be written. this directory should exist.",
         required=True,
     )
-    parser.add_argument(
+    cli_parser.add_argument(
         "--experiment-name",
         type=str,
         help="name of the result directory that will be created.",
         required=True,
     )
 
+    # config file parser
+    config_parser = subparsers.add_parser("config")
+    config_parser.add_argument(
+        "--config-file",
+        type=str,
+        default=None,
+        help="if provided, parse args from file rather than command line. this will override any cli args provided",
+        required=True,
+    )
+
     args = parser.parse_args()
+
+    # read args from file rather than cli if the config parser is used
+    if args.subparser_name == "config":
+        print(f"reading config file: {args.config_file}")
+        args = parser.parse_args(["cli"] + config_to_sequence(args.config_file))
+
     run(args)

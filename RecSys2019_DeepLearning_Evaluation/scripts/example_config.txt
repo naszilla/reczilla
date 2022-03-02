@@ -1,0 +1,10 @@
+# example config file
+--data-dir  ./data/
+--dataset-name Movielens100KReader
+--split-type DataSplitter_leave_k_out
+--split-seed 1
+--alg-seed 1
+--alg-name UserKNNCF_euclidean
+--num-samples 10
+--result-dir .
+--experiment-name TEST_EXPERIMENT_CONFIG
