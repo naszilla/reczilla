@@ -26,7 +26,7 @@ class INeuRec_RecommenderWrapper(BaseMatrixFactorizationRecommender, Incremental
         super(INeuRec_RecommenderWrapper, self).__init__(URM_train)
 
         # tf
-        self.config = tf.ConfigProto()
+        self.config = tf.compat.v1.ConfigProto()
         self.config.gpu_options.allow_growth = True
 
 
@@ -58,10 +58,10 @@ class INeuRec_RecommenderWrapper(BaseMatrixFactorizationRecommender, Incremental
 
 
         print("{}: Init model...".format(self.RECOMMENDER_NAME))
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
 
         # open session tensorflow
-        self.sess = tf.Session(config=self.config)
+        self.sess = tf.compat.v1.Session(config=self.config)
 
         self.model = INeuRec(tf_session=self.sess,
                              num_neurons=self.num_neurons,
@@ -91,7 +91,7 @@ class INeuRec_RecommenderWrapper(BaseMatrixFactorizationRecommender, Incremental
 
         # close session tensorflow
         self.sess.close()
-        self.sess = tf.Session()
+        self.sess = tf.compat.v1.Session()
 
         self.USER_factors = self.USER_factors_best
         self.ITEM_factors = self.ITEM_factors_best
