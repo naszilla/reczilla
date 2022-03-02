@@ -7,9 +7,9 @@ one or more sets of hyperparameters for the algorithm. we record the train and t
 import os
 from pathlib import Path
 from typing import List
+import shutil
 
 from Base.Evaluation.Evaluator import EvaluatorHoldout
-from Data_manager.DataReader import GenericDataReader
 from Data_manager.DataSplitter import DataSplitter
 from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
 from Data_manager.DataSplitter_k_fold_random import DataSplitter_k_fold_random
@@ -49,7 +49,7 @@ class Experiment(object):
         experiment_name: the name of the directory where results will be written. if it doesn't exist, create it.
         """
         self.logger = get_logger()
-
+        self.base_directory = base_directory
         # make sure the base directory exists
         assert (
             base_directory.exists()
@@ -80,6 +80,11 @@ class Experiment(object):
     def get_alg_path(self, dataset_name, split_name, alg_name):
         """get path of results for a particluar dataset and split and algorithm"""
         return self.result_directory.joinpath(dataset_name, split_name, alg_name)
+
+    def zip(self, filename):
+        """zip the result directory to the file at the given path"""
+        shutil.make_archive(filename, 'zip', str(self.result_directory))
+        self.logger.info(f"zipped experiment directory to {str(self.base_directory)}/{filename}")
 
     def prepare_dataset(self, data_dir, dataset_name):
         """keep track of the dataset and reader object"""

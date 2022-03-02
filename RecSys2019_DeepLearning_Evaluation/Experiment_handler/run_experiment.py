@@ -27,6 +27,9 @@ def run(args):
         args.num_samples,
         args.alg_seed,
     )
+    if args.write_zip:
+        # write a zip of the results in folder result_dir
+        experiment.zip("results")
 
 
 if __name__ == "__main__":
@@ -83,6 +86,11 @@ if __name__ == "__main__":
         type=str,
         help="name of the result directory that will be created.",
         required=True,
+    )
+    cli_parser.add_argument(
+        "--write-zip",
+        action="store_true",
+        help="if provided, zip the result directory and place it in result directory",
     )
 
     # config file parser
