@@ -8,15 +8,15 @@
 
 **Note:** You can use the machine image "reczilla-v2" which already includes the data, github repo, and python environment for this project. (See below.)
 
-## Machine Image: reczilla-v4
+## Machine Image: reczilla-v5
 
 The directory `/home/shared` contains all datasets and code for the reczilla project. Everyone should have read/write/execute permissions on `/home/shared`. if not, you can change whatever you'd like with sudo. 
 
 ### Github ssh Credentials
 
-In order to pull/push from/to the reczilla github repo, you'll need github credentials on the GCP instance. Here are two options, Option 1 is preferred.
+In order to pull/push from/to the reczilla github repo, you'll need github credentials on the GCP instance. The easiest way to do this is with SSH agent forwarding.
 
-#### Option 1: ssh agent forwarding
+#### ssh agent forwarding instructions
 
 1. If you don't already have an ssh keypair that authenticates you with github, [create one and add it to your account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
 
@@ -39,19 +39,6 @@ If authentication fails, [here are some troubleshooting tips](https://docs.githu
 ```
 gcloud compute ssh --ssh-flag="-A" <instance name> --zone=<zone> --project=<project> 
 ```
-
-#### Option 2: use root ssh key
-
-All users should be able to authenticate with gituhb as reczilla-dev using a private key owned by user "root", in `/home/shared/.ssh`. The following block in `/etc/ssh/ssh_config` points to this key:
-
-```commandline
-Host github.com
-        HostName github.com
-        User git
-        IdentityFile /home/shared/.ssh/id_ed25519 
-```
-
-**NOTE:** Since this ssh key is owned by root, you need to use `sudo` with all git commands that require authentication. 
 
 ### Code
 
