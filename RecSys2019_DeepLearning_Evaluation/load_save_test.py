@@ -18,4 +18,4 @@ dataSplitter.load_data(save_folder_path=f"./test_load_save_{data_reader.DATASET_
 
 splitter_class, splitter_kwargs = DataSplitter.load_data_splitter_class(f"./test_load_save_{data_reader.DATASET_SUBFOLDER}")
 
-newSplitter = splitter_class(splitter_kwargs)
+newSplitter = splitter_class(data_reader, splitter_kwargs)
