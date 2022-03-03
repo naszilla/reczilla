@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 from Experiment_handler.Experiment import Experiment
-from algorithm_handler import ALGORITHM_NAME_LIST
+from algorithm_handler import ALGORITHM_NAME_LIST, algorithm_handler
 from dataset_handler import DATASET_READER_NAME_LIST
 
 SPLIT_TYPE_LIST = [
@@ -16,6 +16,10 @@ def run(args):
     experiment = Experiment(Path(args.output_dir), args.experiment_name)
     # create a config file for each alg + dataset combination. for now, only include leave_k_out splitter
     for alg_name in ALGORITHM_NAME_LIST:
+
+        # get the maximum number of points for this alg
+        _, _, _, max_points = algorithm_handler(alg_name)
+        num_samples = min(max_points, args.num_samples)
         for dataset_name in DATASET_READER_NAME_LIST:
             for split_type in SPLIT_TYPE_LIST:
                 kwargs = {
@@ -23,7 +27,7 @@ def run(args):
                     "experiment-name": args.experiment_name,
                     "alg-seed": 1,
                     "split-seed": 1,
-                    "num-samples": args.num_samples,
+                    "num-samples": num_samples,
                     "result-dir": args.result_dir
                 }
 
