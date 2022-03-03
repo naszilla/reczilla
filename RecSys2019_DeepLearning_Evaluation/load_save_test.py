@@ -8,13 +8,13 @@ from Data_manager.CiaoDVD.CiaoDVDReader import CiaoDVDReader
 from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
 from Data_manager.DataSplitter import DataSplitter
 
-data_reader = CiaoDVDReader()
+data_reader = CiaoDVDReader(folder=f"./test_load_save_CiaoDVDReader")
 
-loaded_dataset = data_reader.load_data(save_folder_path=f"./test_load_save_{data_reader.DATASET_SUBFOLDER}")
+loaded_dataset = data_reader.load_data()
 
-dataSplitter = DataSplitter_leave_k_out(data_reader, k_out_value=1, use_validation_set=False)
+dataSplitter = DataSplitter_leave_k_out(data_reader, k_out_value=1, use_validation_set=False, folder=f"./test_load_save_CiaoDVDReader/split")
 
-dataSplitter.load_data(save_folder_path=f"./test_load_save_{data_reader.DATASET_SUBFOLDER}")
+dataSplitter.load_data()
 
 # The code hereon loads a split without knowing its original splitter class and datareader class
 

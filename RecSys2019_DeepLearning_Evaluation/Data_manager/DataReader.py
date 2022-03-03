@@ -57,6 +57,7 @@ class DataReader(object):
     def __init__(self,
                  reload_from_original_data="as-needed",  # {"always", "never", "as-needed"}
                  verbose=True,
+                 folder=None,
                  ):
         super(DataReader, self).__init__()
 
@@ -64,6 +65,7 @@ class DataReader(object):
         assert verbose in [True, False], "verbose parameter must be True or False"
 
         self.verbose = verbose
+        self.folder = folder
 
         self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_SPLIT_SUBFOLDER)
         self.DATASET_OFFLINE_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_OFFLINE_SUBFOLDER)
@@ -125,10 +127,17 @@ class DataReader(object):
         :return:
         """
 
-        # Use default e.g., "dataset_name/original/"
         if save_folder_path is None:
-            save_folder_path = self.DATASET_SPLIT_ROOT_FOLDER + self._get_dataset_name_root() + self._get_dataset_name_data_subfolder()
+            # use folder specified upon initialization
+            if self.folder is not None:
+                save_folder_path = self.folder
+            else:
+                # Use default e.g., "dataset_name/original/"
+                save_folder_path = self.DATASET_SPLIT_ROOT_FOLDER + self._get_dataset_name_root() + self._get_dataset_name_data_subfolder()
 
+        # this is extremely annoying
+        if not save_folder_path.endswith(os.sep):
+            save_folder_path = save_folder_path + os.sep
 
         # If save_folder_path contains any path try to load a previously built split from it
         if self.reload_from_original_data in ["as-needed", "always"] and save_folder_path in [None, False]:

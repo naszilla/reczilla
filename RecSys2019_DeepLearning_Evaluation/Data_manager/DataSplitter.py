@@ -45,7 +45,7 @@ class DataSplitter(object):
     DATA_SPLITTER_NAME = "DataSplitter"
 
 
-    def __init__(self, dataReader_object:DataReader, forbid_new_split = False, force_new_split = False):
+    def __init__(self, dataReader_object:DataReader, forbid_new_split = False, force_new_split = False, folder=None):
         """
 
         :param dataReader_object:
@@ -54,6 +54,8 @@ class DataSplitter(object):
         :param forbid_new_split:
         """
         super(DataSplitter, self).__init__()
+
+        self.folder = folder
 
         self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_SPLIT_SUBFOLDER)
 
@@ -130,10 +132,12 @@ class DataSplitter(object):
 
 
     @classmethod
-    def load_data_reader_splitter_class(self, save_folder_path: Path):
+    def load_data_reader_splitter_class(self, save_folder_path: Path = None):
 
-        class_file_path = save_folder_path.joinpath("data_reader_splitter_class")
-
+        if save_folder_path is None:
+            class_file_path = Path(self.folder).joinpath("data_reader_splitter_class")
+        else:
+            class_file_path = save_folder_path.joinpath("data_reader_splitter_class")
         with open(str(class_file_path), 'rb') as f:
             dataReader_object, splitter_class, init_kwargs = pickle.load(f)
 
@@ -159,10 +163,17 @@ class DataSplitter(object):
         :return:
         """
 
-        # Use default "dataset_name/split_name/original" or "dataset_name/split_name/k-cores"
         if save_folder_path is None:
-            save_folder_path = self._get_default_save_path()
+            # use folder specified during init
+            if self.folder is not None:
+                save_folder_path = self.folder
+            else:
+                # Use default "dataset_name/split_name/original" or "dataset_name/split_name/k-cores"
+                save_folder_path = self._get_default_save_path()
 
+        # this is extremely annoying
+        if not save_folder_path.endswith(os.sep):
+            save_folder_path = save_folder_path + os.sep
 
         # If save_folder_path contains any path try to load a previously built split from it
         if save_folder_path is not False and not self.force_new_split:

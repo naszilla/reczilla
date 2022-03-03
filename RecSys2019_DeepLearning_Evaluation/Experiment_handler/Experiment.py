@@ -94,13 +94,12 @@ class Experiment(object):
         # -- make sure dataset exists --
         # never reload the original dataset (reload_from_original_data="never")
         self.dataset_dict[dataset_name] = dataset_handler(dataset_name)(
-            reload_from_original_data="never"
+            reload_from_original_data="never",
+            folder=str(Path(data_dir).joinpath(dataset_name)),
         )
 
         # make sure the data exists in data_dir/dataset_name
-        _ = self.dataset_dict[dataset_name].load_data(
-            save_folder_path=os.path.join(data_dir, dataset_name) + os.sep
-        )  # TODO: adding os.sep at the end of every path is really annoying
+        _ = self.dataset_dict[dataset_name].load_data()
 
         # initialize split dict for this dataset
         self.prepared_split_dict[dataset_name] = {}
@@ -134,8 +133,8 @@ class Experiment(object):
             data_reader, splitter_class, init_kwargs = DataSplitter.load_data_reader_splitter_class(
                 split_path
             )
-            data_splitter = splitter_class(data_reader, **init_kwargs)
-            data_splitter.load_data(str(split_path) + os.sep)  # TODO: it's really annoying to add the path sep every time
+            data_splitter = splitter_class(data_reader, folder=str(split_path), **init_kwargs)
+            data_splitter.load_data()
             self.logger.info(f"found a split in directory {str(split_path)}")
 
         except FileNotFoundError:
@@ -148,11 +147,11 @@ class Experiment(object):
                 raise Exception(f"split_type not recognized: {split_type}")
 
             data_splitter = SPLITTER_DICT[split_type](
-                self.dataset_dict[dataset_name], **split_args
+                self.dataset_dict[dataset_name], **split_args, folder=str(split_path),
             )
 
             # write the split in the result subfolder
-            data_splitter.load_data(str(split_path) + os.sep)  # it's super annoying to add a path sep at the end of each path
+            data_splitter.load_data()
             self.logger.info(f"new split created.")
 
         assert (

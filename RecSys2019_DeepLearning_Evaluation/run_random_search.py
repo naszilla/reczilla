@@ -31,17 +31,17 @@ def run(args):
 
     # initialize data reader
     data_reader = dataset_handler(args.datareader_name)(
-        reload_from_original_data="as-needed", verbose=True
+        reload_from_original_data="as-needed", verbose=True, folder=args.original_data_dir,
     )
     if args.original_data_dir != "":
         # we only need to laod the data to create a new split
-        _ = data_reader.load_data(save_folder_path=args.original_data_dir)
+        _ = data_reader.load_data()
 
     # initialize data splitter & load
     dataSplitter = DataSplitter_leave_k_out(
-        data_reader, forbid_new_split=args.forbid_new_split
+        data_reader, forbid_new_split=args.forbid_new_split, folder=args.data_split_dir,
     )
-    dataSplitter.load_data(save_folder_path=args.data_split_dir)
+    dataSplitter.load_data()
     URM_train, URM_validation, URM_test = dataSplitter.get_holdout_split()
 
     # create evaluators
