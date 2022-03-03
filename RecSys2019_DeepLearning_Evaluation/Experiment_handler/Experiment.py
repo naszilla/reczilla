@@ -33,7 +33,7 @@ class Experiment(object):
 
     the Experiment_handler object will create this directory and write results to it.
 
-    TODO: the secondary constructor reads results from a directory.
+    TODO: write a secondary constructor reads results from a directory.
 
     results are written and read according to the following convention:
     base_directory/<dataset>/<split>/<algorithm>/<result>_metadata.zip
@@ -60,8 +60,7 @@ class Experiment(object):
         # define the result directory
         self.result_directory = base_directory.joinpath(experiment_name).resolve()
 
-        print(f"EXPERIMENT: base_directory: {self.base_directory}")
-        print(f"EXPERIMENT: result_directory: {self.result_directory}")
+        self.logger.info(f"initializing Experiment: base_directory={self.base_directory}, result_directory={self.result_directory}")
 
         # if this directory doesn't exist, create it
         if not self.result_directory.exists():
@@ -94,6 +93,44 @@ class Experiment(object):
         self.logger.info(
             f"zipped experiment directory to {str(self.base_directory)}/{filename}"
         )
+
+    def prepare_config(self, file_name, data_dir, dataset_name, split_name, alg_name, **kwargs):
+        """
+        write an Experiment config file for a dataset-split-alg combination. all config files are stored in the same
+        directory structure as experiment results.
+
+        this does not require initializing any datasets or splits.
+
+        config files are are meant to be read by Experiment_handler.run_experiment. example:
+
+        # comment lines start with '#'
+        --data-dir  /home/shared/data/
+        --dataset-name Movielens100KReader
+        ...
+        --arg-name arg
+        """
+
+        # store file in list of strings, and concatenate before writing
+        line_list = ["# config file prepared by Experiment.prepare_config"]
+
+        # add positional args (these determine the location and name of the config file)
+        line_list.append(f"--data-dir {data_dir}")
+        line_list.append(f"--dataset-name {dataset_name}")
+        line_list.append(f"--split-type {split_name}")
+        line_list.append(f"--alg-name {alg_name}")
+
+        # add kwargs
+        for name, val in kwargs.items():
+            line_list.append(f"--{name} {val}")
+
+        # write file. make its directory if it doesn't exist
+        config_dir = self.get_alg_path(dataset_name, split_name, alg_name)
+        config_dir.mkdir(parents=True, exist_ok=True)
+
+        filepath = str(config_dir.joinpath(file_name))
+        with open(filepath, 'w') as f:
+            for line in line_list:
+                f.write(f"{line}\n")
 
     def prepare_dataset(self, data_dir, dataset_name):
         """keep track of the dataset and reader object"""
