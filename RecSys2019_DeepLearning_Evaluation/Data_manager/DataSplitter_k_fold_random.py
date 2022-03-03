@@ -45,7 +45,7 @@ class DataSplitter_k_fold_random(_DataSplitter):
 
     def __init__(self, dataReader_object:_DataReader, dataSplitter_class,
                  dataSplitter_kwargs = None, preload_all = True,
-                 n_folds = 5, forbid_new_split = False, force_new_split = False):
+                 n_folds = 5, forbid_new_split = False, force_new_split = False, folder=None):
         """
 
         :param dataReader_object:
@@ -59,7 +59,8 @@ class DataSplitter_k_fold_random(_DataSplitter):
 
         super(DataSplitter_k_fold_random, self).__init__(dataReader_object,
                                                          forbid_new_split = forbid_new_split,
-                                                         force_new_split = force_new_split)
+                                                         force_new_split = force_new_split,
+                                                         folder=folder)
 
         self.dataSplitter_class = dataSplitter_class
         self.n_folds = n_folds
