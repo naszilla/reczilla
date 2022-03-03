@@ -153,7 +153,8 @@ class DataReader(object):
                 loaded_dataset.verify_data_consistency()
                 self._print("Verifying data consistency... Passed!")
 
-                loaded_dataset.print_statistics()
+                # don't print statistics every time.
+                # loaded_dataset.print_statistics()
                 return loaded_dataset
 
             except FileNotFoundError:
@@ -192,7 +193,8 @@ class DataReader(object):
 
             self._print("Saving complete!")
 
-        loaded_dataset.print_statistics()
+        # don't print statistics every time
+        # loaded_dataset.print_statistics()
         return loaded_dataset
 
 # NOTE: this class is obsolete, will be removed in a future commit. instead, use function datareader_light

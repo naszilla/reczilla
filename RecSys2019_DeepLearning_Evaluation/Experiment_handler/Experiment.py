@@ -43,13 +43,15 @@ class Experiment(object):
 
     TIME_FORMAT = "%Y%m%d_%H%M%S"
 
-    def __init__(self, base_directory: Path, experiment_name: str):
+    def __init__(self, base_directory: Path, experiment_name: str, verbose=True):
         """
         base_directory: an existing directory where the experiment directory structure will be written
         experiment_name: the name of the directory where results will be written. if it doesn't exist, create it.
         """
         self.logger = get_logger()
         self.base_directory = base_directory.resolve()
+        self.verbose = verbose
+
         # make sure the base directory exists
         assert (
             base_directory.exists()
@@ -143,7 +145,7 @@ class Experiment(object):
                 init_kwargs,
             ) = DataSplitter.load_data_reader_splitter_class(split_path)
             data_splitter = splitter_class(
-                data_reader, folder=str(split_path), **init_kwargs
+                data_reader, folder=str(split_path), verbose=self.verbose, **init_kwargs
             )
             data_splitter.load_data()
             self.logger.info(f"found a split in directory {str(split_path)}")
@@ -234,6 +236,7 @@ class Experiment(object):
             alg,
             evaluator_validation=evaluator_validation,
             evaluator_test=evaluator_test,
+            verbose=self.verbose,
         )
 
         experiment_result_dir = self.get_alg_path(dataset_name, split_name, alg_name)

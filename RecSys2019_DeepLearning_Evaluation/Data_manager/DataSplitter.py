@@ -45,7 +45,7 @@ class DataSplitter(object):
     DATA_SPLITTER_NAME = "DataSplitter"
 
 
-    def __init__(self, dataReader_object:DataReader, forbid_new_split = False, force_new_split = False, folder=None):
+    def __init__(self, dataReader_object:DataReader, forbid_new_split = False, force_new_split = False, folder=None, verbose=True):
         """
 
         :param dataReader_object:
@@ -56,6 +56,7 @@ class DataSplitter(object):
         super(DataSplitter, self).__init__()
 
         self.folder = folder
+        self.verbose = verbose
 
         self.DATASET_SPLIT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), '..', self.__DATASET_SPLIT_SUBFOLDER)
 
@@ -113,7 +114,8 @@ class DataSplitter(object):
         return UCM_dict
 
     def _print(self, message):
-        print("{}: {}".format(self.DATA_SPLITTER_NAME, message))
+        if self.verbose:
+            print("{}: {}".format(self.DATA_SPLITTER_NAME, message))
 
 
     def _get_default_save_path(self):

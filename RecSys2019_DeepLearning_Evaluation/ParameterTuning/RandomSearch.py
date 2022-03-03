@@ -61,6 +61,7 @@ class RandomSearch(SearchAbstractClass):
         sampler_args={},
         sample_seed=0,
         raise_exceptions=False,
+        write_log_every=10,
     ):
         """
         search for the best set of hyperparameters using multiple random draws from the hyperparameter space
@@ -103,6 +104,9 @@ class RandomSearch(SearchAbstractClass):
 
         # generate n_cases random hyperparameter draws
         for i_sample, hyperparams in enumerate(hyperparam_samples):
+            if i_sample % write_log_every == 0:
+                self._write_log("{}: Starting parameter set {} of {}\n".format(
+                self.ALGORITHM_NAME, i_sample + 1, n_samples))
             self._objective_function(hyperparams)
 
         self._write_log(

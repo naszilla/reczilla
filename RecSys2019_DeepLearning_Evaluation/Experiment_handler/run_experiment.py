@@ -16,7 +16,7 @@ from Utils.reczilla_utils import config_to_sequence
 def run(args):
 
     # run experiment
-    experiment = Experiment(Path(args.result_dir), args.experiment_name)
+    experiment = Experiment(Path(args.result_dir), args.experiment_name, verbose=False)
     experiment.prepare_dataset(args.data_dir, args.dataset_name)
     experiment.prepare_split(args.dataset_name, args.split_type)
     experiment.run_experiment(

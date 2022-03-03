@@ -56,7 +56,7 @@ class DataSplitter_leave_k_out(_DataSplitter):
     SPLIT_GLOBAL_MAPPER_DICT = None
 
 
-    def __init__(self, dataReader_object:_DataReader, k_out_value = 1, forbid_new_split = False, force_new_split = False, use_validation_set = True, leave_random_out = True, folder=None):
+    def __init__(self, dataReader_object:_DataReader, k_out_value = 1, forbid_new_split = False, force_new_split = False, use_validation_set = True, leave_random_out = True, folder=None, verbose=True):
         """
 
         :param dataReader_object:
@@ -74,9 +74,9 @@ class DataSplitter_leave_k_out(_DataSplitter):
         self.removed_cold_users = None
         self.leave_random_out = leave_random_out
 
-        self._print("Cold users not allowed")
+        super(DataSplitter_leave_k_out, self).__init__(dataReader_object, forbid_new_split=forbid_new_split, force_new_split=force_new_split, folder=folder, verbose=verbose)
 
-        super(DataSplitter_leave_k_out, self).__init__(dataReader_object, forbid_new_split=forbid_new_split, force_new_split=force_new_split, folder=folder)
+        self._print("Cold users not allowed")
 
         self.init_kwargs = {"k_out_value": k_out_value,
                             "forbid_new_split": forbid_new_split,
@@ -129,7 +129,7 @@ class DataSplitter_leave_k_out(_DataSplitter):
 
         self._print(statistics_string)
 
-        print("\n")
+        self._print("\n")
 
 
 
@@ -155,9 +155,9 @@ class DataSplitter_leave_k_out(_DataSplitter):
                     compute_density(ICM_object)
                 )
 
-                print(statistics_string)
+                self._print(statistics_string)
 
-            print("\n")
+            self._print("\n")
 
 
 
