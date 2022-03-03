@@ -16,7 +16,7 @@ from Utils.reczilla_utils import config_to_sequence
 def run(args):
 
     # run experiment
-    experiment = Experiment(Path(args.result_dir), args.experiment_name, verbose=False)
+    experiment = Experiment(Path(args.result_dir), args.experiment_name, verbose=args.verbose)
     experiment.prepare_dataset(args.data_dir, args.dataset_name)
     experiment.prepare_split(args.dataset_name, args.split_type)
     experiment.run_experiment(
@@ -90,6 +90,11 @@ if __name__ == "__main__":
         "--write-zip",
         action="store_true",
         help="if provided, zip the result directory and place it in result directory",
+    )
+    cli_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="if provided, print additional output",
     )
 
     # config file parser
