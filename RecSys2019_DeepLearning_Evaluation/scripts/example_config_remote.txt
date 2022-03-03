@@ -5,7 +5,7 @@
 --split-seed 1
 --alg-seed 1
 --alg-name UserKNNCF_euclidean
---num-samples 2
+--num-samples 10
 --result-dir /home/shared
 --experiment-name TEST_RESULTS
 --write-zip

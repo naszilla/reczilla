@@ -5,6 +5,7 @@
 --split-seed 1
 --alg-seed 1
 --alg-name UserKNNCF_euclidean
---num-samples 10
+--num-samples 2
 --result-dir .
---experiment-name TEST_EXPERIMENT_CONFIG
+--experiment-name TEST_EXPERIMENT_CONFIG_2
+--write-zip
