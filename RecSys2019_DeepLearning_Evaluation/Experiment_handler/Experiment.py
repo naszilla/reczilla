@@ -7,7 +7,7 @@ one or more sets of hyperparameters for the algorithm. we record the train and t
 import os
 from pathlib import Path
 from typing import List
-import shutil
+from Utils.reczilla_utils import make_archive
 
 from Base.Evaluation.Evaluator import EvaluatorHoldout
 from Data_manager.DataSplitter import DataSplitter
@@ -49,14 +49,17 @@ class Experiment(object):
         experiment_name: the name of the directory where results will be written. if it doesn't exist, create it.
         """
         self.logger = get_logger()
-        self.base_directory = base_directory
+        self.base_directory = base_directory.resolve()
         # make sure the base directory exists
         assert (
             base_directory.exists()
         ), f"base_directory does not exist: {str(base_directory)}"
 
         # define the result directory
-        self.result_directory = base_directory.joinpath(experiment_name)
+        self.result_directory = base_directory.joinpath(experiment_name).resolve()
+
+        print(f"EXPERIMENT: base_directory: {self.base_directory}")
+        print(f"EXPERIMENT: result_directory: {self.result_directory}")
 
         # if this directory doesn't exist, create it
         if not self.result_directory.exists():
@@ -83,8 +86,12 @@ class Experiment(object):
 
     def zip(self, filename):
         """zip the result directory to the file at the given path"""
-        shutil.make_archive(filename, 'zip', str(self.result_directory))
-        self.logger.info(f"zipped experiment directory to {str(self.base_directory)}/{filename}")
+        make_archive(
+            str(self.result_directory), str(self.base_directory.joinpath(filename))
+        )
+        self.logger.info(
+            f"zipped experiment directory to {str(self.base_directory)}/{filename}"
+        )
 
     def prepare_dataset(self, data_dir, dataset_name):
         """keep track of the dataset and reader object"""
@@ -130,10 +137,14 @@ class Experiment(object):
         # first, attempt to read the split. if it does not exist, then create it
         try:
 
-            data_reader, splitter_class, init_kwargs = DataSplitter.load_data_reader_splitter_class(
-                split_path
+            (
+                data_reader,
+                splitter_class,
+                init_kwargs,
+            ) = DataSplitter.load_data_reader_splitter_class(split_path)
+            data_splitter = splitter_class(
+                data_reader, folder=str(split_path), **init_kwargs
             )
-            data_splitter = splitter_class(data_reader, folder=str(split_path), **init_kwargs)
             data_splitter.load_data()
             self.logger.info(f"found a split in directory {str(split_path)}")
 

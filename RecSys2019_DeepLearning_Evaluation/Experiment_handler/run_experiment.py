@@ -8,7 +8,6 @@ for each experiment we regenerate the dataset split. this is reasonable because 
 and they are deterministic since we pass random seeds to the split function.
 """
 import argparse
-import os
 from pathlib import Path
 from Experiment_handler.Experiment import Experiment
 from Utils.reczilla_utils import config_to_sequence
@@ -29,7 +28,7 @@ def run(args):
     )
     if args.write_zip:
         # write a zip of the results in folder result_dir
-        experiment.zip("results")
+        experiment.zip("results.zip")
 
 
 if __name__ == "__main__":
