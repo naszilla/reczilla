@@ -121,3 +121,43 @@ function test_gcp_commands() {
   cp test.py gcp-test-command-worked.out"
 }
 ```
+
+Updated version that uses images.
+
+```bash
+function batch_gcp_creation() {
+  name_base=colin
+  source_image=reczilla-v5-image
+  service_account=default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com
+  zone=us-central1-a
+  project=research-collab-naszilla
+  num_start=1
+  num_end=20
+
+  for i in $(seq $num_start $num_end)
+  do
+    instance_name=$name_base\-vm\-$i
+
+    # create vm instance from image
+    echo creating $instance_name
+    gcloud beta compute instances create $instance_name --zone=$zone \
+    --project=$project --image=$image_name \
+    --service-account $service_account \
+    --scopes=https://www.googleapis.com/auth/devstorage.read_write
+
+    # ssh and perform a simple operation
+    echo starting job from $instance_name
+    gcloud compute ssh --ssh-flag="-A" $instance_name --zone=$zone --project=$project \
+    --command="cd /home/shared/reczilla/RecSys2019_DeepLearning_Evaluation; \
+    cp test.py gcp-test-command-worked.out"
+  done
+}
+```
+
+Note: if we need to update `reczilla-v5-image`, this is how I did it:
+ - Start with an instance that has the updated code/data/etc
+ - On the GCP console, clone its disk, and set zone to "single zone"
+ - Then create an image from the disk using this command
+```bash
+gcloud compute images create reczilla-v6-image --project=research-collab-naszilla --source-disk=NEW_DISK_NAME --source-disk-zone=us-central1-a
+```
