@@ -10,13 +10,14 @@ Created on 06/01/18
 import zipfile, os, shutil
 from Data_manager.Dataset import Dataset
 from Data_manager.DataReader import DataReader
+from Data_manager.DataReader_utils import download_from_URL
 
 
 
 
 class NetflixPrizeReader(DataReader):
 
-    DATASET_URL = "https://www.kaggle.com/netflix-inc/netflix-prize-data"
+    DATASET_URL = "https://figshare.com/ndownloader/files/34312409?private_link=02fd4b4bc40f20a1958e"
     DATASET_SUBFOLDER = "NetflixPrize/"
     AVAILABLE_ICM = []
     DATASET_SPECIFIC_MAPPER = []
@@ -42,14 +43,18 @@ class NetflixPrizeReader(DataReader):
         except (FileNotFoundError, zipfile.BadZipFile):
 
             self._print("Unable to find data zip file.")
-            self._print("Automatic download not available, please ensure the ZIP data file is in folder {}.".format(self.zip_file_folder))
-            self._print("Data can be downloaded here: {}".format(self.DATASET_URL))
+            # self._print("Automatic download not available, please ensure the ZIP data file is in folder {}.".format(self.zip_file_folder))
+            # self._print("Data can be downloaded here: {}".format(self.DATASET_URL))
 
             # If directory does not exist, create
             if not os.path.exists(self.zip_file_folder):
                 os.makedirs(self.zip_file_folder)
+            
+            download_from_URL(self.DATASET_URL, self.zip_file_folder, "netflix-prize-data.zip")
 
-            raise FileNotFoundError("Automatic download not available.")
+            self.dataFile = zipfile.ZipFile(self.zip_file_folder + "netflix-prize-data.zip")
+
+            # raise FileNotFoundError("Automatic download not available.")
 
 
 

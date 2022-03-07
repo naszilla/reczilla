@@ -18,7 +18,7 @@ from Data_manager.DataReader_utils import download_from_URL, load_CSV_into_Spars
 
 class FilmTrustReader(DataReader):
 
-    DATASET_URL = "https://www.librec.net/datasets/filmtrust.zip"
+    DATASET_URL = "https://guoguibing.github.io/librec/datasets/filmtrust.zip"
     DATASET_SUBFOLDER = "FilmTrust/"
     AVAILABLE_URM = ["URM_all"]
 
@@ -47,7 +47,6 @@ class FilmTrustReader(DataReader):
             download_from_URL(self.DATASET_URL, zipFile_path, "filmtrust.zip")
 
             dataFile = zipfile.ZipFile(zipFile_path + "filmtrust.zip")
-
 
         URM_path = dataFile.extract("ratings.txt", path=zipFile_path + "decompressed/")
 
