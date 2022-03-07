@@ -141,7 +141,7 @@ function batch_gcp_creation() {
     # create vm instance from image
     echo creating $instance_name
     gcloud beta compute instances create $instance_name --zone=$zone \
-    --project=$project --image=$image_name \
+    --project=$project --image=$source_image \
     --service-account $service_account \
     --scopes=https://www.googleapis.com/auth/devstorage.read_write
 
