@@ -10,20 +10,21 @@ function run_experiment() {
   instance_name=$2
 
   # constant
-  source_machine_image=reczilla-v5
+  source_image=reczilla-v5-image
   service_account=default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com
   zone=us-central1-a
   project=research-collab-naszilla
+
 
   # important locations on the instance
   instance_config_location=/home/shared/config.txt
   instance_script_location=/home/shared/run_experiment_on_instance.sh
 
-  # launch an instance
   echo "launching instance ${instance_name}"
-  gcloud beta compute instances create $instance_name --zone=$zone --project=$project \
-  --source-machine-image=$source_machine_image \
-  --service-account=$service_account --scopes=https://www.googleapis.com/auth/devstorage.read_write
+    gcloud beta compute instances create $instance_name --zone=$zone \
+    --project=$project --image=$source_image \
+    --service-account $service_account \
+    --scopes=https://www.googleapis.com/auth/devstorage.read_write
 
   # copy config file to a set location on the instance
   gcloud compute scp $config_file $instance_name:$instance_config_location
