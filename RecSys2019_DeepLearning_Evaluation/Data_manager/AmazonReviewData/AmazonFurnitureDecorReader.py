@@ -12,8 +12,8 @@ from Data_manager.AmazonReviewData._AmazonReviewDataReader import _AmazonReviewD
 
 class AmazonFurnitureDecorReader(_AmazonReviewDataReader):
 
-    DATASET_URL_RATING = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Furniture_and_Decor.csv"
-    DATASET_URL_METADATA = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Furniture_and_Decor.json.gz"
+    DATASET_URL_RATING = r"http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/ratings_Furniture_and_D&%23233%3bcor.csv"
+    DATASET_URL_METADATA = r"http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Furniture_and_D&%23233%3bcor.json.gz"
 
     DATASET_SUBFOLDER = "AmazonReviewData/AmazonFurnitureDecor/"
     AVAILABLE_ICM = ["ICM_metadata"]
