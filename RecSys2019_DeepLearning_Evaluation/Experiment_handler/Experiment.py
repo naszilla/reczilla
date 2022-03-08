@@ -7,6 +7,10 @@ one or more sets of hyperparameters for the algorithm. we record the train and t
 import os
 from pathlib import Path
 from typing import List
+import numpy as np
+import random
+import tensorflow as tf
+
 from Utils.reczilla_utils import make_archive
 
 from Base.Evaluation.Evaluator import EvaluatorHoldout
@@ -22,6 +26,21 @@ SPLITTER_DICT = {
     "DataSplitter_leave_k_out": DataSplitter_leave_k_out,
     "DataSplitter_k_fold_random": DataSplitter_k_fold_random,
 }
+
+def set_deterministic(seed):
+    """
+    Set the seeds for all used libraries and enables deterministic behavior
+    """
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_random_seed(seed)
+
+    # Tensorflow Determinism
+    # See https://github.com/NVIDIA/framework-determinism
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+    os.environ['HOROVOD_FUSION_THRESHOLD'] = '0' # Determinism for multiple GPUs
 
 
 class Experiment(object):
