@@ -1,9 +1,5 @@
 #! /bin/bash
 
-# update git repo
-cd /home/shared/reczilla
-git pull
-
 # init conda and activate the reczilla environment
 source /home/shared/miniconda3/bin/activate
 conda init
