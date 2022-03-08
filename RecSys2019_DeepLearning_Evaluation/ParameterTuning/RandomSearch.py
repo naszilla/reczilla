@@ -12,6 +12,9 @@ from ParameterTuning.SearchAbstractClass import SearchAbstractClass
 
 import numpy as np
 
+from Utils.reczilla_utils import set_deterministic
+
+
 class RandomSearch(SearchAbstractClass):
 
     ALGORITHM_NAME = "RandomSearch"
@@ -58,8 +61,9 @@ class RandomSearch(SearchAbstractClass):
         output_folder_path=None,
         output_file_name_root=None,
         sampler_type="Sobol",
-        sampler_args={},
-        sample_seed=0,
+        sampler_args=None,
+        param_seed=0,
+        alg_seed=0,
         raise_exceptions=False,
         write_log_every=10,
     ):
@@ -69,7 +73,10 @@ class RandomSearch(SearchAbstractClass):
         pass additional args to the sampler using sampler_args
         """
 
-        hyperparam_rs = np.random.RandomState(sample_seed)
+        if sampler_args is None:
+            sampler_args = {}
+
+        hyperparam_rs = np.random.RandomState(param_seed)
 
         # sample random hyperparam values
         hyperparam_samples = parameter_search_space.random_samples(
@@ -107,6 +114,7 @@ class RandomSearch(SearchAbstractClass):
             if i_sample % write_log_every == 0:
                 self._write_log("{}: Starting parameter set {} of {}\n".format(
                 self.ALGORITHM_NAME, i_sample + 1, n_samples))
+            set_deterministic(alg_seed)  # reinitialize random states using the algorithm seed
             self._objective_function(hyperparams)
 
         self._write_log(

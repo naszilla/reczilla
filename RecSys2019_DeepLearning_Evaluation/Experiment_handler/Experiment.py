@@ -7,9 +7,6 @@ one or more sets of hyperparameters for the algorithm. we record the train and t
 import os
 from pathlib import Path
 from typing import List
-import numpy as np
-import random
-import tensorflow as tf
 
 from Utils.reczilla_utils import make_archive
 
@@ -26,22 +23,6 @@ SPLITTER_DICT = {
     "DataSplitter_leave_k_out": DataSplitter_leave_k_out,
     "DataSplitter_k_fold_random": DataSplitter_k_fold_random,
 }
-
-def set_deterministic(seed):
-    """
-    Set the seeds for all used libraries and enables deterministic behavior
-    """
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-    tf.random.set_random_seed(seed)
-
-    # Tensorflow Determinism
-    # See https://github.com/NVIDIA/framework-determinism
-    os.environ['TF_DETERMINISTIC_OPS'] = '1'
-    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
-    os.environ['HOROVOD_FUSION_THRESHOLD'] = '0' # Determinism for multiple GPUs
-
 
 class Experiment(object):
     """
@@ -306,6 +287,7 @@ class Experiment(object):
         alg_name: str,
         num_samples: int,
         alg_seed: int,
+        param_seed: int,
         cutoff_list: List[int] = None,
     ):
         """
@@ -370,7 +352,7 @@ class Experiment(object):
         )
 
         # run a random parameter search
-        output_file_name = f"seed{alg_seed}_" + time_to_str(self.TIME_FORMAT)
+        output_file_name = f"algseed{alg_seed}_paramseed{param_seed}_" + time_to_str(self.TIME_FORMAT)
         parameter_search.search(
             search_input_recommender_args,
             parameter_search_space,
@@ -379,7 +361,8 @@ class Experiment(object):
             output_file_name_root=output_file_name,
             sampler_type="Sobol",
             sampler_args={},
-            sample_seed=alg_seed,
+            param_seed=param_seed,
+            alg_seed=alg_seed
         )
 
         # make sure that result (metadata) file exists, and add it to the list

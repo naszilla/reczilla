@@ -78,7 +78,7 @@ def run(args):
         output_file_name_root=file_root,
         sampler_type="Sobol",
         sampler_args={},
-        sample_seed=args.param_seed,
+        param_seed=args.param_seed,
     )
 
     # make sure the metadata file exists

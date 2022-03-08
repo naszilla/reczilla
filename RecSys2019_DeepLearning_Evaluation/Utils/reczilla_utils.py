@@ -3,6 +3,9 @@ import shutil
 import time
 import logging
 import shlex
+import numpy as np
+import random
+import tensorflow as tf
 
 
 def generate_filepath(output_dir, name, extension):
@@ -70,3 +73,19 @@ def make_archive(source, destination):
     archive_to = os.path.basename(source.strip(os.sep))
     shutil.make_archive(name, format, archive_from, archive_to)
     shutil.move("%s.%s" % (name, format), destination)
+
+
+def set_deterministic(seed):
+    """
+    Set the seeds for all used libraries and enables deterministic behavior
+    """
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_random_seed(seed)
+
+    # Tensorflow Determinism
+    # See https://github.com/NVIDIA/framework-determinism
+    os.environ["TF_DETERMINISTIC_OPS"] = "1"
+    os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
+    os.environ["HOROVOD_FUSION_THRESHOLD"] = "0"  # Determinism for multiple GPUs

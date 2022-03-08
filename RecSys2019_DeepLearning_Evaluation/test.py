@@ -76,6 +76,6 @@ for dataset_name in dataset_list:
             output_file_name_root=output_file_name_root,
             sampler_type="Sobol",
             sampler_args={},
-            sample_seed=0,
+            param_seed=0,
         )
 

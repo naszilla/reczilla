@@ -41,6 +41,7 @@ def run(args):
         args.alg_name,
         args.num_samples,
         args.alg_seed,
+        args.param_seed,
     )
     if args.write_zip:
         # write a zip of the results in folder result_dir
@@ -83,6 +84,12 @@ if __name__ == "__main__":
         type=int,
         default=0,
         help="random seed passed to the recommender algorithm. only for random algorithms.",
+    )
+    cli_parser.add_argument(
+        "--param-seed",
+        type=int,
+        default=0,
+        help="random seed for generating random hyperparameters.",
     )
     cli_parser.add_argument(
         "--alg-name", type=str, help="name of the algorithm to use.", required=True,
