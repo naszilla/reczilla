@@ -31,6 +31,7 @@ function run_experiment() {
   echo "RETURN CODE from scp config file: $ret_code"
 
   # ssh and run the experiment. steps:
+  # 1. copy data split to instance
   # 1. pull the latest repo
   # 2. chmod the experiment script
   # 3. run the experiment script
@@ -40,6 +41,7 @@ function run_experiment() {
   echo "running experiment..."
   gcloud compute ssh --ssh-flag="-A" $instance_name --zone=$zone --project=$project \
   --command="\
+
   cd ${instance_repo_dir}; \
   git pull; \
   chmod +x ${instance_script_location}; \

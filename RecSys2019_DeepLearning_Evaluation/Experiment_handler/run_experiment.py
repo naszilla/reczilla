@@ -15,10 +15,26 @@ from Utils.reczilla_utils import config_to_sequence
 
 def run(args):
 
+    # validate args
+    if args.split_dir is None:
+        split_path = None
+    else:
+        split_path = Path(args.split_dir)
+    if args.data_dir is None:
+        data_path = None
+    else:
+        data_path = Path(args.data_dir)
+
     # run experiment
-    experiment = Experiment(Path(args.result_dir), args.experiment_name, verbose=args.verbose)
-    experiment.prepare_dataset(args.data_dir, args.dataset_name)
-    experiment.prepare_split(args.dataset_name, args.split_type)
+    experiment = Experiment(
+        Path(args.result_dir),
+        data_path,
+        args.experiment_name,
+        use_processed_data=args.use_processed_data,
+        verbose=args.verbose,
+    )
+    experiment.prepare_dataset(args.dataset_name)
+    experiment.prepare_split(args.dataset_name, args.split_type, split_path=split_path)
     experiment.run_experiment(
         args.dataset_name,
         args.split_type,
@@ -42,16 +58,19 @@ if __name__ == "__main__":
         "--data-dir",
         type=str,
         help="directory containing downloaded datasets",
-        required=True,
+        required=False,
     )
     cli_parser.add_argument(
         "--dataset-name",
         type=str,
-        help="name of dataset. this must be a subdirectory of data-dir",
+        help="name of dataset. we use this to find the dataset and split.",
         required=True,
     )
     cli_parser.add_argument(
-        "--split-type", type=str, help="name of datasplitter to use.", required=True,
+        "--split-type",
+        type=str,
+        help="name of datasplitter to use. we use this to find the split directory.",
+        required=True,
     )
     cli_parser.add_argument(
         "--split-seed",
@@ -87,14 +106,23 @@ if __name__ == "__main__":
         required=True,
     )
     cli_parser.add_argument(
+        "--split-dir",
+        type=str,
+        help="if the split has been prepared, pass the directory here.",
+        default=None,
+    )
+    cli_parser.add_argument(
+        "--use-processed-data",
+        action="store_true",
+        help="if provided, try to read the dataset at data_dir/<dataset_name>. this can be used to create splits.",
+    )
+    cli_parser.add_argument(
         "--write-zip",
         action="store_true",
         help="if provided, zip the result directory and place it in result directory",
     )
     cli_parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="if provided, print additional output",
+        "--verbose", action="store_true", help="if provided, print additional output",
     )
 
     # config file parser

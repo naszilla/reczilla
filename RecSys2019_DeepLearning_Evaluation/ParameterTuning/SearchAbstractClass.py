@@ -425,10 +425,11 @@ class SearchAbstractClass(object):
 
             if new_best_config_found:
 
-                self._write_log("{}: New best config found. Config {}: {} - results: {}\n".format(self.ALGORITHM_NAME,
-                                                                                           self.model_counter,
-                                                                                           current_fit_parameters_dict,
-                                                                                           result_string))
+                # remove this log for reczilla
+                # self._write_log("{}: New best config found. Config {}: {} - results: {}\n".format(self.ALGORITHM_NAME,
+                #                                                                            self.model_counter,
+                #                                                                            current_fit_parameters_dict,
+                #                                                                            result_string))
 
                 if self.save_model in ["all", "best"]:
                     self._print("{}: Saving model in {}\n".format(self.ALGORITHM_NAME, self.output_folder_path + self.output_file_name_root))

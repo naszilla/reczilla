@@ -1,5 +1,5 @@
 # example config file
---data-dir  ./data/
+--split-dir ./splits
 --dataset-name Movielens100KReader
 --split-type DataSplitter_leave_k_out
 --split-seed 1

@@ -62,24 +62,47 @@ class Experiment(object):
 
     TIME_FORMAT = "%Y%m%d_%H%M%S"
 
-    def __init__(self, base_directory: Path, experiment_name: str, verbose=True):
+    def __init__(
+        self,
+        base_directory: Path,
+        data_directory: Path,
+        experiment_name: str,
+        use_processed_data=False,
+        verbose=True,
+    ):
         """
         base_directory: an existing directory where the experiment directory structure will be written
         experiment_name: the name of the directory where results will be written. if it doesn't exist, create it.
         """
         self.logger = get_logger()
+
+        # define the result & data directory
         self.base_directory = base_directory.resolve()
+        self.result_directory = self.base_directory.joinpath(experiment_name)
+
         self.verbose = verbose
+        self.use_processed_data = use_processed_data  # if true, try to read the original dataset, which can be used to create splits. if false, all splits must already exist.
 
         # make sure the base directory exists
         assert (
-            base_directory.exists()
-        ), f"base_directory does not exist: {str(base_directory)}"
+            self.base_directory.exists()
+        ), f"base_directory does not exist: {str(self.base_directory)}"
 
-        # define the result directory
-        self.result_directory = base_directory.joinpath(experiment_name).resolve()
+        if data_directory is not None:
+            assert (
+                not self.use_processed_data
+            ), f"data_directory must be provided if use_processed_data = True "
+            self.data_directory = data_directory.resolve()
 
-        self.logger.info(f"initializing Experiment: base_directory={self.base_directory}, result_directory={self.result_directory}")
+            assert (
+                self.data_directory.exists()
+            ), f"data_directory does not exist: {str(self.data_directory)}"
+        else:
+            self.data_directory = None
+
+        self.logger.info(
+            f"initializing Experiment: base_directory={self.base_directory}, result_directory={self.result_directory}, data_directory={self.data_directory}"
+        )
 
         # if this directory doesn't exist, create it
         if not self.result_directory.exists():
@@ -89,20 +112,30 @@ class Experiment(object):
             self.logger.info(f"found result directory: {self.result_directory}")
 
         self.prepared_split_dict = {}  # keys = dataset names, values = split names
-        self.dataset_dict = {}  # keys = dataset names, values = reader objects
+        self.dataset_dict = (
+            {}
+        )  # keys = dataset names, values = reader objects (if use_processed_data=True) or None (if use_processed_data=False)
         self.result_list = []
 
-    def get_dataset_path(self, dataset_name):
+    def get_dataset_result_path(self, dataset_name):
         """get path of results for a particluar dataset"""
         return self.result_directory.joinpath(dataset_name)
 
-    def get_split_path(self, dataset_name, split_name):
+    def get_split_result_path(self, dataset_name, split_name):
         """get path of results for a particluar dataset and split"""
         return self.result_directory.joinpath(dataset_name, split_name)
 
-    def get_alg_path(self, dataset_name, split_name, alg_name):
+    def get_alg_result_path(self, dataset_name, split_name, alg_name):
         """get path of results for a particluar dataset and split and algorithm"""
         return self.result_directory.joinpath(dataset_name, split_name, alg_name)
+
+    def get_dataset_path(self, dataset_name):
+        """get path of a dataset"""
+        return self.data_directory.joinpath(dataset_name)
+
+    def get_split_path(self, dataset_name, split_name):
+        """get path of dataset split"""
+        return self.data_directory.joinpath(dataset_name, split_name)
 
     def zip(self, filename):
         """zip the result directory to the file at the given path"""
@@ -113,7 +146,9 @@ class Experiment(object):
             f"zipped experiment directory to {str(self.base_directory)}/{filename}"
         )
 
-    def prepare_config(self, file_name, data_dir, dataset_name, split_name, alg_name, **kwargs):
+    def prepare_config(
+        self, file_name, data_dir, dataset_name, split_name, alg_name, **kwargs
+    ):
         """
         write an Experiment config file for a dataset-split-alg combination. all config files are stored in the same
         directory structure as experiment results.
@@ -143,50 +178,73 @@ class Experiment(object):
             line_list.append(f"--{name} {val}")
 
         # write file. make its directory if it doesn't exist
-        config_dir = self.get_alg_path(dataset_name, split_name, alg_name)
+        config_dir = self.get_alg_result_path(dataset_name, split_name, alg_name)
         config_dir.mkdir(parents=True, exist_ok=True)
 
         filepath = str(config_dir.joinpath(file_name))
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             for line in line_list:
                 f.write(f"{line}\n")
 
-    def prepare_dataset(self, data_dir, dataset_name):
-        """keep track of the dataset and reader object"""
+    def prepare_dataset(self, dataset_name):
+        """keep track of the dataset and reader object. make sure that we can read the dataset."""
         if dataset_name in self.dataset_dict:
             self.logger.info(f"dataset already prepared: {dataset_name}")
 
-        # -- make sure dataset exists --
-        # never reload the original dataset (reload_from_original_data="never")
-        self.dataset_dict[dataset_name] = dataset_handler(dataset_name)(
-            reload_from_original_data="never",
-            folder=str(Path(data_dir).joinpath(dataset_name)),
-        )
+        # if self.use_processed_data = True, then try to read the dataset. Otherwise just make sure the directory exists.
+        if self.use_processed_data:
+            # -- make sure dataset exists --
+            assert self.get_dataset_path(
+                dataset_name
+            ).exists(), f"dataset directory not found: {str(self.get_dataset_path(dataset_name))}"
+            # never reload the original dataset (reload_from_original_data="never")
+            self.dataset_dict[dataset_name] = dataset_handler(dataset_name)(
+                reload_from_original_data="never",
+                folder=str(self.get_dataset_path(dataset_name)),
+            )
 
-        # make sure the data exists in data_dir/dataset_name
-        _ = self.dataset_dict[dataset_name].load_data()
+            # make sure the data exists in self.data_directory/dataset_name
+            _ = self.dataset_dict[dataset_name].load_data()
+        else:
+            self.dataset_dict[dataset_name] = None
 
         # initialize split dict for this dataset
         self.prepared_split_dict[dataset_name] = {}
-        self.logger.info(
-            f"initialized dataset in {str(self.get_dataset_path(dataset_name))}"
-        )
+        self.logger.info(f"initialized dataset in {dataset_name}")
 
     # TODO: add random seed to splitter, and keep track of this seed (maybe in the name of the split?)
     # TODO: keep track of split params somehow...
-    def prepare_split(self, dataset_name, split_type, split_args: dict = None):
+    def prepare_split(
+        self,
+        dataset_name,
+        split_type,
+        split_args: dict = None,
+        split_path: Path = None,
+    ):
         """
         check whether a split already exists. if it does not exist, create it.
+
+        if split_path is not None, read the data directly from this path.
         """
         if split_args is None:
             split_args = {}
+
+        if (split_path is None) and (not self.use_processed_data):
+            raise Exception(
+                f"no split_path provided. if use_processed_data = False, then split_path must be provided."
+            )
 
         # dataset must be initialized
         assert (
             dataset_name in self.dataset_dict
         ), f"dataset '{dataset_name}' must be  initialized with prepare_dataset()"
 
-        split_path = self.get_split_path(dataset_name, split_type)
+        # path to split data
+        if split_path is not None:
+            assert split_path.exists(), f"data_path does not exist: {str(split_path)}"
+            split_path = split_path
+        else:
+            split_path = self.get_split_path(dataset_name, split_type)
 
         # if the split directory has already been prepared, skip it
         if str(split_path) in self.prepared_split_dict[dataset_name]:
@@ -208,20 +266,28 @@ class Experiment(object):
 
         except FileNotFoundError:
 
-            self.logger.info(
-                f"split not found in directory {str(split_path)}. creating a new split."
-            )
+            if not self.use_processed_data:
+                self.logger.info(
+                    f"split not found and use_processed_data=False. raising Exception"
+                )
+                raise FileNotFoundError
+            else:
+                self.logger.info(
+                    f"split not found in directory {str(split_path)}. creating a new split."
+                )
 
-            if split_type not in SPLITTER_DICT:
-                raise Exception(f"split_type not recognized: {split_type}")
+                if split_type not in SPLITTER_DICT:
+                    raise Exception(f"split_type not recognized: {split_type}")
 
-            data_splitter = SPLITTER_DICT[split_type](
-                self.dataset_dict[dataset_name], **split_args, folder=str(split_path),
-            )
+                data_splitter = SPLITTER_DICT[split_type](
+                    self.dataset_dict[dataset_name],
+                    **split_args,
+                    folder=str(split_path),
+                )
 
-            # write the split in the result subfolder
-            data_splitter.load_data()
-            self.logger.info(f"new split created.")
+                # write the split in the result subfolder
+                data_splitter.load_data()
+                self.logger.info(f"new split created.")
 
         assert (
             "URM_test" in data_splitter.SPLIT_URM_DICT
@@ -295,7 +361,9 @@ class Experiment(object):
             verbose=self.verbose,
         )
 
-        experiment_result_dir = self.get_alg_path(dataset_name, split_name, alg_name)
+        experiment_result_dir = self.get_alg_result_path(
+            dataset_name, split_name, alg_name
+        )
 
         self.logger.info(
             f"starting experiment, writing results to {str(experiment_result_dir)}"
