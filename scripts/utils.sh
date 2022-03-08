@@ -32,6 +32,9 @@ function run_experiment() {
   # copy run script to a set location on the instance (this avoids permissions issues)
   gcloud compute scp ./run_experiment_on_instance.sh $instance_name:$instance_script_location
 
+  # change this so we only have one ssh command, no scp
+
+
   # ssh and run the experiment
   echo "running experiment"
   gcloud compute ssh --ssh-flag="-A" $instance_name --zone=$zone --project=$project \
