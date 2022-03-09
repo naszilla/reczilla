@@ -2,14 +2,18 @@
 # functions for running batch jobs
 # load these functions by running 'source utils.sh'
 
-function run_experiment() {
+run_experiment() {
 
   # $1 = argument string passed to Experiment_handler.run_experiment
   # $2 = full path to the split data on the gcloud bucket (should start with gc://reczilla...)
   # $3 = instance name
-  args_str=$1
-  split_path=$2
-  instance_name=$3
+  args_str="$1"
+  split_path="$2"
+  instance_name="$3"
+
+  echo "run_experiment: args_str: ${args_str}"
+  echo "run_experiment: split_path: ${split_path}"
+  echo "run_experiment: instance_name: ${instance_name}"
 
 
   # constants

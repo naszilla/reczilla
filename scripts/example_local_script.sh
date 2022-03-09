@@ -6,6 +6,9 @@ source utils.sh
 ###################
 # define parameters
 
+# base name for the gcloud instances
+instance_base=dcm
+
 # params
 alg_seed=0
 num_samples=3
@@ -69,7 +72,7 @@ do
 
     split_path_on_bucket=${bucket_base}/${dataset_folder_name}/${split_type}
 
-    run_experiment ${arg_str} ${split_path_on_bucket} dcm-test-${i}-${j} >> ./log_${i}_${j}.txt 2>&1 &
+    run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
     sleep 1
   done
 done
