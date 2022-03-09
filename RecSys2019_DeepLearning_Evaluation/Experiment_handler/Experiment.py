@@ -149,7 +149,8 @@ class Experiment(object):
         line_list = ["# config file prepared by Experiment.prepare_config"]
 
         # add positional args (these determine the location and name of the config file)
-        line_list.append(f"--data-dir {data_dir}")
+        if data_dir is not None:
+            line_list.append(f"--data-dir {data_dir}")
         line_list.append(f"--dataset-name {dataset_name}")
         line_list.append(f"--split-type {split_name}")
         line_list.append(f"--alg-name {alg_name}")
