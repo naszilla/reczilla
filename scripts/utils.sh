@@ -43,8 +43,8 @@ run_experiment() {
   --command="\
   cd ${instance_repo_dir}; \
   git pull; \
-  export ARGS=${args_str}; \
-  export SPLIT_PATH_ON_BUCKET=${split_path}; \
+  export ARGS="${args_str}"; \
+  export SPLIT_PATH_ON_BUCKET="${split_path}"; \
   chmod +x ${instance_script_location}; \
   /bin/bash ${instance_script_location}"
 

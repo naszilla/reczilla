@@ -56,86 +56,86 @@ if __name__ == "__main__":
     # command line parser
     cli_parser = subparsers.add_parser("cli")
     cli_parser.add_argument(
-        "--data-dir",
+        "data_dir",
         type=str,
         help="directory containing downloaded datasets",
         required=False,
     )
     cli_parser.add_argument(
-        "--dataset-name",
+        "dataset_name",
         type=str,
         help="name of dataset. we use this to find the dataset and split.",
         required=True,
     )
     cli_parser.add_argument(
-        "--split-type",
+        "split_type",
         type=str,
         help="name of datasplitter to use. we use this to find the split directory.",
         required=True,
     )
     cli_parser.add_argument(
-        "--split-seed",
+        "split_seed",
         type=int,
         default=0,
         help="random seed passed to datasplitter. only used for random splits.",
     )
     cli_parser.add_argument(
-        "--alg-seed",
+        "alg_seed",
         type=int,
         default=0,
         help="random seed passed to the recommender algorithm. only for random algorithms.",
     )
     cli_parser.add_argument(
-        "--param-seed",
+        "param_seed",
         type=int,
         default=0,
         help="random seed for generating random hyperparameters.",
     )
     cli_parser.add_argument(
-        "--alg-name", type=str, help="name of the algorithm to use.", required=True,
+        "alg_name", type=str, help="name of the algorithm to use.", required=True,
     )
     cli_parser.add_argument(
-        "--num-samples",
+        "num_samples",
         type=int,
         help="number of hyperparameter samples.",
         required=True,
     )
     cli_parser.add_argument(
-        "--result-dir",
+        "result_dir",
         type=str,
         help="directory where result dir structure will be written. this directory should exist.",
         required=True,
     )
     cli_parser.add_argument(
-        "--experiment-name",
+        "experiment_name",
         type=str,
         help="name of the result directory that will be created.",
         required=True,
     )
     cli_parser.add_argument(
-        "--split-dir",
+        "split_dir",
         type=str,
         help="if the split has been prepared, pass the directory here.",
         default=None,
     )
     cli_parser.add_argument(
-        "--use-processed-data",
+        "use_processed_data",
         action="store_true",
         help="if provided, try to read the dataset at data_dir/<dataset_name>. this can be used to create splits.",
     )
     cli_parser.add_argument(
-        "--write-zip",
+        "write_zip",
         action="store_true",
         help="if provided, zip the result directory and place it in result directory",
     )
     cli_parser.add_argument(
-        "--verbose", action="store_true", help="if provided, print additional output",
+        "verbose", action="store_true", help="if provided, print additional output",
     )
 
     # config file parser
     config_parser = subparsers.add_parser("config")
     config_parser.add_argument(
-        "--config-file",
+        "config_file",
         type=str,
         default=None,
         help="if provided, parse args from file rather than command line. this will override any cli args provided",

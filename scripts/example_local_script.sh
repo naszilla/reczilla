@@ -55,15 +55,15 @@ do
   do
     # argument string that will be passed to Experiment_handler.run_experiment
     arg_str="\
-    --split-dir /home/shared/split \
-    --result-dir /home/shared \
-    --write-zip \
-    --experiment-name gcp-experiment-${i}-${j} \
-    --split-type ${split_type} \
-    --alg-name ${alg_list[j]} \
-    --dataset-name ${dataset_list[j]} \
-    --alg-seed ${alg_seed} \
-    --num-samples ${num_samples} \
+    split_dir /home/shared/split \
+    result_dir /home/shared \
+    write_zip \
+    experiment_name gcp-experiment-${i}-${j} \
+    split_type ${split_type} \
+    alg_name ${alg_list[j]} \
+    dataset_name ${dataset_list[j]} \
+    alg_seed ${alg_seed} \
+    num_samples ${num_samples} \
     "
 
     # NOTE: in the current version of the split directory, the dataset names do not have suffix "Reader"
