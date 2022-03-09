@@ -1,60 +1,74 @@
 #! /bin/bash
 set -e
-# init conda and activate the reczilla environment
+
+###############################################################################################################
+# This script runs a single experiment on a gcloud instance.
+# This instance needs to have a (not-necessarily-updated) Reczilla codebase in /home/shared/reczilla
+#
+# NOTE: this script requires that two environment variables are defined
+# (use `export <var>=value` to define these)
+#
+# ARGS: this is a string of arguments that is passed to Experiment_handler.run_experiment
+#  the following args should always be included in ARGS:
+#  - `--split-dir /home/shared/split`  <- the location of the split data, which is copied here by this script
+#  - `--result-dir /home/shared  <- where the results dir will be written
+#  - `--write-zip`   <- to write the zip
+#  - `--experiment-name <name>`  <- name of the new results dir
+#  - `--split-type <name>  <- name of the split type. used for writing results to the correct dir
+#  - `--alg-name <name>`  <- used for selecting the algorithm and writing results to the correct dir
+#  - `--dataset-name <name>`  <- name of the dataset. used for writing results to the correct dir
+#
+# SPLIT_PATH_ON_BUCKET: full path to the dataset on the gcloud bucket (should start with gc://reczilla...)
+#
+###############################################################################################################
+
+#############################################
+# make sure environment variables are defined
+
+if [ -n "$ARGS" ]; then
+  echo "ARGS STRING: $ARGS"
+else
+  echo "ARGS string not defined" 1>&2
+fi
+
+if [ -n "$SPLIT_PATH_ON_BUCKET" ]; then
+  echo "SPLIT_PATH_ON_BUCKET: $SPLIT_PATH_ON_BUCKET"
+else
+  echo "SPLIT_PATH_ON_BUCKET not defined" 1>&2
+fi
+
+###############
+# prepare conda
+
 source /home/shared/miniconda3/bin/activate
 conda init
 conda activate reczilla
 
-###################
-# check config file
-
-# we need to have a config file in /home/shared/config.txt
-config_file=/home/shared/config.txt
-if [ -f "$config_file" ]; then
-    echo "config file exists."
-else
-    echo "ERROR: config file does not exist."
-fi
-
-# read dataset name and split name from config file
-dataset_name=$(grep "dataset-name" $config_file | cut -d' ' -f2)
-split_name=$(grep "split-type" $config_file | cut -d' ' -f2)
-
-echo "dataset: ${dataset_name}"
-echo "split: ${split_name}"
 
 #################
 # copy split data
 
-# location of split data on the bucket
-split_data_bucket=gs://reczilla-results/dataset-splits/splits-v2
-
 # copy all files in the split directory to a local folder
-# first remove the dir if it exists
+# first remove the split dir if it exists
 rm -rf /home/shared/split
 mkdir /home/shared/split
 
-dataset_folder_name=${dataset_name%Reader}
-# on the bucket, the string "reader" does not appear at the end of the foldername. remove this from the dataset_name
-gsutil cp "${split_data_bucket}/${dataset_folder_name}/${split_name}/*" /home/shared/split/
-
+# copy the split data to /home/shared/split
+gsutil cp "${SPLIT_PATH_ON_BUCKET}/*" /home/shared/split/
 
 ################
 # run experiment
 
-# run the experiment from /home/shared/config.txt
+# run the experiment using command line args stored in variable $ARGS
 # the results should always be zipped and written to /home/shared/result.zip
-# this is done using argument --write-zip /home/shared/result.zip (in the config file)
 cd /home/shared/reczilla/RecSys2019_DeepLearning_Evaluation
-python -m Experiment_handler.run_experiment config --config-file ${config_file}
+python -m Experiment_handler.run_experiment cli ${ARGS}
 
-# add a timestamp to the result file. add a random string to the end of the filename, to avoid collisions
+# add a timestamp and a random string to the end of the filename, to avoid collisions
 result_file=result_$(date +"%m%d%y_%H%M%S")_$(openssl rand -hex 2).zip
-
 mv /home/shared/results.zip /home/shared/${result_file}
 
+###############################
 # save results to gcloud bucket
+
 gsutil cp /home/shared/${result_file} gs://reczilla-results/inbox
-
-
-
