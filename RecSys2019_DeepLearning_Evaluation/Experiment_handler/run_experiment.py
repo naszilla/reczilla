@@ -63,7 +63,7 @@ if __name__ == "__main__":
         help="name of datasplitter to use. we use this to find the split directory.",
     )
     cli_parser.add_argument(
-        "alg_name", type=str, help="name of the algorithm to use.", required=True,
+        "alg_name", type=str, help="name of the algorithm to use.",
     )
     cli_parser.add_argument(
         "split_dir",
