@@ -34,7 +34,7 @@ CoClustering
 
 for i in ${!alg_list[@]};
 do
-  run_experiment ${config_dir}/Jester2Reader/DataSplitter_leave_k_out/${alg_list[i]}/config.txt test-${i}-b > ./log_${i}.txt
+  run_experiment ${config_dir}/Jester2Reader/DataSplitter_leave_k_out/${alg_list[i]}/config.txt dcm-test-${i} > ./log_${i}.txt
   sleep 1
 done
 

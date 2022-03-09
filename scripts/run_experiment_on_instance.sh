@@ -30,8 +30,13 @@ echo "split: ${split_name}"
 split_data_bucket=gs://reczilla-results/dataset-splits/splits-v2
 
 # copy all files in the split directory to a local folder
+# first remove the dir if it exists
+rm -rf /home/shared/split
 mkdir /home/shared/split
-gsutil cp "${split_data_bucket}/${dataset_name}/${split_name}/*" /home/shared/split/
+
+dataset_folder_name=${dataset_name%Reader}
+# on the bucket, the string "reader" does not appear at the end of the foldername. remove this from the dataset_name
+gsutil cp "${split_data_bucket}/${dataset_folder_name}/${split_name}/*" /home/shared/split/
 
 
 ################
