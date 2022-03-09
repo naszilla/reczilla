@@ -24,10 +24,10 @@ CoClustering
 #ItemKNNCF_asymmetric
 #ItemKNNCF_cosine
 #Mult_VAE_RecommenderWrapper
-#P3alphaRecommender
+P3alphaRecommender
 #PureSVDRecommender
 #SlopeOne
-#TopPop
+TopPop
 #UserKNNCF_dice
 #UserKNNCF_jaccard
 )
@@ -35,7 +35,7 @@ CoClustering
 for i in ${!alg_list[@]};
 do
   run_experiment ${config_dir}/Jester2Reader/DataSplitter_leave_k_out/${alg_list[i]}/config.txt test-${i}-a > ./log_${i}.txt &
-  sleep 3
+  sleep 1
 done
 
 # pass
