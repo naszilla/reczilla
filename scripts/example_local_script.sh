@@ -85,6 +85,6 @@ do
     split_path_on_bucket=${bucket_base}/${dataset_folder_name}/${split_type}
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
-    sleep 1
+    sleep 5
   done
 done
