@@ -8,8 +8,9 @@ function run_experiment() {
   # $2 = full path to the split data on the gcloud bucket (should start with gc://reczilla...)
   # $3 = instance name
   args_str=$1
-  instance_name=$2
-  split_path=$3
+  split_path=$2
+  instance_name=$3
+
 
   # constants
   source_image=reczilla-v5-image
