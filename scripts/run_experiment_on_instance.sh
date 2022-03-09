@@ -17,8 +17,8 @@ else
 fi
 
 # read dataset name and split name from config file
-dataset_name=$(grep "dataset-name" config.txt | cut -d' ' -f2)
-split_name=$(grep "split-type" config.txt | cut -d' ' -f2)
+dataset_name=$(grep "dataset-name" $config_file | cut -d' ' -f2)
+split_name=$(grep "split-type" $config_file | cut -d' ' -f2)
 
 echo "dataset: ${dataset_name}"
 echo "split: ${split_name}"

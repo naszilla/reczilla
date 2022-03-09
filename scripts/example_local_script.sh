@@ -7,7 +7,7 @@ source utils.sh
 # generate config files locally
 # python -m Experiment_handler.generate_config_files ...
 
-config_dir=/Users/duncan/research/active_projects/reczilla/RecSys2019_DeepLearning_Evaluation/CONFIG_FILES
+config_dir=/Users/duncan/research/active_projects/reczilla/RecSys2019_DeepLearning_Evaluation/ONE_SAMPLE_EXPT
 
 # run experiments
 
@@ -24,17 +24,17 @@ CoClustering
 #ItemKNNCF_asymmetric
 #ItemKNNCF_cosine
 #Mult_VAE_RecommenderWrapper
-P3alphaRecommender
+#P3alphaRecommender
 #PureSVDRecommender
 #SlopeOne
-TopPop
+#TopPop
 #UserKNNCF_dice
 #UserKNNCF_jaccard
 )
 
 for i in ${!alg_list[@]};
 do
-  run_experiment ${config_dir}/Jester2Reader/DataSplitter_leave_k_out/${alg_list[i]}/config.txt test-${i}-a > ./log_${i}.txt &
+  run_experiment ${config_dir}/Jester2Reader/DataSplitter_leave_k_out/${alg_list[i]}/config.txt test-${i}-b > ./log_${i}.txt
   sleep 1
 done
 
