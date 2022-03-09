@@ -12,6 +12,7 @@ instance_base=dcm
 # params
 alg_seed=0
 num_samples=3
+param_seed=0
 
 # define the split type
 split_type=DataSplitter_leave_k_out
@@ -53,18 +54,29 @@ for i in ${!alg_list[@]};
 do
   for j in ${!dataset_list[@]};
   do
+
+    # order of args is:
+#    "dataset_name",
+#    "split_type",
+#    "alg_name",
+#    "split_dir",
+#    "alg_seed",
+#    "param_seed",
+#    "num_samples",
+#    "result_dir",
+#    "experiment_name",
+
     # argument string that will be passed to Experiment_handler.run_experiment
     arg_str="\
-    split_dir /home/shared/split \
-    result_dir /home/shared \
-    write_zip \
-    experiment_name gcp-experiment-${i}-${j} \
-    split_type ${split_type} \
-    alg_name ${alg_list[j]} \
-    dataset_name ${dataset_list[j]} \
-    alg_seed ${alg_seed} \
-    num_samples ${num_samples} \
-    "
+    ${dataset_list[j]} \
+    ${split_type} \
+    ${alg_list[j]} \
+    /home/shared/split \
+    ${alg_seed} \
+    ${param_seed} \
+    ${num_samples}
+    /home/shared \
+    gcp-experiment-${i}-${j}"
 
     # NOTE: in the current version of the split directory, the dataset names do not have suffix "Reader"
     dataset_name=${dataset_list[j]}
