@@ -9,6 +9,9 @@ source utils.sh
 # base name for the gcloud instances
 instance_base=dcm
 
+# name of the expeirment (this will be the name of the top-level results folder)
+experiment_base=gcp-experiment
+
 # maximum number of experiments (background processes) that can be running
 MAX_PROCESSES=10
 
@@ -116,7 +119,7 @@ do
     ${param_seed} \
     ${num_samples}
     /home/shared \
-    gcp-experiment-${i}-${j}"
+    ${experiment_base}-${i}-${j}"
 
     # NOTE: in the current version of the split directory, the dataset names do not have suffix "Reader"
     dataset_name=${dataset_list[j]}
