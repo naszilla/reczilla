@@ -23,72 +23,44 @@ Which will download all datasets, and write them in a standard format to local d
 
 **[INTERNAL ONLY]** We already ran this script on the gcloud instances `reczilla-vX`, and the data dir is `/home/shared/data`
 
-## 2. Prepare Config Files
-
-Each experiment is run using a config file, which looks like:
-
-```commandline
-# lines beginning with '#' are comments'
---dataset-name MyData
---num-samples 10
-...
---arg arg_value
-```
-
-Where the first part of each line specifies an argument name, and the second part defines the argument value. (For context: these lines are parsed into a list of strings, and passed to an `argparse.ArgumentParser` object in `Experiment_handler.run_experiment`.)
-
-Because these files are small, we generate one config file for every possible experiment we could run, using `Experiment_handler.generate_config_files`. With this script we can also specify other parameters of the experiment. This script will generate a directory structure of config files, that looks like this:
-
-```commandline
-config_directory/
-├── Dataset_One/
-│   ├── Split_One/
-│       ├── Algorithm_A/config.txt
-│       ...
-│       └── Algorithm_Z/config.txt
-│   ├── Split_Two/
-│       ├── Algorithm_A/config.txt
-│       ...
-│       └── Algorithm_Z/config.txt
-│   ...
-│   └── Split_N/
-├── Dataset_Two/
-│   ├── Split_One/
-│       ├── Algorithm_A/config.txt
-│       ...
-│       └── Algorithm_Z/config.txt
-│   ...
-│   └── Split_N/
-...
-└── Dataset_M/
-```
-
-That is, the config file for each combination of (dataset)-(split)-(algorithm) is found in file:
-
-```commandline
-config_directory/<dataset>/<split>/<algorithm>/config.txt
-```
-
 ## Running Experiments
 
 To run an experiment, we use bash scripts that do the following:
 1. create a new gcloud instance
 2. prepare the instance (update code, initialize conda)
-3. copy a single config file to the instance
-4. copy a script to the instance, which will run an experiment (`scripts/run_experiment_on_instance.sh`)
-5. run the script from step (4)
-6. copy the results to gcloud storage
-7. [TODO] delete the instance
+3. run a script on the instance using `gcloud compute ssh`, and pass arguments directly
+4. copy the results to gcloud storage
+5. delete the instance
 
-All of this is handled by function `run_experiment` in `scripts/utils.sh`.
+These steps are handled by three different scripts:
 
-So, it takes only two lines to run a single experiment using config file `/home/config.txt` from the directory `scripts`:
+### `scripts/example_local_script.sh`
 
-```commandline
-source utils.sh
-run_experiment /home/config.txt experiment-name
-```
+First you need a script to run each experiment. This script should probably live on your local machine. An example script for this purpose is [`example_local_script.sh`](https://github.com/naszilla/reczilla/blob/main/scripts/example_local_script.sh). This script makes one call to the bash function `run_experiment` (in `scripts/utils.sh`) for each experiment you want to run. 
 
-## Running Batch Experiments
+The three main variables defined in this script are:
+1. the GCP location of the split datasets (a gcloud bucket path)
+2. the argument string you want to pass to [`Experiment_handler.run_experiment`](https://github.com/naszilla/reczilla/blob/main/RecSys2019_DeepLearning_Evaluation/Experiment_handler/run_experiment.py). This script takes positional command line arguments only.
+3. the name of each instance you want to create
 
-**TODO**
+### `scripts/utils.sh`
+
+This script just defines the function `run_experiment`, and it should also live on your local machine. This function takes the three pieces of information described above and does the following:
+
+1. launches an instance
+2. runs the experiment on the instance
+3. deletes the instance
+
+It tries the first two steps multiple times, in case an error is thrown. "Running the experiment" (step 2) consists of a single command to `gcloud compute ssh`, where we define some environment variables and run the script `scripts/run_experiment_on_instance.sh`. We describe that script next.
+
+### `scripts/run_experiment_on_instance.sh`
+
+This script runs an experiment from an instance, using two environment variables. Both of these environment variables should be set beforehand (e.g. using the function `run_experiment()`). These variables are:
+- `ARGS`: the argument string that will be passed to Experiment_handler.run_experiment
+- `SPLIT_PATH_ON_BUCKET`: the gcloud path to the split data. (should start with `gc://reczilla...`)
+
+This script does the following:
+1. prepare conda
+2. copy the split data from `SPLIT_PATH_ON_BUCKET` to a local folder
+3. run `Experiment_handler.run_experiment` using the arguments in `ARGS`.
+4. zip the results, and write them to the gcloud directory `gs://reczilla-results/inbox`

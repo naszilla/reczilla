@@ -55,16 +55,16 @@ do
   for j in ${!dataset_list[@]};
   do
 
-    # order of args is:
-#    "dataset_name",
-#    "split_type",
-#    "alg_name",
-#    "split_dir",
-#    "alg_seed",
-#    "param_seed",
-#    "num_samples",
-#    "result_dir",
-#    "experiment_name",
+    # order of args in arg_str is:
+    #    "dataset_name",
+    #    "split_type",
+    #    "alg_name",
+    #    "split_dir",
+    #    "alg_seed",
+    #    "param_seed",
+    #    "num_samples",
+    #    "result_dir",
+    #    "experiment_name",
 
     # argument string that will be passed to Experiment_handler.run_experiment
     arg_str="\
