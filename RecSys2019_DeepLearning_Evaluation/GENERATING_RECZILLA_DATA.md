@@ -9,7 +9,7 @@ The "meta"-data for Reczilla consists of the following for each datum:
 
 To generate this metadata, we need to train & test several different recommender algorithms on several different datasets (and splits). We generate sets of results by running **"experiments"**, each of which trains/tests a different dataset-split + algorithm combination.
 
-This invoves several steps, outlined below.
+This involves several steps, outlined below.
 
 ## 1. Prepare Datasets
 
@@ -25,18 +25,18 @@ Which will download all datasets, and write them in a standard format to local d
 
 ## Running Experiments
 
-To run an experiment, we use bash scripts that do the following:
+To run a _single_ experiment, we use bash scripts that do the following:
 1. create a new gcloud instance
 2. prepare the instance (update code, initialize conda)
 3. run a script on the instance using `gcloud compute ssh`, and pass arguments directly
 4. copy the results to gcloud storage
 5. delete the instance
 
-These steps are handled by three different scripts:
+To run a _set_ of experiments, we have another script that handles everything. In total there are three scripts.. Each is described below.
 
 ### `scripts/example_local_script.sh`
 
-First you need a script to run each experiment. This script should probably live on your local machine. An example script for this purpose is [`example_local_script.sh`](https://github.com/naszilla/reczilla/blob/main/scripts/example_local_script.sh). This script makes one call to the bash function `run_experiment` (in `scripts/utils.sh`) for each experiment you want to run. 
+This script launches all of the experiments in sequence, so this script should probably live on your local machine, or on an instance that is just for managing other instances. An example script for this purpose is [`example_local_script.sh`](https://github.com/naszilla/reczilla/blob/main/scripts/example_local_script.sh). This script makes one call to the bash function `run_experiment` (in `scripts/utils.sh`) for each experiment you want to run. 
 
 The three main variables defined in this script are:
 1. the GCP location of the split datasets (a gcloud bucket path)
