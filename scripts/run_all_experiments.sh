@@ -126,10 +126,12 @@ do
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
     num_experiments=$((num_experiments + 1))
+    echo "launched instance ${instance_base}-${i}-${j}. (job number ${num_experiments})"
     sleep 1
 
     # if we have started MAX_PROCESSES experiments, wait for them to finish
     if (( (num_experiments % MAX_PROCESSES) == 0 )); then
+      echo "reached ${num_experiments} jobs. waiting for them to finish..."
       wait
     fi
   done
