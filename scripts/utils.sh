@@ -99,7 +99,7 @@ run_experiment() {
   echo "successfully ran experiment"
 
   echo "finished experiment. deleting instance..."
-  gcloud compute instances delete ${instance_name}
+  gcloud compute instances delete ${instance_name} --zone=${zone}
   ret_code=$?
   echo "RETURN CODE from deleting instance: $ret_code"
 }
