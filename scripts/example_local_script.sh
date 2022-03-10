@@ -22,12 +22,12 @@ bucket_base=gs://reczilla-results/dataset-splits/splits-v2
 
 # set of algorithms
 alg_list=(
-CoClustering
+#CoClustering
 #DELF_EF_RecommenderWrapper
 #DELF_MLP_RecommenderWrapper
 #EASE_R_Recommender
 #RP3betaRecommender
-#GlobalEffects
+GlobalEffects
 #SLIM_BPR_Cython
 #IALSRecommender
 #INeuRec_RecommenderWrapper
@@ -70,7 +70,7 @@ do
     arg_str="\
     ${dataset_list[j]} \
     ${split_type} \
-    ${alg_list[j]} \
+    ${alg_list[i]} \
     /home/shared/split \
     ${alg_seed} \
     ${param_seed} \
@@ -85,6 +85,6 @@ do
     split_path_on_bucket=${bucket_base}/${dataset_folder_name}/${split_type}
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
-    sleep 5
+    sleep 1
   done
 done

@@ -22,13 +22,41 @@ run_experiment() {
   zone=us-central1-a
   project=research-collab-naszilla
 
+  # maximum number of attempts at creating gcloud instance and ssh
+  MAX_TRIES=5
+
   echo "launching instance ${instance_name}..."
+
+  COUNT=0
+  while [ $COUNT -lt $MAX_TRIES ]; do
+
+    # attempt to create instance
     gcloud beta compute instances create $instance_name --zone=$zone \
     --project=$project --image=$source_image \
     --service-account $service_account \
     --scopes=https://www.googleapis.com/auth/devstorage.read_write
-  ret_code=$?
-  echo "RETURN CODE from launching instance: $ret_code"
+
+    # keep this for later
+    INSTANCE_RETURN_CODE=$?
+
+    if [ $INSTANCE_RETURN_CODE -ne 0 ]; then
+      # failed to create instance
+      let COUNT=COUNT+1
+      echo "failed to create instance during attempt ${COUNT}... (exit code: ${INSTANCE_RETURN_CODE})"
+      if [[ $COUNT -ge $(( $MAX_TRIES - 1 )) ]]; then
+        echo "too many tries. giving up."
+        exit 1
+      fi
+      echo "trying again in 5 seconds..."
+      sleep 5
+    else
+      # success!
+      break
+    fi
+  done
+  echo "successfully created instance: ${instance_name}"
+
+
 
   # ssh and run the experiment. steps:
   # 1. pull the latest repo
@@ -38,18 +66,37 @@ run_experiment() {
   instance_repo_dir=/home/shared/reczilla
   instance_script_location=${instance_repo_dir}/scripts/run_experiment_on_instance.sh
 
-  echo "running experiment..."
-  gcloud compute ssh --ssh-flag="-A" ${instance_name} --zone=${zone} --project=${project} \
-  --command="\
-  cd ${instance_repo_dir}; \
-  git pull; \
-  export ARGS=\"${args_str}\"; \
-  export SPLIT_PATH_ON_BUCKET=${split_path}; \
-  chmod +x ${instance_script_location}; \
-  /bin/bash ${instance_script_location}"
+  COUNT=0
+  while [ $COUNT -lt $MAX_TRIES ]; do
 
-  ret_code=$?
-  echo "RETURN CODE from running experiment: $ret_code"
+    # attempt to run experiment
+    gcloud compute ssh --ssh-flag="-A" ${instance_name} --zone=${zone} --project=${project} \
+      --command="\
+      cd ${instance_repo_dir}; \
+      git pull; \
+      export ARGS=\"${args_str}\"; \
+      export SPLIT_PATH_ON_BUCKET=${split_path}; \
+      chmod +x ${instance_script_location}; \
+      /bin/bash ${instance_script_location}"
+
+    SSH_RETURN_CODE=$?
+
+    if [ $SSH_RETURN_CODE -ne 0 ]; then
+      # failed to run experiment
+      let COUNT=COUNT+1
+      echo "failed to run experiment during attempt ${COUNT}... (exit code: ${SSH_RETURN_CODE})"
+      if [[ $COUNT -ge $(( $MAX_TRIES - 1 )) ]]; then
+        echo "too many tries. giving up."
+        exit 1
+      fi
+      echo "trying again in 5 seconds..."
+      sleep 5
+    else
+      # success!
+      break
+    fi
+  done
+  echo "successfully ran experiment"
 
   echo "finished experiment. deleting instance..."
   gcloud compute instances delete ${instance_name}
