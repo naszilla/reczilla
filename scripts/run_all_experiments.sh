@@ -130,9 +130,6 @@ do
     sleep 1
 
     # if we have started MAX_PROCESSES experiments, wait for them to finish
-    if (( (num_experiments % MAX_PROCESSES) == 0 )); then
-      echo "reached ${num_experiments} jobs. waiting for them to finish..."
-      wait
-    fi
+    wait_until_processes_finish $MAX_PROCESSES
   done
 done

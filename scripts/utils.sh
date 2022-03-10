@@ -2,6 +2,21 @@
 # functions for running batch jobs
 # load these functions by running 'source utils.sh'
 
+wait_until_processes_finish() {
+  # only takes one arg: the maximum number of processes that can be running
+  # print a '.' every 60 iterations
+  counter=0
+  while [ `jobs -r | wc -l | tr -d " "` -gt $1 ]; do
+    sleep 1
+    counter=$((counter+1))
+    if (($counter % 60 == 0))
+    then
+      echo -n "."     # no trailing newline
+    fi
+  done
+  echo "no more than $1 jobs are running. moving on."
+}
+
 run_experiment() {
 
   # $1 = argument string passed to Experiment_handler.run_experiment
