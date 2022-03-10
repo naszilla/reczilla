@@ -9,6 +9,9 @@ source utils.sh
 # base name for the gcloud instances
 instance_base=dcm
 
+# maximum number of experiments (background processes) that can be running
+MAX_PROCESSES=10
+
 # params
 alg_seed=0
 num_samples=100
@@ -86,6 +89,7 @@ WikilensReader
 #################
 # run experiments
 
+num_experiments=0
 for i in ${!alg_list[@]};
 do
   for j in ${!dataset_list[@]};
@@ -121,6 +125,12 @@ do
     split_path_on_bucket=${bucket_base}/${dataset_folder_name}/${split_type}
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
+    num_experiments=$((num_experiments + 1))
     sleep 1
+
+    # if we have started MAX_PROCESSES experiments, wait for them to finish
+    if (( (num_experiments % MAX_PROCESSES) == 0 )); then
+      wait
+    fi
   done
 done
