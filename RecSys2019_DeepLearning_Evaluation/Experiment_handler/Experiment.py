@@ -357,7 +357,7 @@ class Experiment(object):
         parameter_search.search(
             search_input_recommender_args,
             parameter_search_space,
-            n_samples=num_samples,
+            n_samples=min(num_samples, max_points),
             output_folder_path=str(experiment_result_dir) + os.sep,
             output_file_name_root=output_file_name,
             sampler_type="Sobol",
