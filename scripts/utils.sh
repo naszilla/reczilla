@@ -101,7 +101,8 @@ run_experiment() {
       let COUNT=COUNT+1
       echo "failed to run experiment during attempt ${COUNT}... (exit code: ${SSH_RETURN_CODE})"
       if [[ $COUNT -ge $(( $MAX_TRIES - 1 )) ]]; then
-        echo "too many tries. giving up."
+        echo "too many tries. giving up and deleting instance."
+        gcloud compute instances delete ${instance_name} --zone=${zone}
         exit 1
       fi
       echo "trying again in 5 seconds..."
