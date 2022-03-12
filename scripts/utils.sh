@@ -32,7 +32,7 @@ run_experiment() {
 
 
   # constants
-  source_image=reczilla-v5-image
+  image_family=reczilla
   service_account=default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com
   zone=us-central1-a
   project=research-collab-naszilla
@@ -46,8 +46,8 @@ run_experiment() {
   while [ $COUNT -lt $MAX_TRIES ]; do
 
     # attempt to create instance
-    gcloud beta compute instances create $instance_name --zone=$zone \
-    --project=$project --image=$source_image \
+    gcloud compute instances create $instance_name --zone=$zone \
+    --project=$project --image-family=$family \
     --service-account $service_account \
     --scopes=https://www.googleapis.com/auth/devstorage.read_write
 
@@ -87,8 +87,6 @@ run_experiment() {
     # attempt to run experiment
     gcloud compute ssh --ssh-flag="-A" ${instance_name} --zone=${zone} --project=${project} \
       --command="\
-      cd ${instance_repo_dir}; \
-      git pull; \
       export ARGS=\"${args_str}\"; \
       export SPLIT_PATH_ON_BUCKET=${split_path}; \
       chmod +x ${instance_script_location}; \
