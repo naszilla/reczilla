@@ -3,7 +3,7 @@
 # run two algorithms on all datasets. use 2 parameter samples
 
 # load functions
-source utils.sh
+source ../utils.sh
 
 ###################
 # define parameters
