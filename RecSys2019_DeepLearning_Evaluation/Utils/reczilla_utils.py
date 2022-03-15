@@ -41,23 +41,6 @@ def str_to_time(x, time_format):
     # inverse of time_to_str(): return a datetime object
     return time.strptime(x, time_format)
 
-
-def config_to_sequence(config_filepath):
-    """
-    read a config file and return a sequence of args.
-    lines beginning with '#' are ignored.
-    each line is stripped and then split by shlex.split, and all lines are concatenated into a list
-    """
-    sequence = []
-    with open(config_filepath, "r") as f:
-        for line in f:
-            l = line.strip()
-            if not l.startswith("#"):
-                sequence.extend(shlex.split(l))
-
-    return sequence
-
-
 def make_archive(source, destination):
     """
     a helper function because shutil.make_archive is too confusing on its own. adapted from:
