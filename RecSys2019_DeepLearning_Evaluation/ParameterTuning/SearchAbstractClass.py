@@ -130,6 +130,7 @@ class SearchAbstractClass(object):
         self.parameter_dictionary_best = {}
 
         self.evaluator_validation = evaluator_validation
+        self.metadata_dict = {}
 
         if evaluator_test is None:
             self.evaluator_test = None
@@ -163,6 +164,7 @@ class SearchAbstractClass(object):
                                evaluate_on_test,
                                n_cases,
                                raise_exceptions,
+                               metadata_dict=None,
                                ):
 
         assert raise_exceptions in [True, False], "raise_exceptions must be True or False"
@@ -199,44 +201,52 @@ class SearchAbstractClass(object):
         self.evaluate_on_test = "no" if self.evaluator_test is None else evaluate_on_test
 
         self.model_counter = 0
-        self._init_metadata_dict(n_cases = n_cases)
+        self._init_metadata_dict(n_cases = n_cases, metadata_dict=metadata_dict)
 
         if self.save_metadata:
             self.dataIO = DataIO(folder_path = self.output_folder_path)
 
 
 
-    def _init_metadata_dict(self, n_cases):
+    def _init_metadata_dict(self, n_cases, metadata_dict: dict = None):
 
-        self.metadata_dict = {"algorithm_name_search": self.ALGORITHM_NAME,
-                              "algorithm_name_recommender": self.recommender_class.RECOMMENDER_NAME,
-                              "exception_list": [None]*n_cases,
+        if metadata_dict is not None:
+            assert type(metadata_dict) is dict
+            self.metadata_dict = metadata_dict
+        else:
+            self.metadata_dict = {}
+        self.metadata_dict.update(
+            {
+                "algorithm_name_search": self.ALGORITHM_NAME,
+                "algorithm_name_recommender": self.recommender_class.RECOMMENDER_NAME,
+                "exception_list": [None]*n_cases,
 
-                              "hyperparameters_list": [None]*n_cases,
-                              "hyperparameters_best": None,
-                              "hyperparameters_best_index": None,
+                "hyperparameters_list": [None]*n_cases,
+                "hyperparameters_best": None,
+                "hyperparameters_best_index": None,
 
-                              "result_on_validation_list": [None]*n_cases,
-                              "result_on_validation_best": None,
-                              "result_on_test_list": [None]*n_cases,
-                              "result_on_test_best": None,
+                "result_on_validation_list": [None]*n_cases,
+                "result_on_validation_best": None,
+                "result_on_test_list": [None]*n_cases,
+                "result_on_test_best": None,
 
-                              "time_on_train_list": [None]*n_cases,
-                              "time_on_train_total": 0.0,
-                              "time_on_train_avg": 0.0,
+                "time_on_train_list": [None]*n_cases,
+                "time_on_train_total": 0.0,
+                "time_on_train_avg": 0.0,
 
-                              "time_on_validation_list": [None]*n_cases,
-                              "time_on_validation_total": 0.0,
-                              "time_on_validation_avg": 0.0,
+                "time_on_validation_list": [None]*n_cases,
+                "time_on_validation_total": 0.0,
+                "time_on_validation_avg": 0.0,
 
-                              "time_on_test_list": [None]*n_cases,
-                              "time_on_test_total": 0.0,
-                              "time_on_test_avg": 0.0,
+                "time_on_test_list": [None]*n_cases,
+                "time_on_test_total": 0.0,
+                "time_on_test_avg": 0.0,
 
-                              "result_on_last": None,
-                              "time_on_last_train": None,
-                              "time_on_last_test": None,
-                              }
+                "result_on_last": None,
+                "time_on_last_train": None,
+                "time_on_last_test": None,
+            }
+        )
 
 
     def _print(self, string):

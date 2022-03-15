@@ -66,11 +66,14 @@ class RandomSearch(SearchAbstractClass):
         alg_seed=0,
         raise_exceptions=False,
         write_log_every=10,
+        metadata_dict=None,
     ):
         """
         search for the best set of hyperparameters using multiple random draws from the hyperparameter space
 
         pass additional args to the sampler using sampler_args
+
+        if metadata_dict is passed, add this to the metadata dict
         """
 
         if sampler_args is None:
@@ -107,14 +110,20 @@ class RandomSearch(SearchAbstractClass):
             evaluate_on_test,
             n_samples,
             raise_exceptions,
+            metadata_dict=metadata_dict
         )
 
         # generate n_cases random hyperparameter draws
         for i_sample, hyperparams in enumerate(hyperparam_samples):
             if i_sample % write_log_every == 0:
-                self._write_log("{}: Starting parameter set {} of {}\n".format(
-                self.ALGORITHM_NAME, i_sample + 1, n_samples))
-            set_deterministic(alg_seed)  # reinitialize random states using the algorithm seed
+                self._write_log(
+                    "{}: Starting parameter set {} of {}\n".format(
+                        self.ALGORITHM_NAME, i_sample + 1, n_samples
+                    )
+                )
+            set_deterministic(
+                alg_seed
+            )  # reinitialize random states using the algorithm seed
             self._objective_function(hyperparams)
 
         self._write_log(

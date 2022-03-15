@@ -18,7 +18,7 @@ set -e
 #  - `--alg-name <name>`  <- used for selecting the algorithm and writing results to the correct dir
 #  - `--dataset-name <name>`  <- name of the dataset. used for writing results to the correct dir
 #
-# SPLIT_PATH_ON_BUCKET: full path to the dataset on the gcloud bucket (should start with gc://reczilla...)
+# SPLIT_PATH_ON_BUCKET: full path to the dataset on the gcloud bucket (should start with gs://reczilla...)
 #
 ###############################################################################################################
 
@@ -60,9 +60,10 @@ gsutil cp "${SPLIT_PATH_ON_BUCKET}/*" /home/shared/split/
 # run experiment
 
 # run the experiment using command line args stored in variable $ARGS
-# the results should always be zipped and written to /home/shared/result.zip
+# NOTE: the results should always be zipped and written to /home/shared/result.zip.
+# NOTE: do this by passing positional argument result_dir = /home/shared
 cd /home/shared/reczilla/RecSys2019_DeepLearning_Evaluation
-python -m Experiment_handler.run_experiment cli ${ARGS}
+python -m Experiment_handler.run_experiment ${ARGS}
 
 # add a timestamp and a random string to the end of the filename, to avoid collisions
 result_file=result_$(date +"%m%d%y_%H%M%S")_$(openssl rand -hex 2).zip

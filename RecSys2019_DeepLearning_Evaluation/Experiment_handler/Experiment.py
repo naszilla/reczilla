@@ -1,5 +1,5 @@
 """
-base classes for experiment results
+base class for running experiments
 
 here, a single "experiment" is when we train one recsys algorithm on one train/test/validation split of a dataset, with
 one or more sets of hyperparameters for the algorithm. we record the train and test performance for all trained algorithms
@@ -7,6 +7,10 @@ one or more sets of hyperparameters for the algorithm. we record the train and t
 import os
 from pathlib import Path
 from typing import List
+import string
+import random
+import zipfile
+import shutil
 
 from Utils.reczilla_utils import make_archive
 
@@ -24,6 +28,102 @@ SPLITTER_DICT = {
     "DataSplitter_k_fold_random": DataSplitter_k_fold_random,
 }
 
+TIME_FORMAT = "%Y%m%d_%H%M%S"
+
+
+class Result(object):
+    """base class for experiment results"""
+
+    def __init__(
+        self,
+        name: str,
+        datetime_str: str,
+        dataset_name: str,
+        alg_name: str,
+        split_name: str,
+        alg_seed: int,
+        param_seed: int,
+        result_file: Path,
+    ):
+        self.name = name
+        self.datetime_str = datetime_str
+        self.dataset_name = dataset_name
+        self.alg_name = alg_name
+        self.split_name = split_name
+        self.alg_seed = alg_seed
+        self.param_seed = param_seed
+        self.result_file = (
+            result_file  # Path to the result file produced by Experiment.run_experiment
+        )
+
+    @classmethod
+    def from_zip(cls, zip_path: Path, new_base_path: Path):
+        """
+        args:
+        - zip_path: path to zip file to extract, produced by Experiment.zip()
+        - new_base_path: all results will be moved to this base directory,
+            to the subdir new_base_path/<dataset>/<split>/<alg>/
+
+        initialize a result from a zip archive produced by Experiment.zip()
+
+        first unzip into a temporary directory (in the same dir that contains the zip),
+        then create the result, move it to the new base dir
+        then delete the temporary dir
+        """
+
+        # create temp dir
+        temp_dir = zip_path.parent.joinpath(
+            "TEMP_"
+            + time_to_str(TIME_FORMAT)
+            + "_"
+            + "".join(random.choices(string.ascii_uppercase + string.digits, k=3))
+        )
+
+        # extract the zip to the temp dir
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(temp_dir)
+
+        # find all results, i.e. files that end in '_metadata.zip'
+        result_files = [f for f in temp_dir.rglob("*_metadata.zip")]
+
+        assert len(result_files) == 1, f"multiple results found in zip archive: {zip_path}. we expect only one."
+        result_file = result_files[0]
+
+        # gather the name of the alg, the split, and the dataset from the result path
+        alg_name = result_file.parent.name
+        split_name = result_file.parent.parent.name
+        dataset_name = result_file.parent.parent.parent.name
+        experiment_name = result_file.parent.parent.parent.parent.name
+
+        # in the new base: make the result directory if it doesn't exist, and move the result zip there
+        new_home = new_base_path.joinpath(dataset_name, split_name, alg_name)
+        new_home.mkdir(parents=True, exist_ok=True)
+        result_file = result_file.rename(new_home.joinpath(result_file.name))
+
+        # read the alg seed, param seed, and timestamp from the zip file
+        split_name = result_file.name.split("_")
+        assert split_name[0][:7] == 'algseed'
+        alg_seed = int(split_name[0][7:])
+        assert split_name[1][:9] == 'paramseed'
+        param_seed = int(split_name[1][9:])
+
+        time_str = split_name[2] + "_" + split_name[3]
+
+        # finally, remove the temp directory
+        shutil.rmtree(str(temp_dir))
+
+        # return a new result object
+        return cls(
+            experiment_name,
+            time_str,
+            dataset_name,
+            alg_name,
+            split_name,
+            alg_seed,
+            param_seed,
+            result_file,
+        )
+
 class Experiment(object):
     """
     class for generating and managing reczilla experiment results.
@@ -33,33 +133,34 @@ class Experiment(object):
 
     the Experiment_handler object will create this directory and write results to it.
 
-    TODO: write a secondary constructor reads results from a directory.
-
     results are written and read according to the following convention:
     base_directory/<dataset>/<split>/<algorithm>/<result>_metadata.zip
 
     where <result> includes a timestamp (for now, only a timestamp).
     """
 
-    TIME_FORMAT = "%Y%m%d_%H%M%S"
-
     def __init__(
         self,
         base_directory: Path,
-        data_directory: Path,
-        experiment_name: str,
+        name: str,
         use_processed_data=False,
+        data_directory: Path = None,
         verbose=True,
     ):
         """
-        base_directory: an existing directory where the experiment directory structure will be written
-        experiment_name: the name of the directory where results will be written. if it doesn't exist, create it.
+        args:
+        - base_directory: an existing directory where the experiment directory structure will be written
+        - experiment_name: the name of the directory where results will be written. if it doesn't exist, create it.
+        - data_directory: (optional) directory of original processed data. only used if use_processed_data=True.
+        - use_processed_data: if True, attempt to read data from the data_directory. otherwise, just read dataset splits
+            from paths passed as args.
         """
         self.logger = get_logger()
 
         # define the result & data directory
         self.base_directory = base_directory.resolve()
-        self.result_directory = self.base_directory.joinpath(experiment_name)
+        self.result_directory = self.base_directory.joinpath(name)
+        self.name = name
 
         self.verbose = verbose
         self.use_processed_data = use_processed_data  # if true, try to read the original dataset, which can be used to create splits. if false, all splits must already exist.
@@ -96,7 +197,6 @@ class Experiment(object):
         self.dataset_dict = (
             {}
         )  # keys = dataset names, values = reader objects (if use_processed_data=True) or None (if use_processed_data=False)
-        self.result_list = []
 
     def get_dataset_result_path(self, dataset_name):
         """get path of results for a particluar dataset"""
@@ -127,49 +227,11 @@ class Experiment(object):
             f"zipped experiment directory to {str(self.base_directory)}/{filename}"
         )
 
-    def prepare_config(
-        self, file_name, data_dir, dataset_name, split_name, alg_name, **kwargs
-    ):
-        """
-        write an Experiment config file for a dataset-split-alg combination. all config files are stored in the same
-        directory structure as experiment results.
-
-        this does not require initializing any datasets or splits.
-
-        config files are are meant to be read by Experiment_handler.run_experiment. example:
-
-        # comment lines start with '#'
-        --data-dir  /home/shared/data/
-        --dataset-name Movielens100KReader
-        ...
-        --arg-name arg
-        """
-
-        # store file in list of strings, and concatenate before writing
-        line_list = ["# config file prepared by Experiment.prepare_config"]
-
-        # add positional args (these determine the location and name of the config file)
-        if data_dir is not None:
-            line_list.append(f"--data-dir {data_dir}")
-        line_list.append(f"--dataset-name {dataset_name}")
-        line_list.append(f"--split-type {split_name}")
-        line_list.append(f"--alg-name {alg_name}")
-
-        # add kwargs
-        for name, val in kwargs.items():
-            line_list.append(f"--{name} {val}")
-
-        # write file. make its directory if it doesn't exist
-        config_dir = self.get_alg_result_path(dataset_name, split_name, alg_name)
-        config_dir.mkdir(parents=True, exist_ok=True)
-
-        filepath = str(config_dir.joinpath(file_name))
-        with open(filepath, "w") as f:
-            for line in line_list:
-                f.write(f"{line}\n")
-
     def prepare_dataset(self, dataset_name):
-        """keep track of the dataset and reader object. make sure that we can read the dataset."""
+        """
+        keep track of the dataset and reader object.
+        if self.use_processed_data, make sure that we can read the dataset.
+        """
         if dataset_name in self.dataset_dict:
             self.logger.info(f"dataset already prepared: {dataset_name}")
 
@@ -194,8 +256,6 @@ class Experiment(object):
         self.prepared_split_dict[dataset_name] = {}
         self.logger.info(f"initialized dataset in {dataset_name}")
 
-    # TODO: add random seed to splitter, and keep track of this seed (maybe in the name of the split?)
-    # TODO: keep track of split params somehow...
     def prepare_split(
         self,
         dataset_name,
@@ -204,7 +264,7 @@ class Experiment(object):
         split_path: Path = None,
     ):
         """
-        check whether a split already exists. if it does not exist, create it.
+        check whether a split already exists. if it does not exist, create it if self.use_processed_data.
 
         if split_path is not None, read the data directly from this path.
         """
@@ -290,9 +350,13 @@ class Experiment(object):
         alg_seed: int,
         param_seed: int,
         cutoff_list: List[int] = None,
+        result_dir: Path = None,
     ):
         """
         run an experiment, writing the results in the appropriate metadata files
+
+        if result_dir is provided, write the result here.
+        otherwise, write it in the directory structure base/<dataset>/<split>/<alg>/
         """
         assert (
             dataset_name in self.dataset_dict
@@ -344,16 +408,34 @@ class Experiment(object):
             verbose=self.verbose,
         )
 
-        experiment_result_dir = self.get_alg_result_path(
-            dataset_name, split_name, alg_name
-        )
+        # pass these to RandomSearch.search(), which will add this to the metadata dict
+        search_param_dict = {
+            "time": time_to_str(TIME_FORMAT),
+            "dataset_name": dataset_name,
+            "split_name": split_name,
+            "alg_name": alg_name,
+            "num_samples": num_samples,
+            "alg_seed": alg_seed,
+            "param_seed": param_seed,
+            "cutoff_list": cutoff_list,
+            "experiment_name": self.name,
+        }
+
+        if result_dir is not None:
+            experiment_result_dir = result_dir
+            assert experiment_result_dir.exists(), f"result_dir does not exist: {result_dir}"
+        else:
+            experiment_result_dir = self.get_alg_result_path(
+                dataset_name, split_name, alg_name
+            )
 
         self.logger.info(
             f"starting experiment, writing results to {str(experiment_result_dir)}"
         )
 
         # run a random parameter search
-        output_file_name = f"algseed{alg_seed}_paramseed{param_seed}_" + time_to_str(self.TIME_FORMAT)
+        time_str = time_to_str(TIME_FORMAT)
+        output_file_name = f"result_" + time_str
         parameter_search.search(
             search_input_recommender_args,
             parameter_search_space,
@@ -363,11 +445,14 @@ class Experiment(object):
             sampler_type="Sobol",
             sampler_args={},
             param_seed=param_seed,
-            alg_seed=alg_seed
+            alg_seed=alg_seed,
+            metadata_dict={"search_params": search_param_dict},
         )
 
         # make sure that result (metadata) file exists, and add it to the list
         result_file = experiment_result_dir.joinpath(output_file_name + "_metadata.zip")
-        self.result_list.append(result_file)
+        assert result_file.exists()
 
         self.logger.info(f"results written to file: {str(result_file)}")
+
+        return result_file
