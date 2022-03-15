@@ -41,7 +41,7 @@ def run(args):
 
     # the result file has a timestamp on it. we will rename this to a generic name, so that our bash script
     # can move the result file to gcloud
-    _ = Path(result_zip).rename(Path(args.result_dir).joinpath("result.zip"))
+    _ = Path(result_zip).rename(Path(args.result_dir).joinpath("results.zip"))
 
 
 
