@@ -67,7 +67,7 @@ python -m Experiment_handler.run_experiment ${ARGS}
 
 # add a timestamp and a random string to the end of the filename, to avoid collisions
 result_file=result_$(date +"%m%d%y_%H%M%S")_$(openssl rand -hex 2).zip
-mv /home/shared/results.zip /home/shared/${result_file}
+mv /home/shared/result.zip /home/shared/${result_file}
 
 ###############################
 # save results to gcloud bucket
