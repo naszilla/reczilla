@@ -1,11 +1,8 @@
-# download all results locally and update the old ones
+# download all results locally and organize into directory structure dataset/split/alg
 import argparse
 import os
 from pathlib import Path
 from Base.DataIO import DataIO
-
-# run the following command to pull all results:
-# gsutil -m rsync gs://reczilla-results/inbox ./inbox
 
 
 def run(args):
@@ -39,10 +36,6 @@ def run(args):
             alg_name = data["search_params"]["alg_name"]
             dataset_name = data["search_params"]["dataset_name"]
             split_name = data["search_params"]["split_name"]
-
-            # print(
-            #     f"discovered result for ALG: {alg_name}, SPLIT: {split_name}, DATASET: {dataset_name}"
-            # )
 
             new_path = result_path.joinpath(
                 dataset_name, split_name, alg_name, result_file.name
