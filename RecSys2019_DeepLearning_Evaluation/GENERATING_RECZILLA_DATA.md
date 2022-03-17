@@ -1,5 +1,5 @@
 
-# Generating Reczilla "Meta"-data
+# Generating & Processing Reczilla "Meta"-data
 
 The "meta"-data for Reczilla consists of the following for each datum:
 - dataset parameters: multiple numerical metrics
@@ -64,3 +64,30 @@ This script does the following:
 2. copy the split data from `SPLIT_PATH_ON_BUCKET` to a local folder
 3. run `Experiment_handler.run_experiment` using the arguments in `ARGS`.
 4. zip the results, and write them to the gcloud directory `gs://reczilla-results/inbox`
+
+
+## Processing Results
+
+We have a single python script that does the following:
+- download all result files in the gcloud "inbox" folder
+- put these in a nice human-readable file structure
+- turn each into a CSV
+- merge all results into a single, massive CSV
+
+This script is here: [process_inbox.py](https://github.com/naszilla/reczilla/blob/main/RecSys2019_DeepLearning_Evaluation/reczilla_analysis/process_inbox.py). To run this script, `cd` into the repo folder `RecSys2019_DeepLearning_Evaluation`, and run:
+
+```
+python -m reczilla_analysis.process_inbox <result directory>
+```
+
+Where "result directory" is an empty directory. This script `os.system` to call gsutil, so you need to have gcloud cli tools installed. 
+
+### CSV Result Format
+
+The CSVs contain one row for each set of hyperparameters, and many, many columns:
+- basic metadata columns (name of dataset, splitter, algorithm, timestamp, etc.)
+- any exception that is raised during the experiment (and NaN otherwise). This is useful for debugging.
+- **hyperparameter columns: (prefix: param\_")** each hyperparam used by any algorithm gets its own column. the name of these columns starts with "param\_"
+- **metric columns: (prefix: metric\_)** each metric has its own column, for each cutoff tested, and for the test and validation set (if val is used). All of these have the prefix "metric\_". For example, the column for metric "ACCURACY" on the test set, for cutoff 5, has name `test_metric_ACCURACY_cut_5`.
+
+
