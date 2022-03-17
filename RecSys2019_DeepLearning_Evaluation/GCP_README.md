@@ -82,6 +82,8 @@ After running this command, you can simply restart the instance and GCP will aut
 
 ## Launching instances and submitting jobs from CLI
 
+**NOTE on the reczilla repo version:** To run experiments we ceate instances from the `reczilla` image family that we maintain on gcloud, and they use the version of the `reczilla` repo on the image. These scripts **do not** pull the latest code from the repo. So to update the `reczilla` codebase used in these experiments, we need to create a new image in the `reczilla` family. Instructions for updating the image/family with the latest repo are here: https://github.com/naszilla/reczilla/blob/main/scripts/update_reczilla_image.sh
+
 Soon we will be running lots of experiments, so here is the start of automation for it. First, make sure you have gcloud installed on your computer. Also, make sure you have ssh keys set up as explained above (e.g., make sure `ssh -T git@github.com` works).
 
 The following command will start a new instance using the `reczilla-v5` machine image and with read/write permissions to our GCP buckets.
