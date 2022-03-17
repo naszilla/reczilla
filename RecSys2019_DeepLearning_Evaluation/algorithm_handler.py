@@ -438,10 +438,10 @@ def algorithm_handler(algorithm_name):
             fit_keyword_args["path_partial_results"] = "./TMP/"  # TODO: we shouldn't be defining paths here.
 
         elif alg is CoClustering:
-            # TODO: Verify these parameter values make sense
+            # Based on Autosurprise
             space = {
-                "n_cltr_u": Integer(3, 20),
-                "n_cltr_i": Integer(3, 20),
+                "n_cltr_u": Integer(1, 1000),
+                "n_cltr_i": Integer(1, 100),
             }
 
             fit_keyword_args.update({
