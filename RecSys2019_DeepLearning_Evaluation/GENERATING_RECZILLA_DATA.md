@@ -23,7 +23,18 @@ Which will download all datasets, and write them in a standard format to local d
 
 **[INTERNAL ONLY]** We already ran this script on the gcloud instances `reczilla-vX`, and the data dir is `/home/shared/data`
 
-## Running Experiments
+## Running Batch Experiments
+
+There are three template scripts for running batch experiments. I'd recommend running these from a dedicated instance, since we keep an ssh command running while any jobs are running.
+
+You should be able to run any of the following scripts from an instance with the `reczilla` repo on it:
+- https://github.com/naszilla/reczilla/blob/main/scripts/run_all_experiments.sh: this script runs all combination of datasets + algorithms in the lists defined in the script
+- https://github.com/naszilla/reczilla/blob/main/scripts/tests/two_alg_all_datasets.sh: this script runs only two algorithms on all datasets
+- https://github.com/naszilla/reczilla/blob/main/scripts/tests/two_datasets_all_algs.sh: this script runs all algorithms on only two datasets.
+
+
+
+## Running Single Experiments
 
 To run a _single_ experiment, we use bash scripts that do the following:
 1. create a new gcloud instance
