@@ -66,7 +66,7 @@ This script does the following:
 4. zip the results, and write them to the gcloud directory `gs://reczilla-results/inbox`
 
 
-## Processing Results
+# Processing Results
 
 We have a single python script that does the following:
 - download all result files in the gcloud "inbox" folder
