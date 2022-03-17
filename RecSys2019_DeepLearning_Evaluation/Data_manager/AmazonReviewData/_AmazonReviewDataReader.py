@@ -132,6 +132,7 @@ class _AmazonReviewDataReader(DataReader):
         if loaded_ICM_dict["ICM_metadata"].nnz == 0:
             loaded_ICM_dict = {}
             loaded_ICM_mapper_dict = {}
+            self.AVAILABLE_ICM = []
 
 
         if reviews_path is not None:
