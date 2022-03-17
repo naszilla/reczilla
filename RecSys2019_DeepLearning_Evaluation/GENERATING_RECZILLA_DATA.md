@@ -21,7 +21,7 @@ python -m Data_manager.download_check_all_data --data-dir /home/data/
 
 Which will download all datasets, and write them in a standard format to local directory `/home/data`. Each experiment will create its own train/test split of each dataset, so we won't worry about that yet. 
 
-**[INTERNAL ONLY]** We already ran this script on the gcloud instances `reczilla-vX`, and the data dir is `/home/shared/data`
+**NOTE** We already ran this script on the gcloud instances `reczilla-vX`, and the data dir is `/home/shared/data`
 
 ## Running Batch Experiments
 
@@ -32,7 +32,7 @@ You should be able to run any of the following scripts from an instance with the
 - https://github.com/naszilla/reczilla/blob/main/scripts/tests/two_alg_all_datasets.sh: this script runs only two algorithms on all datasets
 - https://github.com/naszilla/reczilla/blob/main/scripts/tests/two_datasets_all_algs.sh: this script runs all algorithms on only two datasets.
 
-
+**NOTE on the reczilla repo version:** These scripts ceate instances from the `reczilla` image family that we maintain on gcloud, and they use the version of the `reczilla` repo on the image. These scripts **do not** pull the latest code from the repo. So to update the `reczilla` codebase used in these experiments, we need to create a new image in the `reczilla` family. Instructions for updating the image/family with the latest repo are here: https://github.com/naszilla/reczilla/blob/main/scripts/update_reczilla_image.sh
 
 ## Running Single Experiments
 
