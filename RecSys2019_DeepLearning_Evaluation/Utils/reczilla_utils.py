@@ -7,6 +7,8 @@ import zipfile
 
 import numpy as np
 import random
+
+import pandas as pd
 import tensorflow as tf
 
 from Base.DataIO import DataIO
@@ -158,3 +160,72 @@ def convert_old_result_file(zip_file_path):
 
     print(f"wrote updated metadata to {zip_file_path.parent.joinpath(result_file.stem + '_UPDATED')}")
 
+
+def result_to_df(result_zip_path):
+    """
+    create a df with one row for each set of hyperparameters, and one col for each metric
+    """
+
+    # load metadata structure
+    dataIO = DataIO(str(result_zip_path.parent) + os.sep)
+    data = dataIO.load_data(result_zip_path.name)
+
+    num_samples = data["search_params"]["num_samples"]
+    use_validation_set = "result_on_validation_list" in data
+
+    # make sure that each of the lists has the correct length
+    assert len(data["hyperparameters_list"]) == num_samples, f"hyperparameters list has len = {len(data['hyperparameters_list'])}. expected {num_samples}"
+    assert len(data["result_on_test_list"]) == num_samples, f"test metric list has len = {len(data['result_on_test_list'])}. expected {num_samples}"
+    if use_validation_set:
+        assert len(data["result_on_validation_list"]) == num_samples, f"validatino metric list has len = {len(data['result_on_validation_list'])}. expected {num_samples}"
+    assert len(data["time_on_test_list"]) == num_samples, f"time-on-test list has len = {len(data['time_on_test_list'])}. expected {num_samples}"
+    assert len(data["time_on_validation_list"]) == num_samples, f"time-on-val list has len = {len(data['time_on_validation_list'])}. expected {num_samples}"
+    assert len(data["time_on_train_list"]) == num_samples, f"time-on-train list has len = {len(data['time_on_train_list'])}. expected {num_samples}"
+    assert len(data["exception_list"]) == num_samples, f"exception list has len = {len(data['exception_list'])}. expected {num_samples}"
+
+    # store each row in a dict. some of these rows have common values: store these in a template
+    row_template = data["search_params"]
+    row_list = []
+
+    # create one row for each of the hyperparameter samples
+    for i in range(num_samples):
+
+        row_dict = row_template.copy()
+        row_dict["sample_number"] = i
+
+        # add hyperparameters to the row
+        if type(data["hyperparameters_list"][i]) is dict:
+            # if not, there was an error with this result, so skip it. all hyperparams will be NA in the final dataframe
+            for key, val in data["hyperparameters_list"][i].items():
+                row_dict[f"param_{key}"] = val
+
+        # add test results
+        if type(data["result_on_test_list"][i]) is dict:
+            # if not, there was an error with this result, so skip it.
+            for key, val in data["result_on_test_list"][i].items():
+                # each val should be a dict with different cutoffs
+                for subkey, subval in val.items():
+                    # each subkey/value should be a metric name/value
+                    row_dict[f"test_metric_{subkey}_cut_{key}"] = subval
+
+        if use_validation_set:
+            if data["result_on_validation_list"][i] is dict:
+                # if not, there was an error with this result, so skip it.
+                for key, val in data["result_on_test_list"][i].items():
+                    # each val should be a dict with different cutoffs
+                    for subkey, subval in val.items():
+                        # each subkey/value should be a metric name/value
+                        row_dict[f"val_metric_{subkey}_cut_{key}"] = subval
+
+        # basic metrics
+        row_dict["time_on_val"] = data["time_on_validation_list"][i]
+        row_dict["time_on_test"] = data["time_on_test_list"][i]
+        row_dict["time_on_train"] = data["time_on_train_list"][i]
+        row_dict["exception"] = data["exception_list"][i]
+
+        row_list.append(row_dict)
+
+    # create a df
+    df = pd.DataFrame(row_list)
+
+    return df
