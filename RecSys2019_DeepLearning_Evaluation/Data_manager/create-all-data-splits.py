@@ -6,6 +6,7 @@ Creates all splits for datasets in dataset_handler.DATASET_READER_LIST.
 import argparse
 import os
 from posixpath import split
+import shutil
 
 from numpy import require
 from dataset_handler import DATASET_READER_LIST
@@ -38,6 +39,7 @@ def create_all_splits(data_dir, splits_dir):
             except Exception as e:
                 print(f"FAILURE - {reader.__name__}: exception raised while loading dataset. skipping this dataset")
                 print(f"EXCEPTION: {e}")
+                shutil.rmtree(save_split_path)
 
 
 if __name__ == "__main__":

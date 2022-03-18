@@ -233,6 +233,9 @@ class DataSplitter_leave_k_out(_DataSplitter):
             "URM_test": URM_test,
         }
 
+        # ensure atleast 10 entries in train and test splits
+        assert URM_train.nnz > 10 and URM_test.nnz > 10, f"{URM_train.nnz} entries in train, {URM_test.nnz} entries in test splits"
+
         if self.use_validation_set:
             self.SPLIT_URM_DICT["URM_validation"] = URM_validation
 

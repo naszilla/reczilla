@@ -130,9 +130,9 @@ class _AmazonReviewDataReader(DataReader):
             loaded_ICM_mapper_dict["ICM_metadata"] = tokenToFeatureMapper_ICM_metadata
 
         if loaded_ICM_dict["ICM_metadata"].nnz == 0:
-            loaded_ICM_dict = {}
+            loaded_ICM_dict = None
             loaded_ICM_mapper_dict = {}
-            self.AVAILABLE_ICM = []
+            self.AVAILABLE_ICM = {}
 
 
         if reviews_path is not None:

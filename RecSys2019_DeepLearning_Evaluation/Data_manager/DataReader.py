@@ -148,6 +148,8 @@ class DataReader(object):
             try:
                 loaded_dataset = Dataset()
                 loaded_dataset.load_data(save_folder_path)
+                if not loaded_dataset.AVAILABLE_ICM:
+                    self.AVAILABLE_ICM = loaded_dataset.AVAILABLE_ICM
 
                 self._print("Verifying data consistency...")
                 loaded_dataset.verify_data_consistency()
