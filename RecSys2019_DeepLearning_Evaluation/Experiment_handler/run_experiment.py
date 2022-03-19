@@ -36,6 +36,7 @@ def run(args):
         args.num_samples,
         args.alg_seed,
         args.param_seed,
+        args.original_split_path,
         result_dir=Path(args.result_dir),
     )
 
@@ -90,6 +91,11 @@ if __name__ == "__main__":
         "experiment_name",
         type=str,
         help="name of the result directory that will be created.",
+    )
+    parser.add_argument(
+        "original_split_path",
+        type=str,
+        help="full path to the split data. only used for bookkeeping.",
     )
 
     args = parser.parse_args()

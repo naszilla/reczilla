@@ -349,6 +349,7 @@ class Experiment(object):
         num_samples: int,
         alg_seed: int,
         param_seed: int,
+        original_split_path: str,
         cutoff_list: List[int] = None,
         result_dir: Path = None,
     ):
@@ -419,6 +420,7 @@ class Experiment(object):
             "param_seed": param_seed,
             "cutoff_list": cutoff_list,
             "experiment_name": self.name,
+            "original_split_path": original_split_path,
         }
 
         if result_dir is not None:
