@@ -37,7 +37,7 @@ run_experiment() {
   echo "run_experiment: instance_name: ${instance_name}"
 
   # set a return trap to delete the instance when this function returns
-  trap "gcloud compute instances delete ${instance_name} --zone=${zone} --project=${project}" RETURN
+  trap "echo deleting instance ${instance_name}...; gcloud compute instances delete ${instance_name} --zone=${zone} --project=${project}" RETURN
 
   # maximum number of attempts at creating gcloud instance and ssh
   MAX_TRIES=5
