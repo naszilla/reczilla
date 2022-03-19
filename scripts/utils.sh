@@ -2,6 +2,12 @@
 # functions for running batch jobs
 # load these functions by running 'source utils.sh'
 
+# constants
+image_family=reczilla
+service_account=default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com
+zone=us-central1-a
+project=research-collab-naszilla
+
 wait_until_processes_finish() {
   # only takes one arg: the maximum number of processes that can be running
   # print a '.' every 60 iterations
@@ -30,12 +36,8 @@ run_experiment() {
   echo "run_experiment: split_path: ${split_path}"
   echo "run_experiment: instance_name: ${instance_name}"
 
-
-  # constants
-  image_family=reczilla
-  service_account=default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com
-  zone=us-central1-a
-  project=research-collab-naszilla
+  # set a return trap to delete the instance when this function returns
+  trap "gcloud compute instances delete ${instance_name} --zone=${zone} --project=${project}" RETURN
 
   # maximum number of attempts at creating gcloud instance and ssh
   MAX_TRIES=5
@@ -74,10 +76,9 @@ run_experiment() {
 
 
   # ssh and run the experiment. steps:
-  # 1. pull the latest repo
-  # 2. set environment variables used by script run_experiment_on_instance.sh
-  # 3. chmod the experiment script
-  # 4. run the experiment script
+  # 1. set environment variables used by script run_experiment_on_instance.sh
+  # 2. chmod the experiment script
+  # 3. run the experiment script
   instance_repo_dir=/home/shared/reczilla
   instance_script_location=${instance_repo_dir}/scripts/run_experiment_on_instance.sh
 
@@ -112,8 +113,5 @@ run_experiment() {
   done
   echo "successfully ran experiment"
 
-  echo "finished experiment. deleting instance..."
-  gcloud compute instances delete ${instance_name} --zone=${zone}
-  ret_code=$?
-  echo "RETURN CODE from deleting instance: $ret_code"
+  # remember we don't need to delete the instance here, because we set a return trap
 }
