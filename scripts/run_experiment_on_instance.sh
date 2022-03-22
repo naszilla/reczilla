@@ -59,10 +59,14 @@ gsutil cp "${SPLIT_PATH_ON_BUCKET}/*" /home/shared/split/
 ################
 # run experiment
 
+# compile all Cython algorithms
+cd /home/shared/reczilla/RecSys2019_DeepLearning_Evaluation
+echo "Compiling Cython algorithms"
+python run_compile_all_cython.py
+
 # run the experiment using command line args stored in variable $ARGS
 # NOTE: the results should always be zipped and written to /home/shared/result.zip.
 # NOTE: do this by passing positional argument result_dir = /home/shared
-cd /home/shared/reczilla/RecSys2019_DeepLearning_Evaluation
 python -m Experiment_handler.run_experiment ${ARGS}
 
 # add a timestamp and a random string to the end of the filename, to avoid collisions
