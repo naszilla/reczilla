@@ -104,3 +104,7 @@ do
     wait_until_processes_finish $MAX_PROCESSES
   done
 done
+
+echo "still waiting for processes to finish..."
+wait
+echo "done."
