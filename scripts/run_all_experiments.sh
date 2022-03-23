@@ -113,6 +113,8 @@ do
 
     # argument string that will be passed to Experiment_handler.run_experiment
     # NOTE: in the current version of the split directory, the dataset names do not have suffix "Reader"
+    split_path_on_bucket=${bucket_base}/${dataset_list[j]}/${split_type}
+
     arg_str="\
     ${dataset_list[j]}Reader \
     ${split_type} \
@@ -122,9 +124,8 @@ do
     ${param_seed} \
     ${num_samples}
     /home/shared \
-    ${experiment_base}-${i}-${j}"
-
-    split_path_on_bucket=${bucket_base}/${dataset_list[j]}/${split_type}
+    ${experiment_base}-${i}-${j} \
+    ${split_path_on_bucket}"
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
     num_experiments=$((num_experiments + 1))
