@@ -50,6 +50,7 @@ run_experiment() {
     # attempt to create instance
     gcloud compute instances create $instance_name --zone=$zone \
     --project=$project --image-family=$image_family \
+    --machine-type=n1-highmem-2 \
     --service-account $service_account \
     --scopes=https://www.googleapis.com/auth/devstorage.read_write
 
