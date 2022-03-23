@@ -26,7 +26,7 @@ param_seed=1
 split_type=DataSplitter_leave_k_out
 
 # bucket where split data is read. we expect split data to be in bucket_base/<dataset name>/<split name>
-bucket_base=gs://reczilla-results/dataset-splits/splits-v2
+bucket_base=gs://reczilla-results/dataset-splits/splits-v3
 
 # set of algorithms
 alg_list=(
@@ -34,28 +34,30 @@ ItemKNNCF_cosine
 P3alphaRecommender
 )
 
-# set of datasets
+# set of datasets - updated for v3
 dataset_list=(
-AnimeReader
-BookCrossingReader
-CiaoDVDReader
-DatingReader
-EpinionsReader
-FilmTrustReader
-FrappeReader
-GoogleLocalReviewsReader
-GowallaReader
-Jester2Reader
-LastFMReader
-MarketBiasAmazonReader
-MarketBiasModClothReader
-MovieTweetingsReader
-Movielens100KReader
-Movielens10MReader
-Movielens20MReader
-NetflixPrizeReader
-RecipesReader
-WikilensReader
+Anime
+BookCrossing
+CiaoDVD
+Dating
+Epinions
+FilmTrust
+Frappe
+GoogleLocalReviews
+Gowalla
+Jester2
+LastFM
+MarketBiasAmazon
+MarketBiasModCloth
+MovieTweetings
+Movielens100K
+Movielens10M
+Movielens1M
+Movielens20M
+MovielensHetrec2011
+NetflixPrize
+Recipes
+Wikilens
 )
 
 #################
@@ -79,8 +81,9 @@ do
     #    "experiment_name",
 
     # argument string that will be passed to Experiment_handler.run_experiment
+    # NOTE: in the current version of the split directory, the dataset names do not have suffix "Reader"
     arg_str="\
-    ${dataset_list[j]} \
+    ${dataset_list[j]}Reader \
     ${split_type} \
     ${alg_list[i]} \
     /home/shared/split \
@@ -90,11 +93,7 @@ do
     /home/shared \
     ${experiment_base}-${i}-${j}"
 
-    # NOTE: in the current version of the split directory, the dataset names do not have suffix "Reader"
-    dataset_name=${dataset_list[j]}
-    dataset_folder_name=${dataset_name%Reader}
-
-    split_path_on_bucket=${bucket_base}/${dataset_folder_name}/${split_type}
+    split_path_on_bucket=${bucket_base}/${dataset_list[j]}/${split_type}
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
     num_experiments=$((num_experiments + 1))
