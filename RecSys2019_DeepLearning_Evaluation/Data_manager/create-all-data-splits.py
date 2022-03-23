@@ -5,10 +5,8 @@ Creates all splits for datasets in dataset_handler.DATASET_READER_LIST.
 
 import argparse
 import os
-from posixpath import split
 import shutil
 
-from numpy import require
 from dataset_handler import DATASET_READER_LIST
 from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
 
