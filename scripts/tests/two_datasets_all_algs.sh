@@ -20,7 +20,7 @@ MAX_PROCESSES=10
 # params
 alg_seed=0
 num_samples=2
-param_seed=0
+param_seed=1
 
 # define the split type
 split_type=DataSplitter_leave_k_out
