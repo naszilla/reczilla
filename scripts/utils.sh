@@ -75,7 +75,6 @@ run_experiment() {
   echo "successfully created instance: ${instance_name}"
 
 
-
   # ssh and run the experiment. steps:
   # 1. set environment variables used by script run_experiment_on_instance.sh
   # 2. chmod the experiment script
@@ -83,8 +82,11 @@ run_experiment() {
   instance_repo_dir=/home/shared/reczilla
   instance_script_location=${instance_repo_dir}/scripts/run_experiment_on_instance.sh
 
+  sleep 10
+
   COUNT=0
-  while [ $COUNT -lt $MAX_TRIES ]; do
+  MAX_TRIES_SSH=2
+  while [ $COUNT -lt $MAX_TRIES_SSH ]; do
 
     # attempt to run experiment
     gcloud compute ssh --ssh-flag="-A" ${instance_name} --zone=${zone} --project=${project} \
@@ -100,13 +102,13 @@ run_experiment() {
       # failed to run experiment
       let COUNT=COUNT+1
       echo "failed to run experiment during attempt ${COUNT}... (exit code: ${SSH_RETURN_CODE})"
-      if [[ $COUNT -ge $(( $MAX_TRIES - 1 )) ]]; then
+      if [[ $COUNT -ge $(( $MAX_TRIES_SSH - 1 )) ]]; then
         echo "too many tries. giving up and deleting instance."
         gcloud compute instances delete ${instance_name} --zone=${zone}
         exit 1
       fi
-      echo "trying again in 5 seconds..."
-      sleep 5
+      echo "trying again in 10 seconds..."
+      sleep 10
     else
       # success!
       break
