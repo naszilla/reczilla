@@ -170,11 +170,13 @@ def result_to_df(result_zip_path):
     dataIO = DataIO(str(result_zip_path.parent) + os.sep)
     data = dataIO.load_data(result_zip_path.name)
 
-    num_samples = data["search_params"]["num_samples"]
+    # the search parameter num_samples is the max number of samples we'll find. some algorithms provide
+    # fewer samples (smaller hyperparam space) so the actual number of samples is just the length of this list.
+    num_samples = len(data["hyperparameters_list"])
+
     use_validation_set = "result_on_validation_list" in data
 
     # make sure that each of the lists has the correct length
-    assert len(data["hyperparameters_list"]) == num_samples, f"hyperparameters list has len = {len(data['hyperparameters_list'])}. expected {num_samples}"
     assert len(data["result_on_test_list"]) == num_samples, f"test metric list has len = {len(data['result_on_test_list'])}. expected {num_samples}"
     if use_validation_set:
         assert len(data["result_on_validation_list"]) == num_samples, f"validatino metric list has len = {len(data['result_on_validation_list'])}. expected {num_samples}"

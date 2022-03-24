@@ -15,11 +15,9 @@ def run(args):
 
     # make sure that directories we will create do not exist, and that the base dir does exist
     assert base_path.exists(), f"base dir does not exist: {base_path}"
-    assert not inbox_path.exists(), f"inbox dir already exists: {inbox_path}"
-    assert not result_path.exists(), f"result dir already exists: {result_path}"
 
-    inbox_path.mkdir()
-    result_path.mkdir()
+    inbox_path.mkdir(exist_ok=True)
+    result_path.mkdir(exist_ok=True)
 
     # pull all files
     os.system(f"gsutil -m rsync gs://reczilla-results/inbox {inbox_path}")
@@ -47,7 +45,6 @@ def run(args):
             )
 
             # create directory if it doesn't exist
-            assert not new_path.exists(), f"file already exists at path: {new_path}"
             new_path.parent.mkdir(parents=True, exist_ok=True)
 
             # move the file to the appropriate directory
