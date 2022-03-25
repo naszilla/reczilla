@@ -107,8 +107,8 @@ run_experiment() {
         gcloud compute instances delete ${instance_name} --zone=${zone}
         exit 1
       fi
-      echo "trying again in 10 seconds..."
-      sleep 10
+      echo "trying again in 30 seconds..."
+      sleep 30
     else
       # success!
       break
