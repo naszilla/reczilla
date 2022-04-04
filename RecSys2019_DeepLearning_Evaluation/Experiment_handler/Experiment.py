@@ -367,7 +367,7 @@ class Experiment(object):
         ), f"split has not been prepared. call prepare_split first."
 
         if cutoff_list is None:
-            cutoff_list = [1, 5, 10, 50]
+            cutoff_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30, 40, 50]
 
         # prepare evaluators
         # TODO: we might want to use the DataSplitter function get_holdout_split, but this has a different return value depending on class-specific params. which is annoying. so we will access the split dict directly
