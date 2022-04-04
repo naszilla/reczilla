@@ -8,6 +8,23 @@ service_account=default-compute-instance@research-collab-naszilla.iam.gserviceac
 zone=us-central1-a
 project=research-collab-naszilla
 
+delete_instances() {
+  # $1 = name of list of instance names. all of these instances will be deleted
+  echo "attempting to delete all instances..."
+  local -n instance_list=$1
+  for i in "${instance_list[@]}";
+    do
+        echo "deleting instance: $i"
+        printf "Y" | gcloud compute instances delete $i --zone=${zone} --project=${project}
+    done
+}
+
+sync_logs(){
+  # $1 = path to log files. the contents of this directory will be added to the gcloud bucket reczilla-results/inbox/logs
+  echo "syncing log files from $1 to gcloud..."
+  gsutil -m rsync $1 gs://reczilla-results/inbox/logs
+}
+
 wait_until_processes_finish() {
   # only takes one arg: the maximum number of processes that can be running
   # print a '.' every 60 iterations
@@ -44,8 +61,8 @@ run_experiment() {
 
   echo "launching instance ${instance_name}..."
 
-  COUNT=0
-  while [ $COUNT -lt $MAX_TRIES ]; do
+  COUNT=1
+  while [ $COUNT -le $MAX_TRIES ]; do
 
     # attempt to create instance
     gcloud compute instances create $instance_name --zone=$zone \
@@ -61,8 +78,8 @@ run_experiment() {
       # failed to create instance
       let COUNT=COUNT+1
       echo "failed to create instance during attempt ${COUNT}... (exit code: ${INSTANCE_RETURN_CODE})"
-      if [[ $COUNT -ge $(( $MAX_TRIES - 1 )) ]]; then
-        echo "too many tries. giving up."
+      if [[ $COUNT -ge $(( $MAX_TRIES + 1 )) ]]; then
+        echo "too many create-instance attempts. giving up."
         exit 1
       fi
       echo "trying again in 5 seconds..."
@@ -84,9 +101,9 @@ run_experiment() {
 
   sleep 10
 
-  COUNT=0
+  COUNT=1
   MAX_TRIES_SSH=2
-  while [ $COUNT -lt $MAX_TRIES_SSH ]; do
+  while [ $COUNT -le $MAX_TRIES_SSH ]; do
 
     # attempt to run experiment
     gcloud compute ssh --ssh-flag="-A" ${instance_name} --zone=${zone} --project=${project} \
@@ -102,8 +119,8 @@ run_experiment() {
       # failed to run experiment
       let COUNT=COUNT+1
       echo "failed to run experiment during attempt ${COUNT}... (exit code: ${SSH_RETURN_CODE})"
-      if [[ $COUNT -ge $(( $MAX_TRIES_SSH - 1 )) ]]; then
-        echo "too many tries. giving up and deleting instance."
+      if [[ $COUNT -ge $(( $MAX_TRIES_SSH + 1 )) ]]; then
+        echo "too many SSH attempts. giving up and deleting instance."
         gcloud compute instances delete ${instance_name} --zone=${zone}
         exit 1
       fi
