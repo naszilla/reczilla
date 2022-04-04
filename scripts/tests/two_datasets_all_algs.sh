@@ -6,6 +6,15 @@
 source ../utils.sh
 
 ###################
+# set trap
+# this will sync the log files, and delete all instances
+
+mkdir ${PWD}/logs
+LOG_DIR=${PWD}/logs
+trap "sync_logs ${LOG_DIR}; delete_instances instance_list" EXIT
+instance_list=()
+
+###################
 # define parameters
 
 # base name for the gcloud instances
@@ -109,13 +118,20 @@ do
     ${experiment_base}-${i}-${j} \
     ${split_path_on_bucket}"
 
-    run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ./log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
+    instance_name=${instance_base}-${i}-${j}
+
+    run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_base}-${i}-${j} >> ${LOG_DIR}/log_${i}_${j}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
     num_experiments=$((num_experiments + 1))
+
+    # add instance name to the instance list
+    instance_list+=("${instance_name}")
+
     echo "launched instance ${instance_base}-${i}-${j}. (job number ${num_experiments})"
     sleep 1
 
     # if we have started MAX_PROCESSES experiments, wait for them to finish
     wait_until_processes_finish $MAX_PROCESSES
+
   done
 done
 
