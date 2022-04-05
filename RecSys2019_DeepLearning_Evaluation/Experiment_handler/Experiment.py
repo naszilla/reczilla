@@ -378,13 +378,13 @@ class Experiment(object):
                 f"WARNING: URM_validation not found in URM_dict for split {dataset_name}/{split_name}"
             )
             evaluator_validation = EvaluatorHoldout(
-                urm_dict["URM_validation"], cutoff_list=cutoff_list, exclude_seen=False
+                urm_dict["URM_validation"], cutoff_list, exclude_seen=False
             )
         else:
             evaluator_validation = None
 
         evaluator_test = EvaluatorHoldout(
-            urm_dict["URM_test"], cutoff_list=cutoff_list, exclude_seen=False
+            urm_dict["URM_test"], cutoff_list, exclude_seen=False
         )
 
         # get a recommender class, hyperparameter search space, and search_input_recommender_args from the algorithm handler
