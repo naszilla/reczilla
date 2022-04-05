@@ -224,6 +224,7 @@ class SearchAbstractClass(object):
                 "hyperparameters_list": [None]*n_cases,
                 "hyperparameters_best": None,
                 "hyperparameters_best_index": None,
+                "hyperparameter_source": [None]*n_cases,
 
                 "result_on_validation_list": [None]*n_cases,
                 "result_on_validation_best": None,
@@ -385,7 +386,7 @@ class SearchAbstractClass(object):
 
 
 
-    def _objective_function(self, current_fit_parameters_dict):
+    def _objective_function(self, current_fit_parameters_dict, hyperparameter_source=None):
         """
         train and evaluate a model using a set of model parameters.
         - save model according to param self.save_model
@@ -396,6 +397,7 @@ class SearchAbstractClass(object):
         try:
 
             self.metadata_dict["hyperparameters_list"][self.model_counter] = current_fit_parameters_dict.copy()
+            self.metadata_dict["hyperparameter_source"][self.model_counter] = hyperparameter_source
 
             result_dict, result_string, recommender_instance, train_time, evaluation_time = self._evaluate_on_validation(current_fit_parameters_dict)
 

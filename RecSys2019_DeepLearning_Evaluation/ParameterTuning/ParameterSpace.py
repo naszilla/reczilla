@@ -13,9 +13,13 @@ SAMPLER_DICT = {
 class ParameterSpace:
     """
     generic class for hyperparameter spaces.
+
+    two variables to initialize:
+    - param_dict: dictionary of variables and ranges
+    - default: default param set
     """
 
-    def __init__(self, param_dict):
+    def __init__(self, param_dict, default):
 
         # validate and create search space. this code is borrowed from SearchAbstractClass
         param_names = []
@@ -37,6 +41,11 @@ class ParameterSpace:
         self.param_names = param_names
         self.param_spaces = param_spaces
         self.param_dict = param_dict
+
+        assert default is dict, f"default param set must be a dictionary"
+        for name in default.keys():
+            assert name in self.param_names, f"name {name} in default param set not found in param space"
+        self.default = default
 
     def random_samples(self, n, rs, sampler_type="Sobol", sampler_args=None):
         """

@@ -115,7 +115,7 @@ ALGORITHM_NAME_LIST = [
     # "ConvNCF_RecommenderWrapper",  # see run_IJCAI_18_ConvNCF.py  # TODO: there are some bugs in this implementation.
     "MFBPR_Wrapper",  # see run_IJCAI_18_ConvNCF_CNN_embedding.py
     "CoClustering",
-    "SlopeOne"
+    "SlopeOne",
 ]
 
 BASE_KNN_ARGS = {
@@ -123,6 +123,15 @@ BASE_KNN_ARGS = {
     "shrink": Integer(0, 1000),
     "normalize": Categorical([True, False]),
 }
+
+DEFAULT_KNN_ARGS = {"topK": 5, "shrink": 50, "normalize": True}
+
+DEFAULT_NUM_FACTORS = 10
+DEFAULT_ITEM_REG = 1e-4
+DEFAULT_USER_REG = 1e-3
+DEFAULT_LEARNING_RATE = 1e-3
+DEFAULT_SGD_MODE = "sgd"
+DEFAULT_EPOCHS = 500
 
 
 def algorithm_handler(algorithm_name):
@@ -168,56 +177,62 @@ def algorithm_handler(algorithm_name):
     # ------------------------------------
 
     space = {}
+    default = {}
 
-    # maximum number of points to sample. -1 = no max
+    # maximum number of points to sample.
     max_points = 1e10
 
     # ---- for all KNN algorithms ----
     # in the original codebase, the constant params were included in the search space. here, we instead add them to
     # the search_input_recommender_args object.
     if KNN_ALG:
+        space.update(BASE_KNN_ARGS)
+        default.update(DEFAULT_KNN_ARGS)
         if algorithm_name.endswith("asymmetric"):
-            space.update(BASE_KNN_ARGS)
             space["asymmetric_alpha"] = Real(low=0, high=2, prior="uniform")
+            default["asymmetric_alpha"] = 1.0
             # remove normalize - this is a constant for this model
             del space["normalize"]
             fit_keyword_args["normalize"] = True
             fit_keyword_args["similarity"] = "asymmetric"
 
         elif algorithm_name.endswith("tversky"):
-            space.update(BASE_KNN_ARGS)
             space.update(
                 {
                     "tversky_alpha": Real(low=0, high=2, prior="uniform"),
                     "tversky_beta": Real(low=0, high=2, prior="uniform"),
                 }
             )
+            default["tversky_alpha"] = 1.0
+            default["tversky_beta"] = 1.0
+
             # remove normalize - this is a constant for this model
             del space["normalize"]
+            del default["normalize"]
             fit_keyword_args["normalize"] = True
             fit_keyword_args["similarity"] = "tversky"
 
         elif algorithm_name.endswith("euclidean"):
-            space.update(BASE_KNN_ARGS)
             space.update(
                 {
                     "normalize_avg_row": Categorical([True, False]),
                     "similarity_from_distance_mode": Categorical(["lin", "log", "exp"]),
                 }
             )
+            default["normalize_avg_row"] = True
+            default["similarity_from_distance_mode"] = "lin"
+
             fit_keyword_args["similarity"] = "euclidean"
 
         elif algorithm_name.endswith("cosine"):
-            space.update(BASE_KNN_ARGS)
             space["feature_weighting"] = Categorical(["none", "BM25", "TF-IDF"])
+            default["feature_weighting"] = "none"
             fit_keyword_args["similarity"] = "cosine"
 
         elif algorithm_name.endswith("jaccard"):
-            space.update(BASE_KNN_ARGS)
             fit_keyword_args["similarity"] = "jaccard"
 
         elif algorithm_name.endswith("dice"):
-            space.update(BASE_KNN_ARGS)
             fit_keyword_args["similarity"] = "dice"
     else:
         # ---- all other (non-KNN) algorithms ----
@@ -232,6 +247,11 @@ def algorithm_handler(algorithm_name):
                 "alpha": Real(low=0, high=2, prior="uniform"),
                 "normalize_similarity": Categorical([True, False]),
             }
+            default = {
+                "topK": 5,
+                "alpha": 1.0,
+                "normalize_similarity": True,
+            }
 
         elif alg is RP3betaRecommender:
             space = {
@@ -240,17 +260,35 @@ def algorithm_handler(algorithm_name):
                 "beta": Real(low=0, high=2, prior="uniform"),
                 "normalize_similarity": Categorical([True, False]),
             }
+            default = {
+                "topK": 5,
+                "alpha": 1.0,
+                "beta": 1.0,
+                "normalize_similarity": True,
+            }
 
         elif alg is MatrixFactorization_FunkSVD_Cython:
             space = {
                 "sgd_mode": Categorical(["sgd", "adagrad", "adam"]),
                 "use_bias": Categorical([True, False]),
-                "batch_size": Categorical([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]),
+                "batch_size": Categorical(
+                    [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+                ),
                 "num_factors": Integer(1, 200),
                 "item_reg": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "user_reg": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "learning_rate": Real(low=1e-4, high=1e-1, prior="log-uniform"),
                 "negative_interactions_quota": Real(low=0.0, high=0.5, prior="uniform"),
+            }
+            default = {
+                "sgd_mode": DEFAULT_SGD_MODE,
+                "use_bias": True,
+                "batch_size": 32,
+                "num_factors": DEFAULT_NUM_FACTORS,
+                "item_reg": DEFAULT_ITEM_REG,
+                "user_reg": DEFAULT_ITEM_REG,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+                "negative_interactions_quota": 0.2,
             }
             fit_keyword_args["epochs"] = 500
 
@@ -264,19 +302,38 @@ def algorithm_handler(algorithm_name):
                 "learning_rate": Real(low=1e-4, high=1e-1, prior="log-uniform"),
                 "negative_interactions_quota": Real(low=0.0, high=0.5, prior="uniform"),
             }
-            fit_keyword_args["epochs"] = 500
+            default = {
+                "sgd_mode": DEFAULT_SGD_MODE,
+                "use_bias": True,
+                "num_factors": DEFAULT_NUM_FACTORS,
+                "item_reg": DEFAULT_ITEM_REG,
+                "user_reg": DEFAULT_USER_REG,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+                "negative_interactions_quota": 0.2,
+            }
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = 1
 
         elif alg is MatrixFactorization_BPR_Cython:
             space = {
                 "sgd_mode": Categorical(["sgd", "adagrad", "adam"]),
                 "num_factors": Integer(1, 200),
-                "batch_size": Categorical([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]),
+                "batch_size": Categorical(
+                    [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+                ),
                 "positive_reg": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "negative_reg": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "learning_rate": Real(low=1e-4, high=1e-1, prior="log-uniform"),
             }
-            fit_keyword_args["epochs"] = 1500
+            default = {
+                "sgd_mode": DEFAULT_SGD_MODE,
+                "num_factors": DEFAULT_NUM_FACTORS,
+                "batch_size": 32,
+                "positive_reg": 1e-3,
+                "negative_reg": 1e-3,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+            }
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["positive_threshold_BPR"] = None
 
         elif alg is IALSRecommender:
@@ -287,11 +344,21 @@ def algorithm_handler(algorithm_name):
                 "epsilon": Real(low=1e-3, high=10.0, prior="log-uniform"),
                 "reg": Real(low=1e-5, high=1e-2, prior="log-uniform"),
             }
-            fit_keyword_args["epochs"] = 300
+            default = {
+                "num_factors": DEFAULT_NUM_FACTORS,
+                "confidence_scaling": "linear",
+                "alpha": 1.0,
+                "epsilon": 1.0,
+                "reg": 1e-3,
+            }
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
 
         elif alg is PureSVDRecommender:
             space = {
                 "num_factors": Integer(1, 350),
+            }
+            default = {
+                "num_factors": DEFAULT_NUM_FACTORS,
             }
             max_points = 300
 
@@ -301,6 +368,12 @@ def algorithm_handler(algorithm_name):
                 "solver": Categorical(["coordinate_descent", "multiplicative_update"]),
                 "init_type": Categorical(["random", "nndsvda"]),
                 "beta_loss": Categorical(["frobenius", "kullback-leibler"]),
+            }
+            default = {
+                "num_factors": DEFAULT_NUM_FACTORS,
+                "solver": "coordinate_descent",
+                "init_type": "random",
+                "beta_loss": "frobenius",
             }
             max_points = 2800
 
@@ -313,7 +386,15 @@ def algorithm_handler(algorithm_name):
                 "lambda_j": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "learning_rate": Real(low=1e-4, high=1e-1, prior="log-uniform"),
             }
-            fit_keyword_args["epochs"] = 1500
+            default = {
+                "topK": 5,
+                "symmetric": True,
+                "sgd_mode": DEFAULT_SGD_MODE,
+                "lambda_i": 1e-3,
+                "lambda_j": 1e-3,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+            }
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["positive_threshold_BPR"] = None
             fit_keyword_args["train_with_sparse_weights"] = None
 
@@ -321,12 +402,20 @@ def algorithm_handler(algorithm_name):
             space = {
                 "topK": Integer(5, 1000),
                 "l1_ratio": Real(low=1e-5, high=1.0, prior="log-uniform"),
-                "alpha": Real(low=1e-3, high=1.0, prior="uniform"),
+                "alpha": Real(low=1e-3, high=1e2, prior="uniform"),
+            }
+            default = {
+                "topK": 5,
+                "l1_ratio": 0.1,
+                "alpha": 1.0,
             }
 
         elif alg is EASE_R_Recommender:
             space = {
                 "l2_norm": Real(low=1e0, high=1e7, prior="log-uniform"),
+            }
+            default = {
+                "l2_norm": 1e3,
             }
             max_points = 1000
             fit_keyword_args["topK"] = None
@@ -338,24 +427,42 @@ def algorithm_handler(algorithm_name):
                 "num_neurons": Integer(
                     3, 500
                 ),  # number of neurons in the first four layers
-                "num_factors": Integer(2, 100),  # number of neurons in the last two layers
+                "num_factors": Integer(
+                    2, 100
+                ),  # number of neurons in the last two layers
                 "dropout_percentage": Real(low=0.0, high=0.3),
                 "learning_rate": Real(low=1e-6, high=1e-1, prior="log-uniform"),
                 "regularization_rate": Real(low=1e-4, high=1e1, prior="log-uniform"),
             }
-            fit_keyword_args["epochs"] = 100
+            default = {
+                "num_neurons": 100,
+                "num_factors": DEFAULT_NUM_FACTORS,  # number of neurons in the last two layers
+                "dropout_percentage": 0.1,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+                "regularization_rate": 1e-2,
+            }
+
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = 1024
 
         elif alg is SpectralCF_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space
             space = {
-                "batch_size": Categorical([128, 256, 512, 1024, 2048]),
+                "batch_size": 256,
                 "embedding_size": Categorical([4, 8, 16, 32]),
                 "decay": Real(low=1e-5, high=1e-1, prior="log-uniform"),
                 "learning_rate": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "k": Integer(low=1, high=6),
             }
-            fit_keyword_args["epochs"] = 1000
+            default = {
+                "batch_size": 1024,
+                "embedding_size": 16,
+                "decay": 0.001,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+                "k": 3,
+            }
+
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
 
         elif alg is Mult_VAE_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space
@@ -366,12 +473,17 @@ def algorithm_handler(algorithm_name):
                 ),  # strength of l2 regularization
                 "lr": Real(1e-6, 1e-2, prior="log-uniform"),  # learning rate
             }
+            default = {
+                "total_anneal_steps": 200000,
+                "lam": 0.0,
+                "lr": DEFAULT_LEARNING_RATE,
+            }
 
             fit_keyword_args[
                 "p_dims"
             ] = None  # TODO: this uses default. define a reasonable parameter range
             # fit_keyword_args["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
-            fit_keyword_args["epochs"] = 1000
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = 500
 
         elif alg is DELF_EF_RecommenderWrapper or alg is DELF_MLP_RecommenderWrapper:
@@ -381,6 +493,10 @@ def algorithm_handler(algorithm_name):
             space = {
                 "learning_rate": Real(1e-6, 1e-2, prior="log-uniform"),
                 "num_negatives": Integer(3, 4),  # TODO: not sure what this is
+            }
+            default = {
+                "learning_rate": DEFAULT_LEARNING_RATE,
+                "num_negatives": 4,
             }
             fit_keyword_args["learner"] = "adam"
             fit_keyword_args["verbose"] = False
@@ -394,7 +510,7 @@ def algorithm_handler(algorithm_name):
                 0,
                 0,
             )
-            fit_keyword_args["epochs"] = 500
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = 256
 
         elif alg is ConvNCF_RecommenderWrapper:
@@ -431,11 +547,17 @@ def algorithm_handler(algorithm_name):
                 "embed_size": Categorical([32, 64, 128]),
                 "learning_rate": Real(1e-4, 1e-1, prior="log-uniform"),
             }
+            default = {
+                "embed_size": 64,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+            }
             fit_keyword_args["negative_sample_per_positive"] = 1
 
             fit_keyword_args["batch_size"] = 512
-            fit_keyword_args["epochs"] = 500
-            fit_keyword_args["path_partial_results"] = "./TMP/"  # TODO: we shouldn't be defining paths here.
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
+            fit_keyword_args[
+                "path_partial_results"
+            ] = "./TMP/"  # TODO: we shouldn't be defining paths here.
 
         elif alg is CoClustering:
             # Based on Autosurprise
@@ -443,16 +565,17 @@ def algorithm_handler(algorithm_name):
                 "n_cltr_u": Integer(1, 1000),
                 "n_cltr_i": Integer(1, 100),
             }
+            default = {
+                "n_cltr_u": 20,
+                "n_cltr_i": 20,
+            }
 
-            fit_keyword_args.update({
-                "n_epochs": 20,
-                "random_state": None
-            })
+            fit_keyword_args.update({"n_epochs": 20, "random_state": None})
 
         elif alg is SlopeOne:
             space = {}
+            default = {}
             max_points = 1
-
         else:
             raise Exception(f"algorithm_handler can't handle {algorithm_name}")
 
@@ -463,6 +586,9 @@ def algorithm_handler(algorithm_name):
         FIT_KEYWORD_ARGS=fit_keyword_args
     )
 
-
-
-    return alg, ParameterSpace(space), search_input_recommender_args, max_points
+    return (
+        alg,
+        ParameterSpace(space, default),
+        search_input_recommender_args,
+        max_points,
+    )

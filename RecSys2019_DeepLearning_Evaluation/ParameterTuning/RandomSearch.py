@@ -57,6 +57,7 @@ class RandomSearch(SearchAbstractClass):
         self,
         recommender_input_args,
         parameter_search_space,
+        use_default_params=True,
         n_samples=1,
         output_folder_path=None,
         output_file_name_root=None,
@@ -71,6 +72,9 @@ class RandomSearch(SearchAbstractClass):
         """
         search for the best set of hyperparameters using multiple random draws from the hyperparameter space
 
+        if use_default_params=True, then the first parameter draw is always the default, and the number of random
+        samples is n_samples - 1.
+
         pass additional args to the sampler using sampler_args
 
         if metadata_dict is passed, add this to the metadata dict
@@ -81,13 +85,21 @@ class RandomSearch(SearchAbstractClass):
 
         hyperparam_rs = np.random.RandomState(param_seed)
 
-        # sample random hyperparam values
-        hyperparam_samples = parameter_search_space.random_samples(
-            n_samples,
-            rs=hyperparam_rs,
-            sampler_type=sampler_type,
-            sampler_args=sampler_args,
-        )
+        # sample random hyperparam values. if we're using the default param set, take (n_samples - 1) samples
+        if use_default_params:
+            n_random_samples = n_samples - 1
+        else:
+            n_random_samples = n_samples
+
+        if n_random_samples > 0:
+            hyperparam_samples = parameter_search_space.random_samples(
+                n_random_samples,
+                rs=hyperparam_rs,
+                sampler_type=sampler_type,
+                sampler_args=sampler_args,
+            )
+        else:
+            hyperparam_samples = []
 
         resume_from_saved = False  # not implemented
         metric_to_optimize = "MAP"  # not important
@@ -110,8 +122,19 @@ class RandomSearch(SearchAbstractClass):
             evaluate_on_test,
             n_samples,
             raise_exceptions,
-            metadata_dict=metadata_dict
+            metadata_dict=metadata_dict,
         )
+
+        # if we're using the default param set, run this one first
+        if use_default_params:
+            self._write_log("{}: Starting parameter set\n".format(self.ALGORITHM_NAME))
+            set_deterministic(
+                alg_seed
+            )  # reinitialize random states using the algorithm seed
+            # fit and evaluate the model
+            self._objective_function(
+                parameter_search_space.default, hyperparameter_source="default"
+            )
 
         # generate n_cases random hyperparameter draws
         for i_sample, hyperparams in enumerate(hyperparam_samples):
@@ -124,7 +147,11 @@ class RandomSearch(SearchAbstractClass):
             set_deterministic(
                 alg_seed
             )  # reinitialize random states using the algorithm seed
-            self._objective_function(hyperparams)
+
+            # fit and evaluate the model
+            self._objective_function(
+                hyperparams, hyperparameter_source=f"random_{i_sample}"
+            )
 
         self._write_log(
             "{}: Search complete. Output written to: {}\n".format(
