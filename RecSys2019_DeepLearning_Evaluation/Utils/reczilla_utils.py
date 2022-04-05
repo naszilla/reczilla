@@ -224,6 +224,8 @@ def result_to_df(result_zip_path):
         row_dict["time_on_test"] = data["time_on_test_list"][i]
         row_dict["time_on_train"] = data["time_on_train_list"][i]
         row_dict["exception"] = data["exception_list"][i]
+        if "hyperparameters_source" in data:
+            row_dict["hyperparameters_source"] = data["hyperparameters_source"][i]
 
         row_list.append(row_dict)
 

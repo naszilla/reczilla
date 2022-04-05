@@ -133,7 +133,7 @@ class RandomSearch(SearchAbstractClass):
             )  # reinitialize random states using the algorithm seed
             # fit and evaluate the model
             self._objective_function(
-                parameter_search_space.default, hyperparameter_source="default"
+                parameter_search_space.default, hyperparameters_source="default"
             )
 
         # generate n_cases random hyperparameter draws
@@ -150,7 +150,7 @@ class RandomSearch(SearchAbstractClass):
 
             # fit and evaluate the model
             self._objective_function(
-                hyperparams, hyperparameter_source=f"random_{i_sample}"
+                hyperparams, hyperparameters_source=f"random_{i_sample}"
             )
 
         self._write_log(
