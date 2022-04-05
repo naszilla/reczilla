@@ -42,7 +42,7 @@ class ParameterSpace:
         self.param_spaces = param_spaces
         self.param_dict = param_dict
 
-        assert default is dict, f"default param set must be a dictionary"
+        assert type(default) is dict, f"default param set must be a dictionary"
         for name in default.keys():
             assert name in self.param_names, f"name {name} in default param set not found in param space"
         self.default = default
