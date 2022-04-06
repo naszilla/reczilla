@@ -8,10 +8,79 @@ service_account=default-compute-instance@research-collab-naszilla.iam.gserviceac
 zone=us-central1-a
 project=research-collab-naszilla
 
+# set of algorithms
+alg_list="
+ItemKNNCF_asymmetric
+ItemKNNCF_tversky
+ItemKNNCF_euclidean
+ItemKNNCF_cosine
+ItemKNNCF_jaccard
+ItemKNNCF_dice
+UserKNNCF_asymmetric
+UserKNNCF_tversky
+UserKNNCF_euclidean
+UserKNNCF_cosine
+UserKNNCF_jaccard
+UserKNNCF_dice
+TopPop
+GlobalEffects
+Random
+P3alphaRecommender
+RP3betaRecommender
+MatrixFactorization_FunkSVD_Cython
+MatrixFactorization_AsySVD_Cython
+MatrixFactorization_BPR_Cython
+IALSRecommender
+PureSVDRecommender
+NMFRecommender
+SLIM_BPR_Cython
+SLIMElasticNetRecommender
+EASE_R_Recommender
+Mult_VAE_RecommenderWrapper
+DELF_EF_RecommenderWrapper
+CoClustering
+SlopeOne
+"
+
+dataset_list="
+Anime
+BookCrossing
+CiaoDVD
+Dating
+Epinions
+FilmTrust
+Frappe
+GoogleLocalReviews
+Gowalla
+Jester2
+LastFM
+MarketBiasAmazon
+MarketBiasModCloth
+MovieTweetings
+Movielens100K
+Movielens10M
+Movielens1M
+Movielens20M
+MovielensHetrec2011
+NetflixPrize
+Recipes
+Wikilens
+"
+
+random_alg() {
+  # return a random algorithm name, drawn from alg_list.txt
+  echo $(sort --random-sort <<<"$alg_list" | head -1)
+}
+
+random_dataset() {
+  # return a random algorithm name, drawn from dataset_list.txt
+  echo $(sort --random-sort <<<"$dataset_list" | head -1)
+}
+
 delete_instances() {
   # $1 = name of list of instance names. all of these instances will be deleted
   echo "attempting to delete all instances..."
-  local -n instance_list=$1
+  local instance_list=$1
   for i in "${instance_list[@]}";
     do
         echo "deleting instance: $i"
@@ -90,7 +159,6 @@ run_experiment() {
     fi
   done
   echo "successfully created instance: ${instance_name}"
-
 
   # ssh and run the experiment. steps:
   # 1. set environment variables used by script run_experiment_on_instance.sh
