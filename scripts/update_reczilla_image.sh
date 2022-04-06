@@ -52,4 +52,4 @@ gcloud compute images create $new_image_name \
 echo "finished creating image, deleting instance"
 
 # delete the instance
-gcloud compute instances delete ${instance} --zone=${zone}
+printf "Y" | gcloud compute instances delete ${instance} --zone=${zone}
