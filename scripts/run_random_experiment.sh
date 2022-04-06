@@ -79,7 +79,7 @@ while [ $count -lt $num_pairs ]; do
 
   instance_name=${instance_base}-${count}
 
-  echo "run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &"
+  run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
   num_experiments=$((num_experiments + 1))
 
   # add instance name to the instance list

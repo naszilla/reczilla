@@ -9,8 +9,7 @@ zone=us-central1-a
 project=research-collab-naszilla
 
 # set of algorithms
-alg_list="
-ItemKNNCF_asymmetric
+alg_list="ItemKNNCF_asymmetric
 ItemKNNCF_tversky
 ItemKNNCF_euclidean
 ItemKNNCF_cosine
@@ -39,11 +38,9 @@ EASE_R_Recommender
 Mult_VAE_RecommenderWrapper
 DELF_EF_RecommenderWrapper
 CoClustering
-SlopeOne
-"
+SlopeOne"
 
-dataset_list="
-Anime
+dataset_list="Anime
 BookCrossing
 CiaoDVD
 Dating
@@ -64,8 +61,7 @@ Movielens20M
 MovielensHetrec2011
 NetflixPrize
 Recipes
-Wikilens
-"
+Wikilens"
 
 random_alg() {
   # return a random algorithm name, drawn from alg_list.txt
