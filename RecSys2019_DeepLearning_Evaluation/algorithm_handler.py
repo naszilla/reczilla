@@ -193,6 +193,7 @@ def algorithm_handler(algorithm_name):
             default["asymmetric_alpha"] = 1.0
             # remove normalize - this is a constant for this model
             del space["normalize"]
+            del default["normalize"]
             fit_keyword_args["normalize"] = True
             fit_keyword_args["similarity"] = "asymmetric"
 
