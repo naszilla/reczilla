@@ -5,13 +5,13 @@
 # BEGIN: user-defined parameters
 
 # number of algorithm-dataset pairs to sample
-num_pairs=5
+num_pairs=100
 
 # base name for the gcloud instances
-instance_base=random-pairs
+instance_base=100randompairs
 
 # name of the expeirment
-experiment_base=random-pairs
+experiment_base=100randompairs
 
 # maximum number of experiments (background processes) that can be running
 MAX_PROCESSES=10
@@ -51,9 +51,9 @@ instance_list=()
 ##################################################
 # BEGIN: run experiments - modify at your own risk
 
-num_experiments=0
+num_experiments=1
 count=1
-while [ $count -lt $num_pairs ]; do
+while [ $count -le $num_pairs ]; do
   # get random alg name
   alg_name=$(random_alg)
   dataset_name=$(random_dataset)
