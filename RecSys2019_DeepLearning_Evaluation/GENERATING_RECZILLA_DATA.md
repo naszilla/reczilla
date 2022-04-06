@@ -102,3 +102,12 @@ The CSVs contain one row for each set of hyperparameters, and many, many columns
 - **metric columns: (prefix: metric\_)** each metric has its own column, for each cutoff tested, and for the test and validation set (if val is used). All of these have the prefix "metric\_". For example, the column for metric "ACCURACY" on the test set, for cutoff 5, has name `test_metric_ACCURACY_cut_5`.
 
 
+# Processing Log Files
+
+Some jobs will fail... We have started writing log files to the gcloud folder `gs://reczilla-results/inbox/logs`. If you write your log files here, you can check whether a job failed or succeeded by checking the log file. You can process the log files using script [process_logs.py](https://github.com/naszilla/reczilla/blob/main/RecSys2019_DeepLearning_Evaluation/reczilla_analysis/process_logs.py). For example:
+
+```
+python -m reczilla_analysis.process_logs <result directory>
+```
+
+This will produce a CSV `<result_directory>/result_logs.csv`, with one row for each log file, and some other useful info scraped from the log file.
