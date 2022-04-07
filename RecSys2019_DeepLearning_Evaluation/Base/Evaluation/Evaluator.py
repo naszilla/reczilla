@@ -418,8 +418,8 @@ class EvaluatorHoldout(Evaluator):
     def _run_evaluation_on_selected_users(self, recommender_object, users_to_evaluate, block_size = None):
 
         if block_size is None:
-            # Reduce block size if estimated memory requirement exceeds 4 GB
-            block_size = min([1000, int(4*1e9*8/64/self.n_items), len(users_to_evaluate)])
+            # Reduce block size if estimated memory requirement exceeds 2 GB
+            block_size = min([1000, int(2*1e9*8/64/self.n_items), len(users_to_evaluate)])
 
 
         results_dict = _create_empty_metrics_dict(self.cutoff_list,
