@@ -46,10 +46,11 @@ echo "creating image ${new_image_name}..."
 # create a new image from this instance, and add it to the reczilla family
 gcloud compute images create $new_image_name \
     --source-disk $instance \
+    --project=$project \
     --source-disk-zone $zone \
     --family $family --force
 
 echo "finished creating image, deleting instance"
 
 # delete the instance
-printf "Y" | gcloud compute instances delete ${instance} --zone=${zone}
+printf "Y" | gcloud compute instances delete ${instance} --zone=${zone} --project=$project
