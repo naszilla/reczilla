@@ -9,6 +9,7 @@ def feature_string(func_name, func_kwargs):
         return func_name
     return "__".join([func_name] + ["{}_{}".format(key, val) for key, val in func_kwargs.items()])
 
+# Entries are (function_name, function_kwargs)
 all_features = [
     ("num_users",
      {}),
@@ -20,6 +21,7 @@ all_features = [
      {})
 ]
 
+# For use with dist_feature. Functions to aggregate distributions.
 aggregation_functions = {
     "mean": np.mean,
     "max": np.max,
@@ -37,12 +39,14 @@ aggregation_functions = {
 def sparse_mean(mat, axis=0):
     return np.array(np.sum(mat, axis=axis)).squeeze() / mat.getnnz(axis=axis)
 
+# For use with dist_feature. Functions to pre-aggregate ratings to form distributions.
 pre_aggregation_functions = {
     "mean": sparse_mean,
     "sum": lambda mat, axis: np.array(np.sum(mat, axis=axis)).squeeze(),
     "count": lambda mat, axis: mat.getnnz(axis=axis)
 }
 
+# Add all possible dist_features to all_features.
 for kind in ["rating", "item", "user"]:
     if kind == "rating":
         pre_agg_funcs = [None]
@@ -60,20 +64,23 @@ for kind in ["rating", "item", "user"]:
                 }
             ))
 
-
+# Number of users
 def num_users(train_set):
     return train_set.shape[0]
 
+# Number of items
 def num_items(train_set):
     return train_set.shape[1]
 
+# Number of interactions
 def num_interactions(train_set):
     return train_set.nnz
 
+# Sparsity of interaction matrix
 def sparsity(train_set):
     return 1 - train_set.nnz / (train_set.shape[0]*train_set.shape[1])
 
-
+# Distribution feature
 def dist_feature(train_set, kind, agg_func, pre_agg_func=None):
     if kind == "rating":
         if pre_agg_func:
@@ -102,7 +109,6 @@ def featurize_train_set(train_set, feature_list=None):
         feature_vals[feature_name] = globals()[func_name](train_set, **func_kwargs)
 
     return feature_vals
-
 
 def featurize_dataset_split(dataset_split_path, feature_list=None):
     dataReader_object, splitter_class, init_kwargs = DataSplitter.load_data_reader_splitter_class(dataset_split_path)
