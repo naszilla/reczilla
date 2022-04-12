@@ -39,6 +39,7 @@ def run(args):
         args.param_seed,
         args.original_split_path,
         result_dir=Path(args.result_dir),
+        time_limit=args.time_limit,
     )
 
     # the result file has a timestamp on it. we will rename this to a generic name, so that our bash script
@@ -50,6 +51,11 @@ def run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "time_limit",
+        type=int,
+        help="time limit in seconds",
+    )
     parser.add_argument(
         "dataset_name",
         type=str,

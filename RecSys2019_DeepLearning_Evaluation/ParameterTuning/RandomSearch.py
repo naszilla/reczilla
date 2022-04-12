@@ -25,6 +25,7 @@ class RandomSearch(SearchAbstractClass):
         evaluator_validation=None,
         evaluator_test=None,
         verbose=True,
+        logger=None,
     ):
 
         super(RandomSearch, self).__init__(
@@ -33,6 +34,13 @@ class RandomSearch(SearchAbstractClass):
             evaluator_test=evaluator_test,
             verbose=verbose,
         )
+
+        # use a separate logging channel than SearchAbstractClass
+        self.logger = logger
+
+    def _log_info(self, x):
+        if self.logger is not None:
+            self.logger.info(x)
 
     def _evaluate_on_validation(self, current_fit_parameters):
 
@@ -66,7 +74,7 @@ class RandomSearch(SearchAbstractClass):
         param_seed=0,
         alg_seed=0,
         raise_exceptions=False,
-        write_log_every=10,
+        write_log_every=1,
         metadata_dict=None,
     ):
         """
@@ -127,7 +135,7 @@ class RandomSearch(SearchAbstractClass):
 
         # if we're using the default param set, run this one first
         if use_default_params:
-            self._write_log("{}: Starting parameter set\n".format(self.ALGORITHM_NAME))
+            self._log_info("{}: Starting parameter set\n".format(self.ALGORITHM_NAME))
             set_deterministic(
                 alg_seed
             )  # reinitialize random states using the algorithm seed
@@ -139,7 +147,7 @@ class RandomSearch(SearchAbstractClass):
         # generate n_cases random hyperparameter draws
         for i_sample, hyperparams in enumerate(hyperparam_samples):
             if i_sample % write_log_every == 0:
-                self._write_log(
+                self._log_info(
                     "{}: Starting parameter set {} of {}\n".format(
                         self.ALGORITHM_NAME, i_sample + 1, n_samples
                     )
@@ -153,8 +161,9 @@ class RandomSearch(SearchAbstractClass):
                 hyperparams, hyperparameters_source=f"random_{i_sample}"
             )
 
-        self._write_log(
+        self._log_info(
             "{}: Search complete. Output written to: {}\n".format(
-                self.ALGORITHM_NAME, self.output_folder_path,
+                self.ALGORITHM_NAME,
+                self.output_folder_path,
             )
         )

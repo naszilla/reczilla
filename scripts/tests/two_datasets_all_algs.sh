@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#### WARNING: this script has not been updated in a while. the calls to run_experiment probably ened to be updated
+
 # run two algorithms on all datasets. use 2 parameter samples
 
 # load functions

@@ -65,6 +65,8 @@ while [ $count -le $num_pairs ]; do
   # NOTE: this assumes that dataset names do not have suffix "Reader". but the reader objects do have this suffix
   split_path_on_bucket=${bucket_base}/${dataset_name}/${split_type}
 
+  LOG_FILE=${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt
+
   arg_str="\
   ${dataset_name}Reader \
   ${split_type} \
@@ -75,11 +77,12 @@ while [ $count -le $num_pairs ]; do
   ${num_samples}
   /home/shared \
   ${experiment_base}-${count} \
-  ${split_path_on_bucket}"
+  ${split_path_on_bucket} \
+  ${LOG_FILE}"
 
   instance_name=${instance_base}-${count}
 
-  run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt 2>&1 &
+  run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_FILE} 2>&1 &
   num_experiments=$((num_experiments + 1))
 
   # add instance name to the instance list

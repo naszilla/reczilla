@@ -4,6 +4,7 @@ base class for running experiments
 here, a single "experiment" is when we train one recsys algorithm on one train/test/validation split of a dataset, with
 one or more sets of hyperparameters for the algorithm. we record the train and test performance for all trained algorithms
 """
+import multiprocessing
 import os
 from pathlib import Path
 from typing import List
@@ -356,12 +357,15 @@ class Experiment(object):
         original_split_path: str,
         cutoff_list: List[int] = None,
         result_dir: Path = None,
+        time_limit=1e10,
     ):
         """
         run an experiment, writing the results in the appropriate metadata files
 
         if result_dir is provided, write the result here.
         otherwise, write it in the directory structure base/<dataset>/<split>/<alg>/
+
+        time_limit is in seconds
         """
         assert (
             dataset_name in self.dataset_dict
@@ -411,6 +415,7 @@ class Experiment(object):
             evaluator_validation=evaluator_validation,
             evaluator_test=evaluator_test,
             verbose=self.verbose,
+            logger=self.logger,
         )
 
         # pass these to RandomSearch.search(), which will add this to the metadata dict
@@ -444,18 +449,29 @@ class Experiment(object):
         # run a random parameter search
         time_str = time_to_str(TIME_FORMAT)
         output_file_name = f"result_" + time_str
-        parameter_search.search(
-            search_input_recommender_args,
-            parameter_search_space,
-            n_samples=min(num_samples, max_points),
-            output_folder_path=str(experiment_result_dir) + os.sep,
-            output_file_name_root=output_file_name,
-            sampler_type="Sobol",
-            sampler_args={},
-            param_seed=param_seed,
-            alg_seed=alg_seed,
-            metadata_dict={"search_params": search_param_dict},
+
+        search_args = (search_input_recommender_args, parameter_search_space)
+        search_kwargs = {
+            "n_samples": min(num_samples, max_points),
+            "output_folder_path": str(experiment_result_dir) + os.sep,
+            "output_file_name_root": output_file_name,
+            "sampler_type": "Sobol",
+            "sampler_args": {},
+            "param_seed": param_seed,
+            "alg_seed": alg_seed,
+            "metadata_dict": {"search_params": search_param_dict},
+        }
+
+        # start a process for running the search. use this to keep track of the time limit
+        p = multiprocessing.Process(
+            target=parameter_search.search, args=search_args, kwargs=search_kwargs
         )
+        p.start()
+        p.join(time_limit)
+
+        if p.is_alive():
+            self.logger.info("time limit reached. stopping search")
+            p.terminate()
 
         # make sure that result (metadata) file exists, and add it to the list
         result_file = experiment_result_dir.joinpath(output_file_name + "_metadata.zip")
