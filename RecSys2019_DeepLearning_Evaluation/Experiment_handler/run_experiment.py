@@ -26,6 +26,7 @@ def run(args):
         args.experiment_name,
         use_processed_data=use_processed_data,
         verbose=verbose,
+        log_file=args.log_file,
     )
     experiment.prepare_dataset(args.dataset_name)
     experiment.prepare_split(args.dataset_name, args.split_type, split_path=Path(args.split_dir))
@@ -96,6 +97,11 @@ if __name__ == "__main__":
         "original_split_path",
         type=str,
         help="full path to the split data. only used for bookkeeping.",
+    )
+    parser.add_argument(
+        "log_file",
+        type=str,
+        help="full path to a file where logs will be written (appended).",
     )
 
     args = parser.parse_args()

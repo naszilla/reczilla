@@ -80,13 +80,15 @@ class Result(object):
         )
 
         # extract the zip to the temp dir
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(temp_dir)
 
         # find all results, i.e. files that end in '_metadata.zip'
         result_files = [f for f in temp_dir.rglob("*_metadata.zip")]
 
-        assert len(result_files) == 1, f"multiple results found in zip archive: {zip_path}. we expect only one."
+        assert (
+            len(result_files) == 1
+        ), f"multiple results found in zip archive: {zip_path}. we expect only one."
         result_file = result_files[0]
 
         # gather the name of the alg, the split, and the dataset from the result path
@@ -101,13 +103,13 @@ class Result(object):
         result_file = result_file.rename(new_home.joinpath(result_file.name))
 
         # read the alg seed, param seed, and timestamp from the zip file
-        split_name = result_file.name.split("_")
-        assert split_name[0][:7] == 'algseed'
-        alg_seed = int(split_name[0][7:])
-        assert split_name[1][:9] == 'paramseed'
-        param_seed = int(split_name[1][9:])
+        filename_split = result_file.name.split("_")
+        assert filename_split[0][:7] == "algseed"
+        alg_seed = int(filename_split[0][7:])
+        assert filename_split[1][:9] == "paramseed"
+        param_seed = int(filename_split[1][9:])
 
-        time_str = split_name[2] + "_" + split_name[3]
+        time_str = filename_split[2] + "_" + filename_split[3]
 
         # finally, remove the temp directory
         shutil.rmtree(str(temp_dir))
@@ -123,6 +125,7 @@ class Result(object):
             param_seed,
             result_file,
         )
+
 
 class Experiment(object):
     """
@@ -143,9 +146,10 @@ class Experiment(object):
         self,
         base_directory: Path,
         name: str,
-        use_processed_data=False,
+        use_processed_data: bool = False,
         data_directory: Path = None,
-        verbose=True,
+        verbose: bool = True,
+        log_file: str = None,
     ):
         """
         args:
@@ -155,7 +159,7 @@ class Experiment(object):
         - use_processed_data: if True, attempt to read data from the data_directory. otherwise, just read dataset splits
             from paths passed as args.
         """
-        self.logger = get_logger()
+        self.logger = get_logger(logfile=log_file)
 
         # define the result & data directory
         self.base_directory = base_directory.resolve()
@@ -198,27 +202,27 @@ class Experiment(object):
             {}
         )  # keys = dataset names, values = reader objects (if use_processed_data=True) or None (if use_processed_data=False)
 
-    def get_dataset_result_path(self, dataset_name):
+    def get_dataset_result_path(self, dataset_name: str):
         """get path of results for a particluar dataset"""
         return self.result_directory.joinpath(dataset_name)
 
-    def get_split_result_path(self, dataset_name, split_name):
+    def get_split_result_path(self, dataset_name: str, split_name: str):
         """get path of results for a particluar dataset and split"""
         return self.result_directory.joinpath(dataset_name, split_name)
 
-    def get_alg_result_path(self, dataset_name, split_name, alg_name):
+    def get_alg_result_path(self, dataset_name: str, split_name: str, alg_name: str):
         """get path of results for a particluar dataset and split and algorithm"""
         return self.result_directory.joinpath(dataset_name, split_name, alg_name)
 
-    def get_dataset_path(self, dataset_name):
+    def get_dataset_path(self, dataset_name: str):
         """get path of a dataset"""
         return self.data_directory.joinpath(dataset_name)
 
-    def get_split_path(self, dataset_name, split_name):
+    def get_split_path(self, dataset_name: str, split_name: str):
         """get path of dataset split"""
         return self.data_directory.joinpath(dataset_name, split_name)
 
-    def zip(self, filename):
+    def zip(self, filename: Path):
         """zip the result directory to the file at the given path"""
         make_archive(
             str(self.result_directory), str(self.base_directory.joinpath(filename))
@@ -227,7 +231,7 @@ class Experiment(object):
             f"zipped experiment directory to {str(self.base_directory)}/{filename}"
         )
 
-    def prepare_dataset(self, dataset_name):
+    def prepare_dataset(self, dataset_name: str):
         """
         keep track of the dataset and reader object.
         if self.use_processed_data, make sure that we can read the dataset.
@@ -425,7 +429,9 @@ class Experiment(object):
 
         if result_dir is not None:
             experiment_result_dir = result_dir
-            assert experiment_result_dir.exists(), f"result_dir does not exist: {result_dir}"
+            assert (
+                experiment_result_dir.exists()
+            ), f"result_dir does not exist: {result_dir}"
         else:
             experiment_result_dir = self.get_alg_result_path(
                 dataset_name, split_name, alg_name
