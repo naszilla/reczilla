@@ -25,7 +25,7 @@ split_path = Path("./reczilla_examples/example_split")
 ###############################################
 
 data_splitter = splitter_class(
-    data_reader, folder=str(split_path), verbose=True,
+    data_reader, folder=str(split_path), verbose=True, **init_kwargs,
 )
 
 # >>>>>> expected output:
@@ -56,10 +56,14 @@ data_splitter.load_data()
 ###############################################
 
 print(f"shape of the training URM: {data_splitter.SPLIT_URM_DICT['URM_train'].shape}")
-print(f"number of nonzero elements: {data_splitter.SPLIT_URM_DICT['URM_train'].count_nonzero()}")
+print(
+    f"number of nonzero elements: {data_splitter.SPLIT_URM_DICT['URM_train'].count_nonzero()}"
+)
 
 print(f"shape of the test URM: {data_splitter.SPLIT_URM_DICT['URM_test'].shape}")
-print(f"number of nonzero elements: {data_splitter.SPLIT_URM_DICT['URM_test'].count_nonzero()}")
+print(
+    f"number of nonzero elements: {data_splitter.SPLIT_URM_DICT['URM_test'].count_nonzero()}"
+)
 
 # >>>>>> expected output:
 #
