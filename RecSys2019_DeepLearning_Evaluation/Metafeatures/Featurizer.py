@@ -1,7 +1,12 @@
 from Data_manager.DataSplitter import DataSplitter
+from Data_manager.Dataset import gini_index
+
 from pathlib import Path
 import numpy as np
 import scipy.stats
+import pandas as pd
+
+dataset_folder = "../all_data"
 
 # Get string representation from a feature setting
 def feature_string(func_name, func_kwargs):
@@ -29,10 +34,10 @@ aggregation_functions = {
     "std": np.std,
     "median": np.median,
     "mode": lambda mat: scipy.stats.mode(mat)[0][0],
-    #"entropy": None,
-    #"Gini": None, # Gini index
+    #"entropy": scipy.stats.differential_entropy,
+    "Gini": gini_index, # Gini index
     "skewness": scipy.stats.skew,
-    "kurtosis:": scipy.stats.kurtosis,
+    "kurtosis": scipy.stats.kurtosis,
 }
 
 # Compute mean across an axis
@@ -96,6 +101,7 @@ def dist_feature(train_set, kind, agg_func, pre_agg_func=None):
         else:
             raise RuntimeError("Unrecognized kind: {}".format(kind))
 
+    distribution = distribution[~np.isnan(distribution)]
     return aggregation_functions[agg_func](distribution)
 
 
@@ -112,10 +118,39 @@ def featurize_train_set(train_set, feature_list=None):
 
 def featurize_dataset_split(dataset_split_path, feature_list=None):
     dataReader_object, splitter_class, init_kwargs = DataSplitter.load_data_reader_splitter_class(dataset_split_path)
-    splitter = splitter_class(dataReader_object, **init_kwargs)
+    init_kwargs["forbid_new_split"] = True
+    splitter = splitter_class(
+        dataReader_object, folder=str(dataset_split_path), verbose=True,
+        **init_kwargs
+    )
     splitter.load_data()
     train_set = splitter.SPLIT_URM_DICT["URM_train"]
-    return featurize_train_set(train_set, feature_list=feature_list)
+    feature_vals = {
+        "dataset_name": dataReader_object.__class__.__name__,
+        "split_name": splitter_class.__name__,
+    }
+    feature_vals.update(featurize_train_set(train_set, feature_list=feature_list))
+    return feature_vals
 
 
-#feature_vals = featurize_dataset_split(Path("DatasplitSample"))
+def featurize_all_datasets(folder=dataset_folder):
+    path = Path(folder)
+    error_paths = []
+    dataset_features = []
+    for path_match in path.glob("**/data_reader_splitter_class"):
+        print(path_match)
+        try:
+            dataset_features.append(featurize_dataset_split(path_match.parent))
+        except Exception as e:
+            print(e)
+            error_paths.append(path_match.parent)
+
+    dataset_features = pd.DataFrame(dataset_features)
+    prefix = ["dataset_name", "split_name"]
+    dataset_features = dataset_features[prefix + [col for col in dataset_features if col not in prefix]]
+    dataset_features.to_csv("Metafeatures.csv", index=False)
+
+    print("{} datasets not processed.".format(len(error_paths)))
+    print([entry.parent.name for entry in error_paths])
+
+featurize_all_datasets()
