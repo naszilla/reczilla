@@ -1,5 +1,5 @@
 #!/bin/bash
-# run a random sample of dataset + algorithm pairs
+# run a set (d) of baseline algs with all datasets, excluding amazon splits
 
 ####################################
 # BEGIN: user-defined parameters
@@ -7,14 +7,11 @@
 # time limit = 10hrs (in seconds)
 time_limit=36000
 
-# number of algorithm-dataset pairs to sample
-num_pairs=100
-
 # base name for the gcloud instances
-instance_base=full-test
+instance_base=algs-d
 
 # name of the expeirment
-experiment_base=full-experiment-test
+experiment_base=full-experiment-d
 
 # maximum number of experiments (background processes) that can be running
 MAX_PROCESSES=10
@@ -22,7 +19,7 @@ MAX_PROCESSES=10
 # params
 alg_seed=0
 num_samples=100
-param_seed=0
+param_seed=3
 
 # define the split type
 split_type=DataSplitter_leave_k_out
@@ -48,13 +45,14 @@ trap "sync_logs ${LOG_DIR}; delete_instances instance_list" EXIT
 instance_list=()
 
 alg_array=(
-ItemKNNCF_asymmetric
-ItemKNNCF_tversky
+SLIMElasticNetRecommender
+EASE_R_Recommender
+Mult_VAE_RecommenderWrapper
+DELF_EF_RecommenderWrapper
+CoClustering
+SlopeOne
 )
 
-dataset_array=(
-Movielens100K
-)
 # END: bookkeeping - modify at your own risk
 ################################################################
 
@@ -69,7 +67,7 @@ do
   for j in ${!dataset_array[@]};
   do
     # get random alg name
-    alg_name=${alg_array[j]}
+    alg_name=${alg_array[i]}
     dataset_name=${dataset_array[j]}
     echo "ALG = $alg_name"
     echo "DATASET = $dataset_name"
@@ -96,13 +94,14 @@ do
     LOG_FILE=${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_FILE} 2>&1 &
-    num_experiments=$((num_experiments + 1))
 
     # add instance name to the instance list
     instance_list+=("${instance_name}")
 
     echo "launched instance ${instance_name}. (job number ${num_experiments})"
     sleep 1
+
+    num_experiments=$((num_experiments + 1))
 
     # if we have started MAX_PROCESSES experiments, wait for them to finish
     wait_until_processes_finish $MAX_PROCESSES
