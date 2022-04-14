@@ -32,11 +32,13 @@ def run(args):
     result_dir_list = []
     experiment_name_list = []
     split_path_list = []
+    time_lim_list = []
 
 
 
     # for each result matching pattern inbox/*.zip, place it in the appropriate folder
     for result_file in inbox_path.glob("log*.txt"):
+        num_args = 10  # temp
         try:
             # read log file
             with result_file.open() as f:
@@ -58,7 +60,15 @@ def run(args):
                         more_args = lines[i+1].split()
                         args.extend(more_args)
 
-                    assert len(args) == 10, f"there must be 10 args. arg list = {args}"
+                    if len(args) == 10:
+                        num_args = 10
+                        offset = 0
+
+                    elif len(args) == 11:
+                        num_args = 11
+                        offset = 1
+                    else:
+                        raise Exception(f"there must be 10 or 11 args. {len(args)} args found: {args}")
 
 
                 elif l.startswith(instance_name_prefix):
@@ -68,16 +78,21 @@ def run(args):
 
             # get information from lines
             # info from args string
-            dataset_name_list.append(args[0])
-            split_type_list.append(args[1])
-            alg_name_list.append(args[2])
-            split_dir_list.append(args[3])
-            alg_seed_list.append(args[4])
-            param_seed_list.append(args[5])
-            num_samples_list.append(args[6])
-            result_dir_list.append(args[7])
-            experiment_name_list.append(args[8])
-            split_path_list.append(args[9])
+            dataset_name_list.append(args[0 + offset])
+            split_type_list.append(args[1 + offset])
+            alg_name_list.append(args[2 + offset])
+            split_dir_list.append(args[3 + offset])
+            alg_seed_list.append(args[4 + offset])
+            param_seed_list.append(args[5 + offset])
+            num_samples_list.append(args[6 + offset])
+            result_dir_list.append(args[7 + offset])
+            experiment_name_list.append(args[8 + offset])
+            split_path_list.append(args[9 + offset])
+
+            if num_args == 11:
+                time_lim_list.append(args[0])
+            else:
+                time_lim_list.append(None)
 
             filename_list.append(result_file)
             complete_list.append(complete)
