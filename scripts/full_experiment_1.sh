@@ -78,8 +78,6 @@ do
     # NOTE: this assumes that dataset names do not have suffix "Reader". but the reader objects do have this suffix
     split_path_on_bucket=${bucket_base}/${dataset_name}/${split_type}
 
-    LOG_FILE=${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt
-
     arg_str="\
     ${time_limit} \
     ${dataset_name}Reader \
@@ -91,10 +89,11 @@ do
     ${num_samples}
     /home/shared \
     ${experiment_base}-${count} \
-    ${split_path_on_bucket} \
-    ${LOG_FILE}"
+    ${split_path_on_bucket}"
 
     instance_name=${instance_base}-${count}
+
+    LOG_FILE=${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt
 
     run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_FILE} 2>&1 &
     num_experiments=$((num_experiments + 1))
