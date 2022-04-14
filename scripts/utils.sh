@@ -63,6 +63,31 @@ NetflixPrize
 Recipes
 Wikilens"
 
+dataset_array=(
+Anime
+BookCrossing
+CiaoDVD
+Dating
+Epinions
+FilmTrust
+Frappe
+GoogleLocalReviews
+Gowalla
+Jester2
+LastFM
+MarketBiasAmazon
+MarketBiasModCloth
+MovieTweetings
+Movielens100K
+Movielens10M
+Movielens1M
+Movielens20M
+MovielensHetrec2011
+NetflixPrize
+Recipes
+Wikilens
+)
+
 random_alg() {
   # return a random algorithm name, drawn from alg_list.txt
   echo $(sort --random-sort <<<"$alg_list" | head -1)
