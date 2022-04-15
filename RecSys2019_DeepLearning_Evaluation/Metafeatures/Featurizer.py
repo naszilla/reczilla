@@ -153,4 +153,5 @@ def featurize_all_datasets(folder=dataset_folder):
     print("{} datasets not processed.".format(len(error_paths)))
     print([entry.parent.name for entry in error_paths])
 
-featurize_all_datasets()
+if __name__ == '__main__':
+    featurize_all_datasets()
