@@ -133,6 +133,10 @@ class RandomSearch(SearchAbstractClass):
             metadata_dict=metadata_dict,
         )
 
+        # write initial metadata file. this will be rewritten each time new results are generated
+        self.dataIO.save_data(data_dict_to_save=self.metadata_dict.copy(),
+                              file_name=self.output_file_name_root + "_metadata")
+
         # if we're using the default param set, run this one first
         if use_default_params:
             self._log_info("{}: Starting parameter set\n".format(self.ALGORITHM_NAME))
