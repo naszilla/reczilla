@@ -23,7 +23,7 @@ python experiment.py
 ```
 
 ## Add more datasets
-Look at the methods in [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py), e.g., `get_dating()`, `get_recipes()`. Choose a dataset from our list: https://docs.google.com/spreadsheets/d/1c36DOxVqbMwFe0Wnnoo6lCwH_FUEo6flJtuEGtmeoms/edit#gid=0. Add it to [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py). If you have any questions, ask Sujay.
+Look at the methods in [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py), e.g., `get_dating()`, `get_recipes()`. Choose a dataset from our list: https://docs.google.com/spreadsheets/d/1c36DOxVqbMwFe0Wnnoo6lCwH_FUEo6flJtuEGtmeoms/edit#gid=0. Add it to [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py). If you have any questions, ask xxxxx.
 
 Note: for now, we are keeping it pretty simple. We only load the interaction matrix of the dataset, which consists of three rows: `user`, `item`, and `rating`. Later on in the project, we will add user features, item features, and more interaction data such as temporal data.
 

@@ -3,7 +3,7 @@
 """
 Created on 4 Feb 2022
 
-@author: Duncan C McElfresh
+@author: yyyyyy C yyyyyy
 
 code for iterating over each dataset
 

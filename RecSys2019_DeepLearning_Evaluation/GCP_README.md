@@ -128,7 +128,7 @@ Updated version that uses images.
 
 ```bash
 function batch_gcp_creation() {
-  name_base=colin
+  name_base=zzzzz
   source_image=reczilla-v5-image
   service_account=default-compute-instance@research-collab-naszilla.iam.gserviceaccount.com
   zone=us-central1-a

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TODO: the URL is to an unpublished dataset on Duncan's figshare site. change to public after checking licenses
+TODO: the URL is to an unpublished dataset on yyyyyy's figshare site. change to public after checking licenses
 
-@author: Sujay Khandagale
+@author: xxxxx xxxxx
 """
 
 import os
