@@ -6,7 +6,7 @@ from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection
 from sklearn.multioutput import RegressorChain
 import xgboost as xgb
 
-METRIC = "PRECISION_cut_1"
+METRICS = ["ARHR_ALL_HITS_cut_1", "F1_cut_1"]
 
 def get_metrics(y_test, preds):
     metrics = {}
@@ -27,22 +27,25 @@ def get_metrics(y_test, preds):
 # leave one out validation
 all_metrics = []
 
-for test_dataset in ALL_DATASETS:
-    X_train, y_train, X_test, y_test = alg_feature_selection_featurized(METRIC, [test_dataset])
+for _metric in METRICS:
+    for test_dataset in ALL_DATASETS:
+        X_train, y_train, X_test, y_test = alg_feature_selection_featurized(_metric, [test_dataset])
 
-    base_model = xgb.XGBRegressor(objective='reg:squarederror')
-    model = RegressorChain(base_model)
-    model.fit(X_train, y_train)
-    
-    preds = model.predict(X_test)
-    metrics = get_metrics(y_test, preds)
-    all_metrics.append(metrics)
+        base_model = xgb.XGBRegressor(objective='reg:squarederror')
+        model = RegressorChain(base_model)
+        model.fit(X_train, y_train)
+        
+        preds = model.predict(X_test)
+        metrics = get_metrics(y_test, preds)
+        all_metrics.append(metrics)
 
-accuracies = [m['accuracy'] for m in all_metrics]
-print("Average leave-one-out accuracy is: ", round(100 * np.mean(accuracies), 1))
+    print("Metric = ", _metric)
 
-perc_diff_best = [m['perc_diff_from_best'] for m in all_metrics]
-print("Average leave-one-out percentage_diff_from_best is: ", round(100 * np.mean(perc_diff_best), 1))
+    accuracies = [m['accuracy'] for m in all_metrics]
+    print("Average leave-one-out accuracy is: ", round(100 * np.mean(accuracies), 1))
 
-perc_diff_worst = [m['perc_diff_from_worst'] for m in all_metrics]
-print("Average leave-one-out percentage_diff_from_worst is: ", round(100 * np.nanmean(perc_diff_worst), 1))
+    perc_diff_best = [m['perc_diff_from_best'] for m in all_metrics]
+    print("Average leave-one-out percentage_diff_from_best is: ", round(100 * np.mean(perc_diff_best), 1))
+
+    perc_diff_worst = [m['perc_diff_from_worst'] for m in all_metrics]
+    print("Average leave-one-out percentage_diff_from_worst is: ", round(100 * np.nanmean(perc_diff_worst), 1))
