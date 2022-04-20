@@ -12,9 +12,10 @@ def get_metrics(y_test, preds):
     metrics = {}
     labels = [np.argmax(yt) for yt in y_test]
     outputs = [np.argmax(p) for p in preds]
-    
+
     # metrics['precision'] = np.mean(precision_score(labels, outputs, average=None))
     metrics['accuracy'] = accuracy_score(labels, outputs)
+    metrics['perc_diff_from_best'] = np.mean([abs(l_s[l] - l_s[o])/l_s[l]  for l, o, l_s, o_s  in zip(labels, outputs, y_test, preds)])
 
     return metrics
 
@@ -34,3 +35,6 @@ for test_dataset in ALL_DATASETS:
 
 accuracies = [m['accuracy'] for m in all_metrics]
 print("Average leave-one-out accuracy is: ", np.mean(accuracies))
+
+perc_errors = [m['perc_diff_from_best'] for m in all_metrics]
+print("Average leave-one-out percentage_diff_from_best is: ", np.mean(perc_errors))
