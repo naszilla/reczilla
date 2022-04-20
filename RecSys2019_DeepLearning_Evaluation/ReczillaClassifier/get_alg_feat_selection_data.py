@@ -1,0 +1,141 @@
+import pandas as pd
+import numpy as np
+pd.options.mode.chained_assignment = None
+
+RESULTS_DIR = "../notebooks/"
+ALL_DATASETS = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)['dataset_name'].unique()
+
+def alg_feature_selection_featurized(metric_name, test_datasets):
+
+    meta_dataset = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)
+    single_sample_algs = [
+        "TopPop", 
+        "GlobalEffects", 
+        "Random",
+        "SlopeOne",
+    ]
+    min_samples = 30
+
+    keep_rows = (meta_dataset["num_samples"] >= min_samples) | meta_dataset["alg_name"].isin(single_sample_algs)
+    meta_dataset = meta_dataset.loc[keep_rows, :]
+
+    metafeats_fn = f"{RESULTS_DIR}/../RecSys2019_DeepLearning_Evaluation/Metafeatures/Metafeatures.csv"
+    metafeats = pd.read_csv(metafeats_fn)
+    join_cols = ["dataset_name", "split_name"]
+    metafeats.columns = ["f__{}".format(col) if col not in join_cols else col for col in metafeats.columns]
+    del metafeats["split_name"]
+    metafeats = meta_dataset.merge(metafeats, on="dataset_name", how='left')
+    metafeats.head()
+
+    list(meta_dataset.columns)
+
+    # Algorithm selection
+
+    def rank_algorithms(test_datasets, metric_name):
+        """Compute algorithm ranks for each dataset"""
+        # Sanity check to prevent leakage
+        for test_dataset in test_datasets:
+            assert test_dataset in meta_dataset['dataset_name'].values
+        filtered_dataset = meta_dataset[~meta_dataset['dataset_name'].isin(test_datasets)]
+        
+        all_ranks = []
+        for dataset_name, dataset_performance in filtered_dataset.groupby("dataset_name"):
+            dataset_performance["rank"] = dataset_performance["max_test_metric_" + metric_name].rank(method='min', ascending=False)
+            dataset_performance.set_index("alg_name", inplace=True)
+            dataset_performance = dataset_performance[["rank"]]
+            dataset_performance = dataset_performance.rename(columns={"rank": dataset_name})
+            all_ranks.append(dataset_performance)
+            
+        ranked_algs = pd.concat(all_ranks, axis=1)
+        return ranked_algs
+
+    def select_algs(test_datasets, metric_name, num_algs=10):
+        """Select num_algs algorithm with best mean rank"""
+        return list(ranked_algs.T.mean().sort_values().iloc[:num_algs].index)
+
+    # Metafeature selection
+
+    def compute_feature_corrs(test_datasets, metric_name, selected_algs):
+        """Compute correlation between each metafeature and the desired metric for all selected algorithms.
+        Dataframe result is num_features x num_algorithms."""
+        all_features = [col for col in metafeats.columns if col.startswith("f__")]
+        # Sanity check to prevent leakage
+        for test_dataset in test_datasets:
+            assert test_dataset in metafeats['dataset_name'].values
+        filtered_metafeats = metafeats[~metafeats['dataset_name'].isin(test_datasets)]
+        
+        all_cors = []
+        for alg in selected_algs:
+            filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_name"] == alg)]
+            alg_cors = filtered_results[all_features].corrwith(filtered_results["max_test_metric_" + metric_name],
+                                                            method="spearman")
+            alg_cors.name = alg
+            all_cors.append(alg_cors)
+        all_cors = pd.concat(all_cors, axis=1).abs()
+        return all_cors
+
+    def select_features(test_datasets, metric_name, selected_algs, num_feats=10):
+        """Select num_feats features. Greedy scheme. At each step, we compute the best correlations
+        across all metafeatures for each algorithm so far. We add whichever metafeature can obtain the maximum
+        improvement across any single one of the best correlations for the selected algorithms."""
+        all_cors = compute_feature_corrs(test_datasets, metric_name, selected_algs)
+        
+        selected_feats = [all_cors.max(axis=1).idxmax()]
+        
+        while len(selected_feats) < num_feats:
+            # Current best correlations
+            current_best_cors = all_cors.loc[selected_feats].max(axis=0)
+            # Pick whichever feature results in the highest maximum improvement on the current best correlations
+            selected_feats.append((
+                all_cors.loc[~all_cors.index.isin(selected_feats)] - current_best_cors)
+                .max(axis=1)
+                .idxmax())
+        return selected_feats
+
+    # Assume some split
+    # test_datasets = ["AnimeReader"]# , "CiaoDVDReader"]
+    # # Assume some metric
+    # metric_name = "PRECISION_cut_1"
+
+    ranked_algs = rank_algorithms(test_datasets, metric_name)
+
+    selected_algs = select_algs(test_datasets, metric_name)
+
+    feature_corrs = compute_feature_corrs(test_datasets, metric_name, selected_algs)
+
+    selected_feats = select_features(test_datasets, metric_name, selected_algs)
+    
+    ##### Featurization
+    
+    final_feat_columns = selected_feats
+    X_train = metafeats[metafeats['alg_name'].isin(selected_algs) & ~metafeats['dataset_name'].isin(test_datasets)]
+
+    metric_col_name = "max_test_metric_" + metric_name
+    X_train = X_train[[metric_col_name] + ["dataset_name", "alg_name"] + final_feat_columns]
+
+    transforms = {f: 'last' for f in final_feat_columns}
+    transforms.update({metric_col_name: list, 'alg_name': list})
+
+    X_train_grouped = X_train.groupby('dataset_name').agg(transforms)
+
+    def get_ordered_target(row):
+        avg = np.mean(row[metric_col_name])
+        algos_perfs = {alg: val for val, alg in zip(row[metric_col_name], row['alg_name'])}
+        algos_perfs.update({alg: avg for alg in selected_algs if alg not in algos_perfs})
+        ordered_target = [algos_perfs[key] for key in sorted(algos_perfs.keys(), reverse=True)]
+        return ordered_target
+
+    X_train_grouped['target'] = X_train_grouped.apply(get_ordered_target, axis=1)
+
+    X_train = X_train_grouped[final_feat_columns].values
+    y_train = np.array(X_train_grouped['target'].to_list())
+    
+    test_data = metafeats[metafeats['dataset_name'].isin(test_datasets) & metafeats['alg_name'].isin(selected_algs)]
+    test_data = test_data[[metric_col_name] + ["dataset_name", "alg_name"] + final_feat_columns]
+
+    X_test = test_data[final_feat_columns].iloc[0].values
+    X_test = np.array([X_test])
+    y_test = test_data.groupby('dataset_name').agg(transforms).apply(get_ordered_target, axis=1).values
+    # y_test = y_test.tolist()
+    
+    return X_train, y_train, X_test, y_test

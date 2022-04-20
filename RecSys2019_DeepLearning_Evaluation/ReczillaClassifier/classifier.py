@@ -1,46 +1,36 @@
 import numpy as np
+from sklearn.metrics import accuracy_score, precision_score
 
-from Metafeatures.Featurizer import featurize_all_datasets
+from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized, ALL_DATASETS
 
-import catboost as cb
-from catboost import Pool, metrics, cv
-from sklearn.metrics import accuracy_score
+from sklearn.multioutput import RegressorChain
+import xgboost as xgb
 
-# get features from featurizer as a DataFrame
-# TODOs: 1. Ensure feature types are correct
-#        2. Missing target variable? We might want to return the name of the target_col from Featurizer
-#        3. Missing train-test split?
+METRIC = "PRECISION_cut_1"
 
-features, target_col = featurize_all_datasets()
+def get_metrics(y_test, preds):
+    metrics = {}
+    labels = [np.argmax(yt) for yt in y_test]
+    outputs = [np.argmax(p) for p in preds]
+    
+    # metrics['precision'] = np.mean(precision_score(labels, outputs, average=None))
+    metrics['accuracy'] = accuracy_score(labels, outputs)
 
-feature_types = features.dtypes
+    return metrics
 
-# assert features to be only ints, floats, or strings(categoricals)
-assert all([f in (float, int, str) for f in feature_types.unique()])
+# leave one out validation
+all_metrics = []
 
-# assert target_col is of categorical type
-assert features[target_col].dtype == str
+for test_dataset in ALL_DATASETS:
+    X_train, y_train, X_test, y_test = alg_feature_selection_featurized(METRIC, [test_dataset])
 
-numerical_features = [col for col, dtype in zip(features, feature_types) if dtype in (int, float)]
-categorical_features = [col for col, dtype in zip(features, feature_types) if dtype == str]
-categorical_features = [f for f in categorical_features if f != target_col]  # remove target_col from numerical features
-categorical_features_indices = [idx for idx, dtype in enumerate(feature_types) if dtype == str]
+    base_model = xgb.XGBRegressor(objective='reg:squarederror')
+    model = RegressorChain(base_model)
+    model.fit(X_train, y_train)
+    
+    preds = model.predict(X_test)
+    metrics = get_metrics(y_test, preds)
+    all_metrics.append(metrics)
 
-# form X_train, y_train
-all_features = numerical_features + categorical_features
-X_train, y_train = features[all_features], features[target_col]
-
-# Model training
-model = cb.CatBoostClassifier(
-    custom_loss=[metrics.Accuracy()],
-    random_seed=42,
-    # logging_level='Silent'
-)
-
-model.fit(
-    X_train, y_train,
-    cat_features=categorical_features_indices,
-    # eval_set=(X_validation, y_validation),
-    # logging_level='Verbose',
-    plot=True
-);
+accuracies = [m['accuracy'] for m in all_metrics]
+print("Average leave-one-out accuracy is: ", np.mean(accuracies))
