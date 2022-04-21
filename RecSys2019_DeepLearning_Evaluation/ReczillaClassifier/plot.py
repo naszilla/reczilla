@@ -11,7 +11,7 @@ from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection
 from sklearn.multioutput import RegressorChain
 import xgboost as xgb
 
-METRIC = "RECALL_cut_1"  #"COVERAGE_ITEM_cut_1"]
+METRIC = "PRECISION_cut_50"  #"COVERAGE_ITEM_cut_1"]
 
 def get_metrics(y_test, preds):
     metrics = {}
@@ -35,7 +35,7 @@ for num_train in tqdm(range(2, 21, 6)):
     # leave one out validation
     all_metrics = []
     for _ in range(50):
-        test_dataset = random.choice([d for d in ALL_DATASETS if d != 'GowallaReader'])
+        test_dataset = "AnimeReader"
         train_datasets = [d for d in ALL_DATASETS if d != test_dataset]
         train_datasets = random.sample(train_datasets, k=num_train)
         X_train, y_train, X_test, y_test = alg_feature_selection_featurized(METRIC, [test_dataset], train_datasets=train_datasets)
