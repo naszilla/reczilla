@@ -1,11 +1,13 @@
 import pandas as pd
-import numpy as np
 pd.options.mode.chained_assignment = None
+import numpy as np
+import warnings
+warnings.filterwarnings(action='ignore', category=UserWarning)
 
 RESULTS_DIR = "../notebooks/"
 ALL_DATASETS = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)['dataset_name'].unique()
 
-def alg_feature_selection_featurized(metric_name, test_datasets):
+def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets = None):
 
     meta_dataset = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)
     single_sample_algs = [
@@ -18,6 +20,9 @@ def alg_feature_selection_featurized(metric_name, test_datasets):
 
     keep_rows = (meta_dataset["num_samples"] >= min_samples) | meta_dataset["alg_name"].isin(single_sample_algs)
     meta_dataset = meta_dataset.loc[keep_rows, :]
+    
+    if train_datasets is not None:
+        meta_dataset = meta_dataset[meta_dataset['dataset_name'].isin(train_datasets + test_datasets)]
 
     metafeats_fn = f"{RESULTS_DIR}/../RecSys2019_DeepLearning_Evaluation/Metafeatures/Metafeatures.csv"
     metafeats = pd.read_csv(metafeats_fn)
