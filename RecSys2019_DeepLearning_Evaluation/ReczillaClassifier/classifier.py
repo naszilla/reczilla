@@ -6,7 +6,7 @@ from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection
 from sklearn.multioutput import RegressorChain
 import xgboost as xgb
 
-METRICS = ["ARHR_ALL_HITS_cut_1", "F1_cut_1"]
+METRICS = ["PRECISION_cut_10", "MAP_cut_10"]
 
 def get_metrics(y_test, preds):
     metrics = {}
