@@ -5,7 +5,7 @@
 @author: Sujay Khandagale
 
 
-TODO: Handle the 255 rating case (Don't want to see again)
+TODO: Using only the train file for now. Maybe add test in the future
 """
 
 import tarfile, os, shutil, gzip
