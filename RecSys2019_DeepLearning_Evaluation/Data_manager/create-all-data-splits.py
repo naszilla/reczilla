@@ -15,7 +15,8 @@ ALL_SPLITTERS = [
         "k_out_value": 1, 
         "forbid_new_split": False, 
         "force_new_split": False, 
-        "use_validation_set": True
+        "use_validation_set": True,
+        "leave_random_out": False  # this controls whether we leave the last k or random k out as test/val. False = keep last k as test/eval
     }),
     ]
 

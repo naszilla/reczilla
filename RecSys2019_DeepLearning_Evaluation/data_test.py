@@ -11,7 +11,13 @@ from Data_manager.Flixster.FlixsterReader import *
 from Data_manager.CiaoDVD.CiaoDVDReader import *
 from Data_manager.Anime.AnimeReader import *
 from Data_manager.LastFM.LastFMReader import *
-from Data_manager.YahooMovies.YahooMoviesReader import *
-data_reader = YahooMoviesReader()
+from Data_manager.GoogleLocalReviews.GoogleLocalReviewsReader import *
+data_reader = CiaoDVDReader()
 dataset = data_reader.load_data()
-dataset.print_statistics()
+
+from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
+from Data_manager.DataSplitter import DataSplitter
+
+splitter = DataSplitter_leave_k_out(data_reader, k_out_value=1, folder=f"./test_load_save_{data_reader.DATASET_SUBFOLDER}/split", leave_random_out=False)
+
+splitter.load_data()
