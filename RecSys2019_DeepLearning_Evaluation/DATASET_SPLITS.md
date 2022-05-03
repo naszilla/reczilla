@@ -6,7 +6,7 @@ All splits live in `gs:/reczilla-results/dataset-splits/`. Each sub-directory he
 
 All but one of the directories here contain a single split, created using a random leave-one-out split (one random interaction is reserved for validation, for each dataset). The one exception is the directory `reczilla-results/dataset-splits/splits-v3/AmazonReviewData`, which contains a different sub-directory for each of the amazon splits.
 
-**Note:** all splits here are in the `DataSplitter_leave_k_out_random` folders (see `-v5` below).
+**Note:** all splits here are in the `DataSplitter_leave_k_out` folders but are created using the `leave_k_out_random` logic (see `-v5` below).
 
 ## `gs:/reczilla-results/dataset-splits/splits-v5`
 
