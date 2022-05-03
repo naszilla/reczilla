@@ -4,7 +4,7 @@
 ####################################
 # BEGIN: user-defined parameters
 
-# time limit = 10hrs (in seconds)
+# time limit = 10hrs (in seconds) for each job
 time_limit=36000
 
 # base name for the gcloud instances
@@ -76,7 +76,7 @@ do
   do
     # get alg name and dataset name
     alg_name=${alg_array[i]}
-    dataset_name=${dataset_array[j]}
+    dataset_name=${v5_dataset_list[j]}
     echo "ALG = $alg_name"
     echo "DATASET = $dataset_name"
 
