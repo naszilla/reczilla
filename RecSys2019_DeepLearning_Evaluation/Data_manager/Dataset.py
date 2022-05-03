@@ -122,7 +122,7 @@ class Dataset(object):
 
     def get_URM_from_name(self, URM_name):
         self._assert_is_initialized()
-        assert URM_name in self.AVAILABLE_URM, "DataReader {}: This dataset probably does not have timestamps.".format(self._get_dataset_name())
+        assert URM_name in self.AVAILABLE_URM, "DataReader {}: This dataset probably does not have timestamps.".format(self.get_dataset_name())
         return self.AVAILABLE_URM[URM_name].copy()
 
     def get_ICM_feature_to_index_mapper_from_name(self, ICM_name):
