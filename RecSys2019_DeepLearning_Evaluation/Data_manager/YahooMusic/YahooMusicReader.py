@@ -42,7 +42,7 @@ class YahooMusicReader(DataReader):
 
         except (FileNotFoundError, tarfile.TarError):
 
-            print("Wikilens: Unable to fild data zip file. Downloading...")
+            print("YahooMusic: Unable to fild data zip file. Downloading...")
 
             download_from_URL(self.DATASET_URL, tarFile_path, "download.yahooMusic-ratings.tgz")
 

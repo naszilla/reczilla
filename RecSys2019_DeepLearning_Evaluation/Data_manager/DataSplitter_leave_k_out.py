@@ -68,6 +68,9 @@ class DataSplitter_leave_k_out(_DataSplitter):
 
         assert k_out_value >= 1, "{}: k_out_value must be  greater or equal than 1".format(self.DATA_SPLITTER_NAME)
 
+        suffix = "_random" if leave_random_out else "_last"
+        self.DATA_SPLITTER_NAME = self.DATA_SPLITTER_NAME + suffix
+
         self.k_out_value = k_out_value
         self.use_validation_set = use_validation_set
         self.allow_cold_users = False
