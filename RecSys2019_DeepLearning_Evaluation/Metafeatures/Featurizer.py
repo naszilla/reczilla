@@ -1,18 +1,23 @@
 from Data_manager.DataSplitter import DataSplitter
-from Data_manager.Dataset import gini_index
+import Metafeatures.DistributionFeatures
+import Metafeatures.Landmarkers
+from Metafeatures.utils import register_func
 
 from pathlib import Path
-import numpy as np
-import scipy.stats
 import pandas as pd
+
 
 dataset_folder = "../all_data"
 
 # Get string representation from a feature setting
 def feature_string(func_name, func_kwargs):
     if not func_kwargs:
-        return func_name
-    return "__".join([func_name] + ["{}_{}".format(key, val) for key, val in func_kwargs.items()])
+        return "f_" + func_name
+    return "f_" + "__".join([func_name] + ["{}_{}".format(key, val) for key, val in func_kwargs.items()])
+
+feature_func_lookup = {} # This will serve as a lookup for feature functions
+feature_func_lookup.update(Metafeatures.DistributionFeatures.feature_func_lookup)
+feature_func_lookup.update(Metafeatures.Landmarkers.feature_func_lookup)
 
 # Entries are (function_name, function_kwargs)
 all_features = [
@@ -23,97 +28,38 @@ all_features = [
     ("num_interactions",
      {}),
     ("sparsity",
+     {}),
+    ("item_user_ratio",
      {})
 ]
 
-
-# Returns the entropy of samples in an array. Modelled as discrete distribution.
-def sample_entropy(array):
-    _, counts = np.unique(array, return_counts=True)
-    return scipy.stats.entropy(counts, base=2)
-
-# For use with dist_feature. Functions to aggregate distributions.
-aggregation_functions = {
-    "mean": np.mean,
-    "max": np.max,
-    "min": np.min,
-    "std": np.std,
-    "median": np.median,
-    "mode": lambda mat: scipy.stats.mode(mat)[0][0],
-    #"entropy": scipy.stats.differential_entropy,
-    "entropy": sample_entropy,
-    "Gini": gini_index, # Gini index
-    "skewness": scipy.stats.skew,
-    "kurtosis": scipy.stats.kurtosis,
-}
-
-# Quick fix: original environment is incompatible with differential entropy Python function.
-#if "differential_entropy" in dir(scipy.stats):
-#    aggregation_functions["entropy"] = scipy.stats.differential_entropy
-
-# Compute mean across an axis
-def sparse_mean(mat, axis=0):
-    return np.array(np.sum(mat, axis=axis)).squeeze() / mat.getnnz(axis=axis)
-
-# For use with dist_feature. Functions to pre-aggregate ratings to form distributions.
-pre_aggregation_functions = {
-    "mean": sparse_mean,
-    "sum": lambda mat, axis: np.array(np.sum(mat, axis=axis)).squeeze(),
-    "count": lambda mat, axis: mat.getnnz(axis=axis)
-}
-
-# Add all possible dist_features to all_features.
-for kind in ["rating", "item", "user"]:
-    if kind == "rating":
-        pre_agg_funcs = [None]
-    else:
-        pre_agg_funcs = pre_aggregation_functions.keys()
-
-    for pre_agg_func in pre_agg_funcs:
-        for agg_func in aggregation_functions.keys():
-            all_features.append((
-                "dist_feature",
-                {
-                    "kind": kind,
-                    "pre_agg_func": pre_agg_func,
-                    "agg_func": agg_func,
-                }
-            ))
+all_features += Metafeatures.DistributionFeatures.feature_list
+all_features += Metafeatures.Landmarkers.feature_list
 
 # Number of users
+@register_func(feature_func_lookup)
 def num_users(train_set):
     return {"": train_set.shape[0]}
 
 # Number of items
+@register_func(feature_func_lookup)
 def num_items(train_set):
     return {"": train_set.shape[1]}
 
 # Number of interactions
+@register_func(feature_func_lookup)
 def num_interactions(train_set):
     return {"": train_set.nnz}
 
 # Sparsity of interaction matrix
+@register_func(feature_func_lookup)
 def sparsity(train_set):
     return {"": 1 - train_set.nnz / (train_set.shape[0]*train_set.shape[1])}
 
-# Distribution feature
-def dist_feature(train_set, kind, agg_func, pre_agg_func=None):
-    if kind == "rating":
-        if pre_agg_func:
-            raise RuntimeError("Cannot use pre aggregation function when using all ratings")
-        distribution = train_set.data
-    else:
-        if not pre_agg_func:
-            raise RuntimeError("Need pre aggregation function when pre aggregating across items or users")
-        if kind == "item":
-            distribution = np.array(pre_aggregation_functions[pre_agg_func](train_set, axis=0)).squeeze()
-        elif kind == "user":
-            distribution = np.array(pre_aggregation_functions[pre_agg_func](train_set, axis=1)).squeeze()
-        else:
-            raise RuntimeError("Unrecognized kind: {}".format(kind))
-
-    distribution = distribution[~np.isnan(distribution)]
-    return {"": aggregation_functions[agg_func](distribution)}
+# Item to user ratio
+@register_func(feature_func_lookup)
+def item_user_ratio(train_set):
+    return {"": train_set.shape[1] / train_set.shape[0]}
 
 
 def featurize_train_set(train_set, feature_list=None):
@@ -123,7 +69,8 @@ def featurize_train_set(train_set, feature_list=None):
     feature_vals = {}
     for func_name, func_kwargs in feature_list:
         feature_name = feature_string(func_name, func_kwargs)
-        new_values = globals()[func_name](train_set, **func_kwargs)
+        #new_values = globals()[func_name](train_set, **func_kwargs)
+        new_values = feature_func_lookup[func_name](train_set, **func_kwargs)
         if len(new_values) == 1 and list(new_values.keys())[0] == "":
             feature_vals[feature_name] = new_values[""]
         else:
@@ -181,17 +128,19 @@ def featurize_all_datasets(folder=dataset_folder, omit_paths=None):
         if gcloud_path.parts[0] in omit_paths:
             continue
         print(path_match)
-        try:
-            dataset_features.append(featurize_dataset_split(path_match.parent, feature_list=feature_list))
-            dataset_features[-1]["bucket_path"] = gcloud_path.as_posix()
-        except Exception as e:
-            print(e)
-            error_paths.append(path_match.parent)
+        #try:
+        dataset_features.append(featurize_dataset_split(path_match.parent, feature_list=feature_list))
+        dataset_features[-1]["bucket_path"] = gcloud_path.as_posix()
+        # except Exception as e:
+        #     print(e)
+        #     error_paths.append(path_match.parent)
+        #     import pdb
+        #     pdb.set_trace()
 
     dataset_features = pd.DataFrame(dataset_features)
     if pre_computed_features is not None:
         dataset_features = pd.merge(dataset_features, pre_computed_features, how='outer', on=extra_info_cols)
-    dataset_features = dataset_features[extra_info_cols + [col for col in dataset_features if col not in extra_info_cols]]
+    dataset_features = dataset_features[extra_info_cols + sorted([col for col in dataset_features if col not in extra_info_cols])]
     dataset_features.to_csv(output_file, index=False)
 
     print("{} datasets not processed.".format(len(error_paths)))
