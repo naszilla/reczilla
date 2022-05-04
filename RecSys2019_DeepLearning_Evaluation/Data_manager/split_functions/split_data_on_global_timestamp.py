@@ -29,8 +29,8 @@ def split_data_on_global_timestamp(URM_all, URM_timestamp, ts_val, ts_test):
 
     for user_index in range(URM_all.shape[0]):
 
-        if user_index % 10000 == 0:
-            print("split_data_on_global_timestamp: user {} of {}".format(user_index, URM_all.shape[0]))
+        # if user_index % 10000 == 0:
+        #     print("split_data_on_global_timestamp: user {} of {}".format(user_index, URM_all.shape[0]))
 
         start_pos = URM_all.indptr[user_index]
         end_pos = URM_all.indptr[user_index+1]
