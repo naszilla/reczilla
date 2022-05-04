@@ -200,21 +200,28 @@ class DataSplitter_global_timestamp(_DataSplitter):
         if self.use_validation_set:
             split_number+=1
         
-        URM_train, URM_validation, URM_test, users_to_remove = split_data_on_global_timestamp(URM, URM_timestamp, self.k_out_percent)
+        percentiles_to_compute = [100 - 2 * self.k_out_percent, 100 - self.k_out_percent]
+        ts_val, ts_test = np.percentile(sorted(URM_timestamp.data), percentiles_to_compute, interpolation='lower')
         
         if not self.allow_cold_users:  # always satisfied
-            user_to_preserve = np.logical_not(users_to_remove)
-            self.removed_cold_users = users_to_remove
+            user_to_preserve = np.array([any(URM_timestamp.data[URM.indptr[user_index]:URM.indptr[user_index+1]] < ts_val) for user_index in range(URM.shape[0])])
+            self.removed_cold_users = np.logical_not(user_to_preserve)
+            
+            self._print("Removing {} ({:.2f} %) of {} users because they have no train interactions.".format(
+                 URM.shape[0] - user_to_preserve.sum(), (1-user_to_preserve.sum()/URM.shape[0])*100, URM.shape[0]))
 
             URM = URM[user_to_preserve,:]
+            URM_timestamp = URM_timestamp[user_to_preserve,:]
             
-
             self.SPLIT_GLOBAL_MAPPER_DICT["user_original_ID_to_index"] = reconcile_mapper_with_removed_tokens(self.SPLIT_GLOBAL_MAPPER_DICT["user_original_ID_to_index"],
                                                                                                               np.arange(0, len(self.removed_cold_users), dtype=np.int)[self.removed_cold_users])
 
             for UCM_name, UCM_object in self.SPLIT_UCM_DICT.items():
                 UCM_object = UCM_object[user_to_preserve,:]
                 self.SPLIT_UCM_DICT[UCM_name] = UCM_object
+        
+        
+        URM_train, URM_validation, URM_test = split_data_on_global_timestamp(URM, URM_timestamp, ts_val, ts_test)
 
 
         self.SPLIT_URM_DICT = {

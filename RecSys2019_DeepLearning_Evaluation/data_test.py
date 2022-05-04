@@ -1,3 +1,4 @@
+from Data_manager.AmazonReviewData.AmazonAllBeautyReader import AmazonAllBeautyReader
 from Data_manager.BookCrossing.BookCrossingReader import *
 from Data_manager.Jester2.Jester2Reader import *
 from Data_manager.Dating.DatingReader import *
@@ -24,7 +25,7 @@ dataset.print_statistics()
 
 # # Create a training-validation-test split, for example by leave-1-out
 # # This splitter requires the DataReader object and the number of elements to holdout
-# dataSplitter = DataSplitter_global_timestamp(data_reader, k_out_percent=10, use_validation_set=True, force_new_split=True)
+# dataSplitter = DataSplitter_global_timestamp(data_reader, k_out_percent=20, use_validation_set=True, force_new_split=False)
 
 # # The load_data function will split the data and save it in the desired folder.
 # # Once the split is saved, further calls to the load_data will load the splitted data ensuring you always use the same split
