@@ -14,6 +14,9 @@ This directory contains one sub-directory for each dataset, including all amazon
 - `DataSplitter_leave_k_out_last`: leave-last-out: the last interaction from each user is placed in the test set, and all remaining interactions are used for training.
 - `DataSplitter_leave_k_out_random`: leave-one-out: one randomly-selected interaction is placed in the test set for each user. **Note:** this is the same split present in `splits-v3`. 
 
+## `gs:/reczilla-results/dataset-splits/splits-global-timestamp`
+
+This directory stores global timestamp splits. The splitting is done on the 60th and 80th percentile timestamp to get the train/val/test splits.
 
 ## Ignore these sub-directories
 - `gs:/reczilla-results/dataset-splits/splits-v1`
