@@ -1,5 +1,6 @@
 from Data_manager.AmazonReviewData.AmazonAllBeautyReader import AmazonAllBeautyReader
 from Data_manager.BookCrossing.BookCrossingReader import *
+from Data_manager.GoogleLocalReviews.GoogleLocalReviewsReader import GoogleLocalReviewsReader
 from Data_manager.Jester2.Jester2Reader import *
 from Data_manager.Dating.DatingReader import *
 from Data_manager.Wikilens.WikilensReader import *
@@ -13,11 +14,11 @@ from Data_manager.CiaoDVD.CiaoDVDReader import *
 from Data_manager.Anime.AnimeReader import *
 from Data_manager.LastFM.LastFMReader import *
 from Data_manager.YahooMovies.YahooMoviesReader import *
-data_reader = CiaoDVDReader()
+data_reader = MovieTweetingsReader()
 dataset = data_reader.load_data()
 dataset.print_statistics()
 
-##### uncomment if want to test e2e pipeline
+# #### uncomment if want to test e2e pipeline
 
 # from Data_manager.DataSplitter_global_timestamp import DataSplitter_global_timestamp
 
@@ -41,7 +42,7 @@ dataset.print_statistics()
 # from Base.NonPersonalizedRecommender import TopPop
 
 
-# cutoffs = [5, 10]
+# cutoffs = [5]
 # evaluator_test = EvaluatorHoldout(URM_test, cutoff_list=cutoffs)
 
 

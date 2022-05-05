@@ -24,8 +24,8 @@ def split_data_on_global_timestamp(URM_all, URM_timestamp, ts_val, ts_test):
     URM_test_builder = IncrementalSparseMatrix(n_rows=n_rows, n_cols=n_cols)
     URM_validation_builder = IncrementalSparseMatrix(n_rows=n_rows, n_cols=n_cols)
 
-    all_items = np.arange(0, n_cols, dtype=np.int)
     skipped_users = 0
+    keep_user = np.full(n_rows, True)
 
     for user_index in range(URM_all.shape[0]):
 
@@ -38,6 +38,7 @@ def split_data_on_global_timestamp(URM_all, URM_timestamp, ts_val, ts_test):
         user_profile = URM_all.indices[start_pos:end_pos]
         user_data = URM_all.data[start_pos:end_pos]
         user_sequence = URM_timestamp.data[start_pos:end_pos]
+        assert len(user_sequence) == len(user_data)
 
 
         # if len(user_profile) >= 3:
@@ -46,8 +47,9 @@ def split_data_on_global_timestamp(URM_all, URM_timestamp, ts_val, ts_test):
         train_pos = np.where(user_sequence < ts_val, True, False)
         
         if not any(train_pos):
+            keep_user[user_index] = False
             skipped_users += 1
-            continue # do not include cold start users
+            continue
         
         # test
         test_user_indices = [user_index] * sum(test_pos)
@@ -66,18 +68,20 @@ def split_data_on_global_timestamp(URM_all, URM_timestamp, ts_val, ts_test):
         train_venue_indices = user_profile[train_pos]
         train_venue_data = user_data[train_pos]
         URM_train_builder.add_data_lists(train_user_indices, train_venue_indices, train_venue_data)
-            
-
-
-            # URM_train_builder.add_data_lists([user_index]*len(user_profile), user_profile, user_data)
-
-
+    
+    
     URM_train = URM_train_builder.get_SparseMatrix()
     URM_validation = URM_validation_builder.get_SparseMatrix()
     URM_test = URM_test_builder.get_SparseMatrix()
+
+    # removing cold users
+
+    URM_train = URM_train[keep_user, :]
+    URM_validation = URM_validation[keep_user, :]
+    URM_test = URM_test[keep_user, :]
     
     print(f"split_data_on_global_timestamp: {skipped_users} cold users of total {URM_all.shape[0]} users skipped")
 
-    return URM_train, URM_validation, URM_test
+    return URM_train, URM_validation, URM_test, keep_user
 
 
