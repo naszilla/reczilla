@@ -32,8 +32,7 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
 
     metafeats_fn = f"{RESULTS_DIR}/../RecSys2019_DeepLearning_Evaluation/Metafeatures/Metafeatures.csv"
     metafeats = pd.read_csv(metafeats_fn)
-    join_cols = ["dataset_name", "split_name"]
-    metafeats.columns = ["f__{}".format(col) if col not in join_cols else col for col in metafeats.columns]
+    # TODO: This line might be omitted when the join code is updated.
     del metafeats["split_name"]
     # TODO: make sure that we are merging on the correct version of each dataset. it's probably good to merge using the
     #  gcloud path, not just the dataset name.
@@ -77,7 +76,7 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
     def compute_feature_corrs(test_datasets, metric_name, selected_algs):
         """Compute correlation between each metafeature and the desired metric for all selected algorithms.
         Dataframe result is num_features x num_algorithms."""
-        all_features = [col for col in metafeats.columns if col.startswith("f__")]
+        all_features = [col for col in metafeats.columns if col.startswith("f_")]
         # Sanity check to prevent leakage
         for test_dataset in test_datasets:
             assert test_dataset in metafeats['dataset_name'].values
