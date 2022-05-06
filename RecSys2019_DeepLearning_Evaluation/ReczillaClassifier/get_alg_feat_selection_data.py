@@ -5,10 +5,15 @@ import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning)
 
 RESULTS_DIR = "../notebooks/"
+
+# TODO: we need to use a different meta-dataset, one with every alg + hyperparam combination (see below)
 ALL_DATASETS = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)['dataset_name'].unique()
 
+# TODO: pass number of algs & number of meta-features as an arg to this function
 def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets = None):
 
+    # TODO: we need to read in the complete meta-dataset - with each alg + hyperparam combination. the file
+    #  "performance_meta_dataset.csv" only provides the best performance for each alg.
     meta_dataset = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)
     single_sample_algs = [
         "TopPop", 
@@ -18,6 +23,7 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
     ]
     min_samples = 30
 
+    # TODO: we no longer need to select algs based on number of samples.
     keep_rows = (meta_dataset["num_samples"] >= min_samples) | meta_dataset["alg_name"].isin(single_sample_algs)
     meta_dataset = meta_dataset.loc[keep_rows, :]
     
@@ -29,6 +35,8 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
     join_cols = ["dataset_name", "split_name"]
     metafeats.columns = ["f__{}".format(col) if col not in join_cols else col for col in metafeats.columns]
     del metafeats["split_name"]
+    # TODO: make sure that we are merging on the correct version of each dataset. it's probably good to merge using the
+    #  gcloud path, not just the dataset name.
     metafeats = meta_dataset.merge(metafeats, on="dataset_name", how='left')
     metafeats.head()
 
@@ -42,7 +50,8 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
         for test_dataset in test_datasets:
             assert test_dataset in meta_dataset['dataset_name'].values
         filtered_dataset = meta_dataset[~meta_dataset['dataset_name'].isin(test_datasets)]
-        
+
+        # TODO: instead of ranking algorithms we need to maximize coverage - see sec. 4.1 and equation (1) in overleaf
         all_ranks = []
         for dataset_name, dataset_performance in filtered_dataset.groupby("dataset_name"):
             dataset_performance["rank"] = dataset_performance["max_test_metric_" + metric_name].rank(method='min', ascending=False)
@@ -54,6 +63,11 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
         ranked_algs = pd.concat(all_ranks, axis=1)
         return ranked_algs
 
+    # TODO: instead of finding the best *algorithm*, we need to find the best *alg+hyperparameter* combination (see sec.
+    #  4.1 in the overleaf). The set of hyperparameters is uniquely identified by column "hyperparameters_source", so we
+    #  probably should create a new column for this, e.g. "alg_hyperparam", that indicates both the algorithm and the
+    #  hyperparameter set.
+    # TODO: instead of ranking algorithms we need to maximize coverage - see sec. 4.1 and equation (1) in overleaf
     def select_algs(test_datasets, metric_name, num_algs=10):
         """Select num_algs algorithm with best mean rank"""
         return list(ranked_algs.T.mean().sort_values().iloc[:num_algs].index)

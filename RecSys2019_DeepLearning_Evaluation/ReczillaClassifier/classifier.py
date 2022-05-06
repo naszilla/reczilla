@@ -17,6 +17,8 @@ def get_metrics(y_test, preds):
     #     print(y_test)
     #     exit()
 
+    # TODO: does this collect the two accuracy metrics described in the paper? ("%OPT" and "AlgAccuracy"). we might need
+    #  to add some logic to check if the selected algorithm matches the ground-truth-best algorithm.
     # metrics['precision'] = np.mean(precision_score(labels, outputs, average=None))
     metrics['accuracy'] = accuracy_score(labels, outputs)
     metrics['perc_diff_from_best'] = np.mean([abs(l_s[l] - l_s[o])/l_s[l]  for l, o, l_s, o_s  in zip(labels, outputs, y_test, preds)])
@@ -27,10 +29,13 @@ def get_metrics(y_test, preds):
 # leave one out validation
 all_metrics = []
 
+# TODO: iterate over num_algs and num_meta_features, or make these parameters or cli args. pass these to the function
+#  alg_feature_selection_featurized
 for _metric in METRICS:
     for test_dataset in ALL_DATASETS:
         X_train, y_train, X_test, y_test = alg_feature_selection_featurized(_metric, [test_dataset])
 
+        # TODO: add baseline methods here: random, knn, other meta-learners, etc.
         base_model = xgb.XGBRegressor(objective='reg:squarederror')
         model = RegressorChain(base_model)
         model.fit(X_train, y_train)
