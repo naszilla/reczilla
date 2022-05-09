@@ -3,46 +3,43 @@ pd.options.mode.chained_assignment = None
 import numpy as np
 import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning)
+import pickle
 
 RESULTS_DIR = "../notebooks/"
 
-# TODO: we need to use a different meta-dataset, one with every alg + hyperparam combination (see below)
-ALL_DATASETS = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)['dataset_name'].unique()
-
 # TODO: pass number of algs & number of meta-features as an arg to this function
 def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets = None):
-
     # TODO: we need to read in the complete meta-dataset - with each alg + hyperparam combination. the file
     #  "performance_meta_dataset.csv" only provides the best performance for each alg.
-    meta_dataset = pd.read_csv(f"{RESULTS_DIR}/performance_meta_dataset.csv", index_col=0)
-    single_sample_algs = [
-        "TopPop", 
-        "GlobalEffects", 
-        "Random",
-        "SlopeOne",
-    ]
-    min_samples = 30
+    # Update: done as implemented below
+    metadataset_fn = f"{RESULTS_DIR}/meta_datasets/metadata-0.pkl"
+    with open(metadataset_fn, "rb") as f:
+        meta_dataset = pickle.load(f)
 
-    # TODO: we no longer need to select algs based on number of samples.
-    keep_rows = (meta_dataset["num_samples"] >= min_samples) | meta_dataset["alg_name"].isin(single_sample_algs)
-    meta_dataset = meta_dataset.loc[keep_rows, :]
-    
+    # single_sample_algs = [
+    #     "TopPop",
+    #     "GlobalEffects",
+    #     "Random",
+    #     "SlopeOne",
+    # ]
+    # min_samples = 30
+    #
+    # # TODO: we no longer need to select algs based on number of samples.
+    # keep_rows = (meta_dataset["num_samples"] >= min_samples) | meta_dataset["alg_name"].isin(single_sample_algs)
+    # meta_dataset = meta_dataset.loc[keep_rows, :]
+
     if train_datasets is not None:
         meta_dataset = meta_dataset[meta_dataset['dataset_name'].isin(train_datasets + test_datasets)]
 
     metafeats_fn = f"{RESULTS_DIR}/../RecSys2019_DeepLearning_Evaluation/Metafeatures/Metafeatures.csv"
     metafeats = pd.read_csv(metafeats_fn)
-    # TODO: This line might be omitted when the join code is updated.
-    del metafeats["split_name"]
-    # TODO: make sure that we are merging on the correct version of each dataset. it's probably good to merge using the
-    #  gcloud path, not just the dataset name.
-    metafeats = meta_dataset.merge(metafeats, on="dataset_name", how='left')
-    metafeats.head()
-
-    list(meta_dataset.columns)
+    bucket_prefix = r"gs://reczilla-results/dataset-splits/"
+    metafeats["original_split_path"] = bucket_prefix + metafeats["bucket_path"]
+    metafeats.drop(["bucket_path", "dataset_name", "split_name"], axis=1, inplace=True)
+    # Joining on full bucket path
+    metafeats = meta_dataset.merge(metafeats, on="original_split_path", how='left')
 
     # Algorithm selection
-
     def rank_algorithms(test_datasets, metric_name):
         """Compute algorithm ranks for each dataset"""
         # Sanity check to prevent leakage
@@ -110,17 +107,8 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
                 .idxmax())
         return selected_feats
 
-    # Assume some split
-    # test_datasets = ["AnimeReader"]# , "CiaoDVDReader"]
-    # # Assume some metric
-    # metric_name = "PRECISION_cut_1"
-
     ranked_algs = rank_algorithms(test_datasets, metric_name)
-
     selected_algs = select_algs(test_datasets, metric_name)
-
-    feature_corrs = compute_feature_corrs(test_datasets, metric_name, selected_algs)
-
     selected_feats = select_features(test_datasets, metric_name, selected_algs)
     
     ##### Featurization
