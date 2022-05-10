@@ -133,7 +133,8 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     metafeats = get_metafeats(dataset_name)
 
     if train_datasets is not None:
-        metafeats = metafeats[metafeats['dataset_name'].isin(train_datasets + test_datasets)]
+        # TODO: The functionality of this line might be broken
+        metafeats = metafeats[metafeats['dataset_family'].isin(train_datasets + test_datasets)]
 
     # TODO: This function to be updated
     selected_algs = select_algs(metafeats, test_datasets, metric_name)
