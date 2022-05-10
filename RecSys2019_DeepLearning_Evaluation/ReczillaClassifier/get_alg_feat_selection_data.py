@@ -4,11 +4,12 @@ import numpy as np
 import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning)
 import pickle
+from tqdm import tqdm
 
 RESULTS_DIR = "../notebooks/"
 
 # TODO: pass number of algs & number of meta-features as an arg to this function
-def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets = None):
+def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets=None):
     # TODO: we need to read in the complete meta-dataset - with each alg + hyperparam combination. the file
     #  "performance_meta_dataset.csv" only provides the best performance for each alg.
     # Update: done as implemented below
@@ -38,14 +39,18 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
     metafeats.drop(["bucket_path", "dataset_name", "split_name"], axis=1, inplace=True)
     # Joining on full bucket path
     metafeats = meta_dataset.merge(metafeats, on="original_split_path", how='left')
+    # TODO: Build dataset family column based on some manual dict or function
+    metafeats["dataset_family"] = metafeats["dataset_name"]
+
+    # TODO: Filter based on minimum number of alg_param_name samples?
 
     # Algorithm selection
     def rank_algorithms(test_datasets, metric_name):
         """Compute algorithm ranks for each dataset"""
         # Sanity check to prevent leakage
         for test_dataset in test_datasets:
-            assert test_dataset in meta_dataset['dataset_name'].values
-        filtered_dataset = meta_dataset[~meta_dataset['dataset_name'].isin(test_datasets)]
+            assert test_dataset in meta_dataset['dataset_family'].values
+        filtered_dataset = meta_dataset[~meta_dataset['dataset_family'].isin(test_datasets)]
 
         # TODO: instead of ranking algorithms we need to maximize coverage - see sec. 4.1 and equation (1) in overleaf
         all_ranks = []
@@ -55,7 +60,7 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
             dataset_performance = dataset_performance[["rank"]]
             dataset_performance = dataset_performance.rename(columns={"rank": dataset_name})
             all_ranks.append(dataset_performance)
-            
+
         ranked_algs = pd.concat(all_ranks, axis=1)
         return ranked_algs
 
@@ -66,34 +71,50 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
     # TODO: instead of ranking algorithms we need to maximize coverage - see sec. 4.1 and equation (1) in overleaf
     def select_algs(test_datasets, metric_name, num_algs=10):
         """Select num_algs algorithm with best mean rank"""
+        ranked_algs = rank_algorithms(test_datasets, metric_name)
         return list(ranked_algs.T.mean().sort_values().iloc[:num_algs].index)
 
     # Metafeature selection
-
-    def compute_feature_corrs(test_datasets, metric_name, selected_algs):
+    def compute_feature_corrs(test_datasets, metric_name, selected_algs=None, by_alg_family=False):
         """Compute correlation between each metafeature and the desired metric for all selected algorithms.
         Dataframe result is num_features x num_algorithms."""
+        print("Computing correlations...")
+        if selected_algs is None:
+            if not by_alg_family:
+                selected_algs = metafeats["alg_param_name"].unique()
+            else:
+                selected_algs = metafeats["alg_family"].unique()
+
         all_features = [col for col in metafeats.columns if col.startswith("f_")]
         # Sanity check to prevent leakage
         for test_dataset in test_datasets:
-            assert test_dataset in metafeats['dataset_name'].values
-        filtered_metafeats = metafeats[~metafeats['dataset_name'].isin(test_datasets)]
+            assert test_dataset in metafeats['dataset_family'].values
+        filtered_metafeats = metafeats[~metafeats['dataset_family'].isin(test_datasets)]
         
         all_cors = []
-        for alg in selected_algs:
-            filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_name"] == alg)]
-            alg_cors = filtered_results[all_features].corrwith(filtered_results["max_test_metric_" + metric_name],
-                                                            method="spearman")
+
+        for alg in tqdm(selected_algs):
+            if by_alg_family:
+                # TODO: Implement algorithm family correlation
+                raise NotImplementedError("Algorithm family correlation not yet implemented")
+                #filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_name"] == alg)]
+                #alg_cors = filtered_results[all_features].corrwith(filtered_results["max_test_metric_" + metric_name],
+                #                                                method="spearman")
+            else:
+                filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_param_name"] == alg)]
+                alg_cors = filtered_results[all_features].corrwith(filtered_results["test_metric_" + metric_name],
+                                                                   method="spearman")
+
             alg_cors.name = alg
             all_cors.append(alg_cors)
         all_cors = pd.concat(all_cors, axis=1).abs()
         return all_cors
 
-    def select_features(test_datasets, metric_name, selected_algs, num_feats=10):
+    def select_features(test_datasets, metric_name, selected_algs=None, num_feats=10):
         """Select num_feats features. Greedy scheme. At each step, we compute the best correlations
         across all metafeatures for each algorithm so far. We add whichever metafeature can obtain the maximum
         improvement across any single one of the best correlations for the selected algorithms."""
-        all_cors = compute_feature_corrs(test_datasets, metric_name, selected_algs)
+        all_cors = compute_feature_corrs(test_datasets, metric_name, selected_algs=selected_algs)
         
         selected_feats = [all_cors.max(axis=1).idxmax()]
         
@@ -107,14 +128,14 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
                 .idxmax())
         return selected_feats
 
-    ranked_algs = rank_algorithms(test_datasets, metric_name)
+    # TODO: This function to be updated
     selected_algs = select_algs(test_datasets, metric_name)
     selected_feats = select_features(test_datasets, metric_name, selected_algs)
     
     ##### Featurization
     
     final_feat_columns = selected_feats
-    X_train = metafeats[metafeats['alg_name'].isin(selected_algs) & ~metafeats['dataset_name'].isin(test_datasets)]
+    X_train = metafeats[metafeats['alg_name'].isin(selected_algs) & ~metafeats['dataset_family'].isin(test_datasets)]
 
     metric_col_name = "max_test_metric_" + metric_name
     X_train = X_train[[metric_col_name] + ["dataset_name", "alg_name"] + final_feat_columns]
@@ -136,7 +157,7 @@ def alg_feature_selection_featurized(metric_name, test_datasets, train_datasets 
     X_train = X_train_grouped[final_feat_columns].values
     y_train = np.array(X_train_grouped['target'].to_list())
     
-    test_data = metafeats[metafeats['dataset_name'].isin(test_datasets) & metafeats['alg_name'].isin(selected_algs)]
+    test_data = metafeats[metafeats['dataset_family'].isin(test_datasets) & metafeats['alg_name'].isin(selected_algs)]
     test_data = test_data[[metric_col_name] + ["dataset_name", "alg_name"] + final_feat_columns]
 
     X_test = test_data[final_feat_columns].iloc[0].values
