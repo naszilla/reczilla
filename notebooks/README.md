@@ -1,8 +1,11 @@
-### prepare_metadataset.ipynb
+### prepare_metadataset_v#.ipynb
 
-This notebook creates a meta-dataset for all RecZilla experiments, using aggregated output from all experiments. The only input to this notebook is a CSV produced by the script `process_inbox.py` -- this script reads all zipped results from gcloud and creates an aggregated CSV.
+These notebooks create a meta-dataset for all RecZilla experiments, using aggregated output from all experiments. The only input to this notebook is a CSV produced by the script `process_inbox.py` -- this script reads all zipped results from gcloud and creates an aggregated CSV.
 
-### meta_datasets
+**v0:** uses only results from the workshop submission
+**v1:** uses all new results for the NeurIPS submission
+ 
+### meta-datasets
 
 The meta-datasets can be downloaded from google drive. These should be read as a pickle file (using `pandas.read_pickle(<filename>)`):
 - v0 meta-dataset: this includes only the results from our workshop submission: <tbd>
