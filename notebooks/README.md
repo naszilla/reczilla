@@ -8,8 +8,8 @@ These notebooks create a meta-dataset for all RecZilla experiments, using aggreg
 ### meta-datasets
 
 The meta-datasets can be downloaded from google drive. These should be read as a pickle file (using `pandas.read_pickle(<filename>)`):
-- v0 meta-dataset: this includes only the results from our workshop submission: <tbd>
-- v1: this includes all results that have completed by May 9: <tbd> 
+- v0 meta-dataset: this includes only the results from our workshop submission: [https://storage.cloud.google.com/reczilla-results/meta-datasets/metadata-v0.pkl](metadata-v0.pkl)
+- v1: this includes all results that have completed by May 9: [https://storage.cloud.google.com/reczilla-results/meta-datasets/metadata-v1.pkl](metadata-v1.pkl)
   
 In these datasets, there is one row for each combination of algorhtm + hyperparameter set + dataset split. The important columns are:
 - `alg_family`: the algorithm family (e.g. TopPop or UserKNN)
