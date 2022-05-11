@@ -166,7 +166,7 @@ def compute_feature_corrs(metafeats, test_datasets, metric_name, selected_algs=N
             #                                                method="spearman")
         else:
             filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_param_name"] == alg)]
-            alg_cors = filtered_results[all_features].corrwith(filtered_results["test_metric_" + metric_name],
+            alg_cors = filtered_results[all_features].corrwith(filtered_results[metric_name],
                                                                method="spearman")
 
         alg_cors.name = alg
@@ -210,6 +210,8 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     final_feat_columns = selected_feats
     X_train = metafeats[metafeats['alg_name'].isin(selected_algs) & ~metafeats['dataset_family'].isin(test_datasets)]
 
+    # TODO: This line to be updated (should just be metric_name), like this:
+    # metric_col_name = metric_name
     metric_col_name = "max_test_metric_" + metric_name
     X_train = X_train[[metric_col_name] + ["dataset_name", "alg_name"] + final_feat_columns]
 
