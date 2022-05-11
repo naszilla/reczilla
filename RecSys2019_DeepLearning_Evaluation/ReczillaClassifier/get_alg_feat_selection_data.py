@@ -38,17 +38,20 @@ def get_metafeats(metadataset_filename):
 
     return metafeats
 
+def my_print(x, verbose):
+    if verbose:
+        print(x)
 
-def select_algs(metafeats, dataset_family_list, metric_name, num_algs=10):
+def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, verbose=False):
     """
-    Select a set of parameterized algorithms with good coverage over all datasets belonging to one or mode dataset
-    families. Algorithms are selected "greedily" to maximize coverage (see eq. 1 in the paper).
+    Select a set of parameterized algorithms with good coverage over all datasets, excluding some dataset families.
+    Algorithms are selected "greedily" to maximize coverage (see eq. 1 in the paper).
 
     For coding purposes, higher metrics = better. This may be different from the paper.
 
     args:
     - metafeats (dataframe): contains performance metrics and dataset meta-features
-    - dataset_family_list (list[str]): in all calculations, only include datasets belonging to the families listed here
+    - exclude_dataset_families (list[str]): a list of dataset families to exclude
     - metric_name (str): name of the metric used to select algs. this must be a column in the meta-dataset
     - num_algs (int): number of algorithms to select
 
@@ -59,9 +62,13 @@ def select_algs(metafeats, dataset_family_list, metric_name, num_algs=10):
     if metric_name not in metafeats.columns:
         raise Exception(f"metric_name {metric_name} not found in metafeats dataframe.")
 
-    # only include dataset families
+    # Sanity check to prevent leakage
+    for family_name in exclude_dataset_families:
+        assert family_name in metafeats['dataset_family'].values
+
+    # exclude some dataset families
     # create a temporary df for use in this function
-    tmp_df = metafeats.loc[metafeats["dataset_family"].isin(dataset_family_list), :].copy()
+    tmp_df = metafeats.loc[~metafeats['dataset_family'].isin(exclude_dataset_families), :].copy()
 
     # require that there is only one result for each dataset + parameterized alg pair. if not, drop duplicates (keep first).
     pair_counts = tmp_df.groupby(["original_split_path", "alg_param_name"]).size().rename("size").reset_index()
@@ -108,7 +115,7 @@ def select_algs(metafeats, dataset_family_list, metric_name, num_algs=10):
     candidate_algs = all_algs.copy()  # all algs that we can select from
 
     for i_step in range(num_algs):
-        print(f"[select_algs] beginning step {i_step + 1} of {num_algs}")
+        my_print(f"[select_algs] beginning step {i_step + 1} of {num_algs}", verbose)
         if len(candidate_algs) == 0:
             raise Exception("no candidate algs left to select from.")
 
@@ -135,6 +142,7 @@ def select_algs(metafeats, dataset_family_list, metric_name, num_algs=10):
         selected_algs.append(candidate_algs[add_index])
         del candidate_algs[add_index]
 
+    my_print(f"done. selected algs: {selected_algs}", verbose)
     return selected_algs
 
 
@@ -250,8 +258,12 @@ if __name__ == '__main__':
     # test select algs
     metric_name = 'test_metric_ARHR_ALL_HITS_cut_10'
     dataset_family_list = list(metafeats["dataset_family"].unique())
-    selected_algs = select_algs(metafeats, dataset_family_list, metric_name, num_algs=4)
+    selected_algs = select_algs(metafeats, [dataset_family_list[0]], metric_name, num_algs=4, verbose=True)
     print(f"selected_algs: {selected_algs}")
-    # example output:
-    # selected_algs: ['ItemKNNCF:dice_random_0', 'ItemKNNCF:dice_random_41', 'TopPop:default',
-    #                 'ItemKNNCF:euclidean_random_19']
+    ## example output:
+    # [select_algs] beginning step 1 of 4
+    # [select_algs] beginning step 2 of 4
+    # [select_algs] beginning step 3 of 4
+    # [select_algs] beginning step 4 of 4
+    # done. selected algs: ['ItemKNNCF:dice_random_0', 'ItemKNNCF:dice_random_41', 'TopPop:default', 'ItemKNNCF:euclidean_random_19']
+    # selected_algs: ['ItemKNNCF:dice_random_0', 'ItemKNNCF:dice_random_41', 'TopPop:default', 'ItemKNNCF:euclidean_random_19']
