@@ -93,17 +93,12 @@ def select_algs(metafeats, dataset_family_list, metric_name, num_algs=10):
         # this assumes that there is exactly one metric for each dataset + parameterized alg (we check for this above)
         subset_rows = tmp_df["alg_param_name"].isin(alg_subset)
 
-        best_pct_diff = []
+        best_pct_dict = tmp_df.loc[subset_rows, :].groupby("original_split_path")["pct_diff_opt"].max().to_dict()
         for dataset in all_datasets:
-            # find all rows for this dataset and this subset
-            dataset_rows = tmp_df["original_split_path"] == dataset
-            eval_rows = tmp_df.loc[dataset_rows & subset_rows, :]
-            if len(eval_rows) == 0:
-                best_pct_diff.append(np.nan)  # no result for this dataset...
-            else:
-                best_pct_diff.append(eval_rows["pct_diff_opt"].max())  # add the best (max) pct_diff_opt
+            if dataset not in best_pct_dict:
+                best_pct_dict[dataset] = np.nan
 
-        return best_pct_diff
+        return list(best_pct_dict.values())
 
 
     ###################################
@@ -113,7 +108,7 @@ def select_algs(metafeats, dataset_family_list, metric_name, num_algs=10):
     candidate_algs = all_algs.copy()  # all algs that we can select from
 
     for i_step in range(num_algs):
-        # print(f"[select_algs] beginning step {i_step + 1} of {num_algs}")
+        print(f"[select_algs] beginning step {i_step + 1} of {num_algs}")
         if len(candidate_algs) == 0:
             raise Exception("no candidate algs left to select from.")
 
