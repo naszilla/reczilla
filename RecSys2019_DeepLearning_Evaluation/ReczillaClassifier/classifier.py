@@ -1,10 +1,15 @@
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score
 
-from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized, ALL_DATASETS
+from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized
+from ReczillaClassifier.dataset_families import get_all_datasets
 
 from sklearn.multioutput import RegressorChain
 import xgboost as xgb
+
+ALL_DATASETS = get_all_datasets()
+
+METADATASET_NAME = "metadata-v0"
 
 METRICS = ["PRECISION_cut_10", "MAP_cut_10"]
 
@@ -33,7 +38,7 @@ all_metrics = []
 #  alg_feature_selection_featurized
 for _metric in METRICS:
     for test_dataset in ALL_DATASETS:
-        X_train, y_train, X_test, y_test = alg_feature_selection_featurized(_metric, [test_dataset])
+        X_train, y_train, X_test, y_test = alg_feature_selection_featurized(_metric, [test_dataset], METADATASET_NAME)
 
         # TODO: add baseline methods here: random, knn, other meta-learners, etc.
         base_model = xgb.XGBRegressor(objective='reg:squarederror')

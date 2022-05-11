@@ -119,3 +119,7 @@ def dataset_family_lookup(dataset_name, strict_match=True):
 def get_dataset_families():
     """This returns all of the dataset families (useful for hold-one-out validation with dataset families)"""
     return set(family_map.keys()).union(unique_datasets)
+
+def get_all_datasets():
+    """Returns all of the datasets we have."""
+    return set([k for v in family_map.values() for k in v]).union(unique_datasets)
