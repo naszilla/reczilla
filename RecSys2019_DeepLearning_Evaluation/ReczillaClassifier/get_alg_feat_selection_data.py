@@ -13,7 +13,7 @@ def get_metafeats(metadataset_filename):
     """Merge metafeatures and metadataset. Return as dataframe."""
     metadataset_fn = f"{RESULTS_DIR}/{metadataset_filename}.pkl"
     with open(metadataset_fn, "rb") as f:
-        meta_dataset = pickle.load(f)
+        meta_dataset = pickle.load(f)  # TODO: this file is intended to be read using pd.read_pickle(metadataset_fn). pickle.load may or may not work as expected
 
     # single_sample_algs = [
     #     "TopPop",
@@ -39,37 +39,108 @@ def get_metafeats(metadataset_filename):
     return metafeats
 
 
-# Algorithm selection
-def rank_algorithms(meta_dataset, test_datasets, metric_name):
-    """Compute algorithm ranks for each dataset"""
-    # Sanity check to prevent leakage
-    for test_dataset in test_datasets:
-        assert test_dataset in meta_dataset['dataset_family'].values
-    filtered_dataset = meta_dataset[~meta_dataset['dataset_family'].isin(test_datasets)]
+def select_algs(metafeats, dataset_family_list, metric_name, num_algs=10):
+    """
+    Select a set of parameterized algorithms with good coverage over all datasets belonging to one or mode dataset
+    families. Algorithms are selected "greedily" to maximize coverage (see eq. 1 in the paper).
 
-    # TODO: instead of ranking algorithms we need to maximize coverage - see sec. 4.1 and equation (1) in overleaf
-    all_ranks = []
-    for dataset_name, dataset_performance in filtered_dataset.groupby("dataset_name"):
-        dataset_performance["rank"] = dataset_performance["max_test_metric_" + metric_name].rank(method='min',
-                                                                                                 ascending=False)
-        dataset_performance.set_index("alg_name", inplace=True)
-        dataset_performance = dataset_performance[["rank"]]
-        dataset_performance = dataset_performance.rename(columns={"rank": dataset_name})
-        all_ranks.append(dataset_performance)
+    For coding purposes, higher metrics = better. This may be different from the paper.
 
-    ranked_algs = pd.concat(all_ranks, axis=1)
-    return ranked_algs
+    args:
+    - metafeats (dataframe): contains performance metrics and dataset meta-features
+    - dataset_family_list (list[str]): in all calculations, only include datasets belonging to the families listed here
+    - metric_name (str): name of the metric used to select algs. this must be a column in the meta-dataset
+    - num_algs (int): number of algorithms to select
+
+    output:
+    - a list of parameterized algorithms, from the column alg_param_name in the meta-dataset
+    """
+
+    if metric_name not in metafeats.columns:
+        raise Exception(f"metric_name {metric_name} not found in metafeats dataframe.")
+
+    # only include dataset families
+    # create a temporary df for use in this function
+    tmp_df = metafeats.loc[metafeats["dataset_family"].isin(dataset_family_list), :].copy()
+
+    # require that there is only one result for each dataset + parameterized alg pair. if not, drop duplicates (keep first).
+    pair_counts = tmp_df.groupby(["original_split_path", "alg_param_name"]).size().rename("size").reset_index()
+
+    if pair_counts["size"].max() > 1:
+        e = f"multiple rows found for dataset + parameterized pairs:\n{str(pair_counts[pair_counts['size'] > 1])}"
+        raise Exception(e)
+
+    if len(tmp_df) == 0:
+        raise Exception(f"no rows found for dataset_family_list = {dataset_family_list}")
+
+    # for all datasets, find the best (maximum) metric achieved by any parameterized algs
+    # all datasets are uniquely identified by their original path on gcloud (original_split_path)
+    dataset_best_metrics = tmp_df.groupby("original_split_path")[metric_name].max().rename("max_metric").reset_index()
+
+    # get all datasets & algs
+    all_datasets = list(tmp_df["original_split_path"].unique())
+    all_algs = list(tmp_df["alg_param_name"].unique())
+
+    # merge in the best metrics for each dataset
+    tmp_df = tmp_df.merge(dataset_best_metrics, on="original_split_path", how="left")
+
+    # calculate the pct-difference-from-best for each parameterized alg (row) in the meta-dataset
+    tmp_df.loc[:, "pct_diff_opt"] = 100.0 * (tmp_df[metric_name].values - tmp_df["max_metric"].values) / tmp_df["max_metric"].values
+
+    # function for calculating coverage
+    def coverage(alg_subset):
+        # return the average pct_diff_from_opt for the *best* parameterized alg in the subset, over all datasets
+        # this assumes that there is exactly one metric for each dataset + parameterized alg (we check for this above)
+        subset_rows = tmp_df["alg_param_name"].isin(alg_subset)
+
+        best_pct_diff = []
+        for dataset in all_datasets:
+            # find all rows for this dataset and this subset
+            dataset_rows = tmp_df["original_split_path"] == dataset
+            eval_rows = tmp_df.loc[dataset_rows & subset_rows, :]
+            if len(eval_rows) == 0:
+                best_pct_diff.append(np.nan)  # no result for this dataset...
+            else:
+                best_pct_diff.append(eval_rows["pct_diff_opt"].max())  # add the best (max) pct_diff_opt
+
+        return best_pct_diff
 
 
-# TODO: instead of finding the best *algorithm*, we need to find the best *alg+hyperparameter* combination (see sec.
-#  4.1 in the overleaf). The set of hyperparameters is uniquely identified by column "hyperparameters_source", so we
-#  probably should create a new column for this, e.g. "alg_hyperparam", that indicates both the algorithm and the
-#  hyperparameter set.
-# TODO: instead of ranking algorithms we need to maximize coverage - see sec. 4.1 and equation (1) in overleaf
-def select_algs(metafeats, test_datasets, metric_name, num_algs=10):
-    """Select num_algs algorithm with best mean rank"""
-    ranked_algs = rank_algorithms(metafeats, test_datasets, metric_name)
-    return list(ranked_algs.T.mean().sort_values().iloc[:num_algs].index)
+    ###################################
+    # greedy algorithm subset selection
+
+    selected_algs = []
+    candidate_algs = all_algs.copy()  # all algs that we can select from
+
+    for i_step in range(num_algs):
+        # print(f"[select_algs] beginning step {i_step + 1} of {num_algs}")
+        if len(candidate_algs) == 0:
+            raise Exception("no candidate algs left to select from.")
+
+        # add the algorithm that results in the largest coverage for the subset
+        avg_coverage_list = []  # avg. coverage over all datasets
+        sum_coverage_list = []  # sum of coverage over all datasets (for tiebreaking)
+        for i_alg, alg_name in enumerate(candidate_algs):
+            # calculate the average coverage over all datasets
+            cov = coverage(selected_algs + [alg_name])
+            avg_coverage_list.append(np.mean(cov))  # mean of covg over all datasets, and nan if any are nan
+            sum_coverage_list.append(np.nansum(cov))  # sum of covg over all datasets, ignoring nan
+
+        # if some algs have non-nan avg-coverage, select the alg with the greatest coverage
+        if any(np.array(avg_coverage_list) != np.nan):
+            # add the alg that results in the largest coverage, ignoring nans
+            add_index = np.nanargmax(avg_coverage_list)
+        elif any(np.array(sum_coverage_list) != np.nan):
+            # ... otherwise, add the alg with the largest sum of coverage, ignoring nans
+            add_index = np.nanargmax(sum_coverage_list)
+        else:
+            print(f"[select_algs] WARNING: no coverage during step {i_step+1}. adding a random algorithm")
+            add_index = np.random.randint(0, len(candidate_algs))
+
+        selected_algs.append(candidate_algs[add_index])
+        del candidate_algs[add_index]
+
+    return selected_algs
 
 
 # Metafeature selection
@@ -176,4 +247,14 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
 
 # Test code
 if __name__ == '__main__':
+    # get metafeatures
     metafeats = get_metafeats("metadata-v0")
+
+    # test select algs
+    metric_name = 'test_metric_ARHR_ALL_HITS_cut_10'
+    dataset_family_list = list(metafeats["dataset_family"].unique())
+    selected_algs = select_algs(metafeats, dataset_family_list, metric_name, num_algs=4)
+    print(f"selected_algs: {selected_algs}")
+    # example output:
+    # selected_algs: ['ItemKNNCF:dice_random_0', 'ItemKNNCF:dice_random_41', 'TopPop:default',
+    #                 'ItemKNNCF:euclidean_random_19']
