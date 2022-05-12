@@ -147,7 +147,7 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
 
 
 # Metafeature selection
-def compute_feature_corrs(metafeats, test_datasets, metric_name, selected_algs=None, by_alg_family=False):
+def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, selected_algs=None, by_alg_family=False):
     """Compute correlation between each metafeature and the desired metric for all selected algorithms.
     Dataframe result is num_features x num_algorithms."""
     print("Computing correlations...")
@@ -159,9 +159,9 @@ def compute_feature_corrs(metafeats, test_datasets, metric_name, selected_algs=N
 
     all_features = [col for col in metafeats.columns if col.startswith("f_")]
     # Sanity check to prevent leakage
-    for test_dataset in test_datasets:
-        assert test_dataset in metafeats['dataset_family'].values
-    filtered_metafeats = metafeats[~metafeats['dataset_family'].isin(test_datasets)]
+    for family_name in exclude_dataset_families:
+        assert family_name in metafeats['dataset_family'].values
+    filtered_metafeats = metafeats[~metafeats['dataset_family'].isin(exclude_dataset_families)]
 
     all_cors = []
 
@@ -206,31 +206,33 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     # TODO: Filter based on minimum number of alg_param_name samples?
     metafeats = get_metafeats(dataset_name)
 
+    exclude_test_dataset_families = [dataset_family_lookup(test_dataset) for test_dataset in test_datasets]
+
     if train_datasets is not None:
         # TODO: The functionality of this line might be broken
         metafeats = metafeats[metafeats['dataset_family'].isin(train_datasets + test_datasets)]
 
     # TODO: This function to be updated
-    selected_algs = select_algs(metafeats, test_datasets, metric_name)
-    selected_feats = select_features(metafeats, test_datasets, metric_name, selected_algs)
+    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name)
+    selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs)
     
     ##### Featurization
     final_feat_columns = selected_feats
-    X_train = metafeats[metafeats['alg_name'].isin(selected_algs) & ~metafeats['dataset_family'].isin(test_datasets)]
+    X_train = metafeats[metafeats['alg_param_name'].isin(selected_algs) & ~metafeats['dataset_family'].isin(exclude_test_dataset_families)]
 
     # TODO: This line to be updated (should just be metric_name), like this:
     # metric_col_name = metric_name
-    metric_col_name = "max_test_metric_" + metric_name
-    X_train = X_train[[metric_col_name] + ["dataset_name", "alg_name"] + final_feat_columns]
+    metric_col_name = metric_name
+    X_train = X_train[[metric_col_name] + ["dataset_name", "alg_param_name"] + final_feat_columns]
 
     transforms = {f: 'last' for f in final_feat_columns}
-    transforms.update({metric_col_name: list, 'alg_name': list})
+    transforms.update({metric_col_name: list, 'alg_param_name': list})
 
     X_train_grouped = X_train.groupby('dataset_name').agg(transforms)
 
     def get_ordered_target(row):
         avg = np.mean(row[metric_col_name])
-        algos_perfs = {alg: val for val, alg in zip(row[metric_col_name], row['alg_name'])}
+        algos_perfs = {alg: val for val, alg in zip(row[metric_col_name], row['alg_param_name'])}
         algos_perfs.update({alg: avg for alg in selected_algs if alg not in algos_perfs})
         ordered_target = [algos_perfs[key] for key in sorted(algos_perfs.keys(), reverse=True)]
         return ordered_target
@@ -240,8 +242,8 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     X_train = X_train_grouped[final_feat_columns].values
     y_train = np.array(X_train_grouped['target'].to_list())
     
-    test_data = metafeats[metafeats['dataset_family'].isin(test_datasets) & metafeats['alg_name'].isin(selected_algs)]
-    test_data = test_data[[metric_col_name] + ["dataset_name", "alg_name"] + final_feat_columns]
+    test_data = metafeats[metafeats['dataset_name'].isin(test_datasets) & metafeats['alg_param_name'].isin(selected_algs)]
+    test_data = test_data[[metric_col_name] + ["dataset_name", "alg_param_name"] + final_feat_columns]
 
     X_test = test_data[final_feat_columns].iloc[0].values
     X_test = np.array([X_test])

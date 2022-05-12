@@ -9,9 +9,9 @@ import xgboost as xgb
 
 ALL_DATASETS = get_all_datasets()
 
-METADATASET_NAME = "metadata-v0"
+METADATASET_NAME = "metadata-v1"
 
-METRICS = ["PRECISION_cut_10", "MAP_cut_10"]
+METRICS = ["test_metric_PRECISION_cut_10", "test_metric_MAP_cut_10"]
 
 def get_metrics(y_test, preds):
     metrics = {}
@@ -37,7 +37,7 @@ all_metrics = []
 # TODO: iterate over num_algs and num_meta_features, or make these parameters or cli args. pass these to the function
 #  alg_feature_selection_featurized
 for _metric in METRICS:
-    for test_dataset in ALL_DATASETS:
+    for test_dataset in list(ALL_DATASETS):
         X_train, y_train, X_test, y_test = alg_feature_selection_featurized(_metric, [test_dataset], METADATASET_NAME)
 
         # TODO: add baseline methods here: random, knn, other meta-learners, etc.
