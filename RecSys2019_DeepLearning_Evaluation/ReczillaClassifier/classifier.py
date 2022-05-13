@@ -11,7 +11,21 @@ ALL_DATASETS = get_all_datasets()
 
 METADATASET_NAME = "metadata-v1"
 
-METRICS = ["test_metric_PRECISION_cut_10", "test_metric_MAP_cut_10"]
+METRICS = ["test_metric_PRECISION_cut_10", "test_metric_RECALL_cut_10"]
+
+def perc_diff_from_best(labels, outputs, y_test, preds):
+    diff = []
+    for label, output, label_score, output_score in zip(labels, outputs, y_test, preds):
+        m = abs(label_score[label] - label_score[output]) / label_score[label]
+        diff.append(m)
+    return np.mean(diff)
+
+def perc_diff_from_worst(labels, outputs, y_test, preds):
+    diff = []
+    for label, output, label_score, output_score in zip(labels, outputs, y_test, preds):
+        m = abs(label_score[output] - min(label_score)) / (label_score[label] - min(label_score))
+        diff.append(m)
+    return np.mean(diff)
 
 def get_metrics(y_test, preds):
     metrics = {}
@@ -26,8 +40,8 @@ def get_metrics(y_test, preds):
     #  to add some logic to check if the selected algorithm matches the ground-truth-best algorithm.
     # metrics['precision'] = np.mean(precision_score(labels, outputs, average=None))
     metrics['accuracy'] = accuracy_score(labels, outputs)
-    metrics['perc_diff_from_best'] = np.mean([abs(l_s[l] - l_s[o])/l_s[l]  for l, o, l_s, o_s  in zip(labels, outputs, y_test, preds)])
-    metrics['perc_diff_from_worst'] = np.mean([abs(l_s[o] - np.min(l_s))/(l_s[l] - np.min(l_s))  for l, o, l_s, o_s  in zip(labels, outputs, y_test, preds)])
+    metrics['perc_diff_from_best'] = perc_diff_from_best(labels, outputs, y_test, preds)
+    metrics['perc_diff_from_worst'] = perc_diff_from_worst(labels, outputs, y_test, preds)
 
     return metrics
 
@@ -49,6 +63,7 @@ for _metric in METRICS:
         metrics = get_metrics(y_test, preds)
         all_metrics.append(metrics)
 
+    # import pdb; pdb.set_trace()
     print("Metric = ", _metric)
 
     accuracies = [m['accuracy'] for m in all_metrics]
