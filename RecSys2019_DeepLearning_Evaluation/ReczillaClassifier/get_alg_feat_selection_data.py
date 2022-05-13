@@ -165,7 +165,7 @@ def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, sele
 
     all_cors = []
 
-    for alg in tqdm(selected_algs):
+    for alg in selected_algs:
         if by_alg_family:
             # TODO: Implement algorithm family correlation (if we plan on using it)
             raise NotImplementedError("Algorithm family correlation not yet implemented")
@@ -210,7 +210,8 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
 
     if train_datasets is not None:
         # TODO: The functionality of this line might be broken
-        metafeats = metafeats[metafeats['dataset_family'].isin(train_datasets + test_datasets)]
+        # metafeats = metafeats[metafeats['dataset_family'].isin(train_datasets + test_datasets)]
+        raise NotImplementedError
 
     # TODO: This function to be updated
     selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name)
@@ -221,7 +222,7 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     X_train = metafeats[metafeats['alg_param_name'].isin(selected_algs) & ~metafeats['dataset_family'].isin(exclude_test_dataset_families)]
 
     # TODO: This line to be updated (should just be metric_name), like this:
-    # metric_col_name = metric_name
+    # metric_col_name = metric_name. DONE: (Sujay)
     metric_col_name = metric_name
     X_train = X_train[[metric_col_name] + ["dataset_name", "alg_param_name"] + final_feat_columns]
 
@@ -245,9 +246,11 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     test_data = metafeats[metafeats['dataset_name'].isin(test_datasets) & metafeats['alg_param_name'].isin(selected_algs)]
     test_data = test_data[[metric_col_name] + ["dataset_name", "alg_param_name"] + final_feat_columns]
 
-    X_test = test_data[final_feat_columns].iloc[0].values
-    X_test = np.array([X_test])
-    y_test = test_data.groupby('dataset_name').agg(transforms).apply(get_ordered_target, axis=1).values
+    X_test_grouped = test_data.groupby('dataset_name').agg(transforms)
+    X_test_grouped['target'] = X_test_grouped.apply(get_ordered_target, axis=1)
+
+    X_test = X_test_grouped[final_feat_columns].values
+    y_test = np.array(X_test_grouped['target'].to_list())
     # y_test = y_test.tolist()
     
     return X_train, y_train, X_test, y_test
