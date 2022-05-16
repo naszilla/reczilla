@@ -2,6 +2,9 @@ import numpy as np
 import sys
 from sklearn.metrics import accuracy_score, precision_score
 from sklearn.multioutput import RegressorChain
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 import xgboost as xgb
 
 from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized
@@ -29,6 +32,15 @@ def run_metalearner(model_name, X_train, y_train, X_test):
         model = RegressorChain(base_model)
         model.fit(X_train, y_train)
         preds = model.predict(X_test)
+
+    elif model_name == "knn":
+        n_neighbors = 5
+        n_training_samples = X_train.shape[0]
+        pipe = Pipeline([("scaler", StandardScaler()),
+                         ("knn", KNeighborsRegressor(n_neighbors=min(n_neighbors, n_training_samples)))])
+        pipe.fit(X_train, y_train)
+        preds = pipe.predict(X_test)
+
     else:
         raise NotImplementedError("{} not implemented".format(model_name))
 
