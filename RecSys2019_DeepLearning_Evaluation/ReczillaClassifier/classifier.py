@@ -1,6 +1,8 @@
 import numpy as np
 import sys
 from sklearn.metrics import accuracy_score, precision_score
+from sklearn.multioutput import RegressorChain
+import xgboost as xgb
 
 from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized
 from ReczillaClassifier.dataset_families import get_all_datasets, dataset_family_lookup, get_dataset_families
@@ -9,6 +11,28 @@ from ReczillaClassifier.dataset_families import family_map as dataset_family_map
 ALL_DATASET_FAMILIES = sorted(get_dataset_families())
 
 METADATASET_NAME = "metadata-v1.1"
+
+def run_metalearner(model_name, X_train, y_train, X_test):
+    """
+
+    Args:
+        model_name: "xgboost", "knn"
+        X_train: training data
+        y_train: training target
+        X_test: testing data
+
+    Returns:
+        preds: predictions
+    """
+    if model_name == "xgboost":
+        base_model = xgb.XGBRegressor(objective='reg:squarederror')
+        model = RegressorChain(base_model)
+        model.fit(X_train, y_train)
+        preds = model.predict(X_test)
+    else:
+        raise NotImplementedError("{} not implemented".format(model_name))
+
+    return preds
 
 def perc_diff_from_best(labels, outputs, y_test, preds):
     diff = []

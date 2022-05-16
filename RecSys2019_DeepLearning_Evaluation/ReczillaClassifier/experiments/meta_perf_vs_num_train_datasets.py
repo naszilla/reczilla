@@ -8,11 +8,10 @@ from sklearn.metrics import accuracy_score, precision_score
 from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized
 from ReczillaClassifier.dataset_families import get_all_datasets, dataset_family_lookup, get_dataset_families
 from ReczillaClassifier.dataset_families import family_map as dataset_family_map
+from ReczillaClassifier.classifier import run_metalearner
 
 from ReczillaClassifier.classifier import perc_diff_from_best, perc_diff_from_worst, get_metrics, get_cached_featurized, ALL_DATASET_FAMILIES, METADATASET_NAME
 
-from sklearn.multioutput import RegressorChain
-import xgboost as xgb
 from tqdm import tqdm
 
 ############### CONSTANTS ###############################
@@ -25,6 +24,7 @@ test_datasets = list(dataset_family_map.get(test_dataset_family, (test_dataset_f
 ###############
 
 final_metrics = DefaultDict(list)
+metalearners = ["xgboost"]
 
 for num_train in tqdm(range(2, 20, 2)):
     try:
@@ -40,11 +40,15 @@ for num_train in tqdm(range(2, 20, 2)):
 
             X_train, y_train, X_test, y_test = get_cached_featurized(METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets)
 
-            base_model = xgb.XGBRegressor(objective='reg:squarederror')
-            model = RegressorChain(base_model)
-            model.fit(X_train, y_train)
-            
-            preds = model.predict(X_test)
+            # base_model = xgb.XGBRegressor(objective='reg:squarederror')
+            # model = RegressorChain(base_model)
+            # model.fit(X_train, y_train)
+            # preds = model.predict(X_test)
+
+            # TODO: Use this loop to aggregate results for all metalearners
+            for metalearner in metalearners:
+                preds = run_metalearner(metalearner, X_train, y_train, X_test)
+
             metrics = get_metrics(y_test, preds)
             all_metrics.append(metrics)
 
