@@ -150,7 +150,8 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
 
 
 # Metafeature selection
-def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, selected_algs=None, by_alg_family=False):
+def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, selected_algs=None, by_alg_family=False,
+                          filter_nans=True):
     """Compute correlation between each metafeature and the desired metric for all selected algorithms.
     Dataframe result is num_features x num_algorithms."""
     print("Computing correlations...")
@@ -161,6 +162,11 @@ def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, sele
             selected_algs = metafeats["alg_family"].unique()
 
     all_features = [col for col in metafeats.columns if col.startswith("f_")]
+    if filter_nans:
+        nan_counts = metafeats[[col for col in metafeats.columns if col.startswith("f_")]].isna().sum(axis=0)
+        exclude_feats = nan_counts[nan_counts > 0].index
+        all_features = [feat for feat in all_features if feat not in exclude_feats]
+
     # Sanity check to prevent leakage
     for family_name in exclude_dataset_families:
         assert family_name in metafeats['dataset_family'].values
@@ -177,6 +183,7 @@ def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, sele
             #                                                method="spearman")
         else:
             filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_param_name"] == alg)]
+            #frequencies = filtered_results['dataset_family'].map(filtered_results['dataset_family'].value_counts())
             alg_cors = filtered_results[all_features].corrwith(filtered_results[metric_name],
                                                                method="spearman")
 
