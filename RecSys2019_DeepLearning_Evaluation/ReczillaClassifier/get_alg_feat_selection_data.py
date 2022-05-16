@@ -66,12 +66,16 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
         raise Exception(f"metric_name {metric_name} not found in metafeats dataframe.")
 
     # Sanity check to prevent leakage
-    for family_name in exclude_dataset_families:
-        assert family_name in metafeats['dataset_family'].values
+    if exclude_dataset_families is not None:
+        for family_name in exclude_dataset_families:
+            assert family_name in metafeats['dataset_family'].values
 
     # exclude some dataset families
     # create a temporary df for use in this function
-    tmp_df = metafeats.loc[~metafeats['dataset_family'].isin(exclude_dataset_families), :].copy()
+    if exclude_dataset_families is None:
+        tmp_df = metafeats.copy()
+    else:
+        tmp_df = metafeats.loc[~metafeats['dataset_family'].isin(exclude_dataset_families), :].copy()
 
     # require that there is only one result for each dataset + parameterized alg pair. if not, drop duplicates (keep first).
     pair_counts = tmp_df.groupby(["original_split_path", "alg_param_name"]).size().rename("size").reset_index()
@@ -81,7 +85,7 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
         raise Exception(e)
 
     if len(tmp_df) == 0:
-        raise Exception(f"no rows found for dataset_family_list = {dataset_family_list}")
+        raise Exception(f"no rows found after excluding dataset_family_list {dataset_family_list}")
 
     # for all datasets, find the best (maximum) metric achieved by any parameterized algs
     # all datasets are uniquely identified by their original path on gcloud (original_split_path)
@@ -97,19 +101,15 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
     # calculate the pct-difference-from-best for each parameterized alg (row) in the meta-dataset
     tmp_df.loc[:, "pct_diff_opt"] = 100.0 * (tmp_df[metric_name].values - tmp_df["max_metric"].values) / tmp_df["max_metric"].values
 
-    # function for calculating coverage
-    def coverage(alg_subset):
-        # return the average pct_diff_from_opt for the *best* parameterized alg in the subset, over all datasets
-        # this assumes that there is exactly one metric for each dataset + parameterized alg (we check for this above)
-        subset_rows = tmp_df["alg_param_name"].isin(alg_subset)
+    # create a list of performance on each dataset (ordered by list "all_datasets") , for all parameterized algs
+    performance_dict = dict()
+    for alg_param in tmp_df["alg_param_name"].unique():
+        alg_df = tmp_df.loc[tmp_df["alg_param_name"] == alg_param, ["original_split_path", "pct_diff_opt"]].set_index("original_split_path").to_dict()
+        performance_dict[alg_param] = np.array([alg_df["pct_diff_opt"].get(dataset, np.nan) for dataset in all_datasets])
 
-        best_pct_dict = tmp_df.loc[subset_rows, :].groupby("original_split_path")["pct_diff_opt"].max().to_dict()
-        for dataset in all_datasets:
-            if dataset not in best_pct_dict:
-                best_pct_dict[dataset] = np.nan
-
-        return list(best_pct_dict.values())
-
+    def coverage_fast(old_coverage, alg_param):
+        """compare the old coverage to the alg coverage, using performance_dict"""
+        return np.nanmax(np.stack([old_coverage, performance_dict[alg_param]]), axis=0)
 
     ###################################
     # greedy algorithm subset selection
@@ -117,19 +117,24 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
     selected_algs = []
     candidate_algs = all_algs.copy()  # all algs that we can select from
 
+    # keep track of the current coverage
+    current_coverage = np.array([np.nan for _ in all_datasets])
+
     for i_step in range(num_algs):
         my_print(f"[select_algs] beginning step {i_step + 1} of {num_algs}", verbose)
         if len(candidate_algs) == 0:
             raise Exception("no candidate algs left to select from.")
 
         # add the algorithm that results in the largest coverage for the subset
+        cov_list = []
         avg_coverage_list = []  # avg. coverage over all datasets
         sum_coverage_list = []  # sum of coverage over all datasets (for tiebreaking)
         for i_alg, alg_name in enumerate(candidate_algs):
             # calculate the average coverage over all datasets
-            cov = coverage(selected_algs + [alg_name])
-            avg_coverage_list.append(np.mean(cov))  # mean of covg over all datasets, and nan if any are nan
-            sum_coverage_list.append(np.nansum(cov))  # sum of covg over all datasets, ignoring nan
+            tmp_cov = coverage_fast(current_coverage, alg_name)
+            avg_coverage_list.append(np.mean(tmp_cov))  # mean of covg over all datasets, and nan if any are nan
+            sum_coverage_list.append(np.nansum(tmp_cov))  # sum of covg over all datasets, ignoring nan
+            cov_list.append(tmp_cov)
 
         # if some algs have non-nan avg-coverage, select the alg with the greatest coverage
         if any(np.array(avg_coverage_list) != np.nan):
@@ -143,11 +148,21 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
             add_index = np.random.randint(0, len(candidate_algs))
 
         selected_algs.append(candidate_algs[add_index])
+        current_coverage = cov_list[add_index]
         del candidate_algs[add_index]
 
     my_print(f"done. selected algs: {selected_algs}", verbose)
     return selected_algs
 
+# define functions for weighted correlation
+# from https://stackoverflow.com/questions/38641691/weighted-correlation-coefficient-with-pandas
+def w_cov(x, y, w):
+    """Weighted Covariance"""
+    return np.sum(w * (x - np.average(x, weights=w)) * (y - np.average(y, weights=w))) / np.sum(w)
+
+def weighted_corr(x, y, w):
+    """Weighted Correlation"""
+    return w_cov(x, y, w) / np.sqrt(w_cov(x, x, w) * w_cov(y, y, w))
 
 # Metafeature selection
 def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, selected_algs=None, by_alg_family=False,
@@ -168,9 +183,12 @@ def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, sele
         all_features = [feat for feat in all_features if feat not in exclude_feats]
 
     # Sanity check to prevent leakage
-    for family_name in exclude_dataset_families:
-        assert family_name in metafeats['dataset_family'].values
-    filtered_metafeats = metafeats[~metafeats['dataset_family'].isin(exclude_dataset_families)]
+    if exclude_dataset_families is not None:
+        for family_name in exclude_dataset_families:
+            assert family_name in metafeats['dataset_family'].values
+        filtered_metafeats = metafeats[~metafeats['dataset_family'].isin(exclude_dataset_families)]
+    else:
+        filtered_metafeats = metafeats
 
     all_cors = []
 
@@ -183,9 +201,9 @@ def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, sele
             #                                                method="spearman")
         else:
             filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_param_name"] == alg)]
-            #frequencies = filtered_results['dataset_family'].map(filtered_results['dataset_family'].value_counts())
-            alg_cors = filtered_results[all_features].corrwith(filtered_results[metric_name],
-                                                               method="spearman")
+            frequencies = filtered_results['dataset_family'].map(filtered_results['dataset_family'].value_counts())
+            freq_weighted_corr = lambda x, y: weighted_corr(x, y, 1.0 / frequencies.values)
+            alg_cors = filtered_results[all_features].corrwith(filtered_results[metric_name],                                                        method=freq_weighted_corr)
 
         alg_cors.name = alg
         all_cors.append(alg_cors)
@@ -282,10 +300,10 @@ if __name__ == '__main__':
     metafeats = get_metafeats("metadata-v0")
 
     # test select algs
-    metric_name = 'test_metric_ARHR_ALL_HITS_cut_10'
-    dataset_family_list = list(metafeats["dataset_family"].unique())
-    selected_algs = select_algs(metafeats, [dataset_family_list[0]], metric_name, num_algs=4, verbose=True)
-    print(f"selected_algs: {selected_algs}")
+    metric_name = 'test_metric_PRECISION_cut_10'
+    # dataset_family_list = list(metafeats["dataset_family"].unique())
+    selected_algs = select_algs(metafeats, None, metric_name, num_algs=100, verbose=True)
+    # print(f"selected_algs: {selected_algs}")
     ## example output:
     # [select_algs] beginning step 1 of 4
     # [select_algs] beginning step 2 of 4
@@ -293,3 +311,7 @@ if __name__ == '__main__':
     # [select_algs] beginning step 4 of 4
     # done. selected algs: ['ItemKNNCF:dice_random_0', 'ItemKNNCF:dice_random_41', 'TopPop:default', 'ItemKNNCF:euclidean_random_19']
     # selected_algs: ['ItemKNNCF:dice_random_0', 'ItemKNNCF:dice_random_41', 'TopPop:default', 'ItemKNNCF:euclidean_random_19']
+
+    feats = select_features(metafeats, None, metric_name, selected_algs=selected_algs)
+    print("features:")
+    print(feats)
