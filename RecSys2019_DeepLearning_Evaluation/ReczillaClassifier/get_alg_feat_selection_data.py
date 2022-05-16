@@ -186,11 +186,16 @@ def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, sele
     return all_cors
 
 
-def select_features(metafeats, test_datasets, metric_name, selected_algs=None, num_feats=10):
+def select_features(metafeats, test_datasets, metric_name, selected_algs=None, num_feats=10, filter_nans=True):
     """Select num_feats features. Greedy scheme. At each step, we compute the best correlations
     across all metafeatures for each algorithm so far. We add whichever metafeature can obtain the maximum
     improvement across any single one of the best correlations for the selected algorithms."""
     all_cors = compute_feature_corrs(metafeats, test_datasets, metric_name, selected_algs=selected_algs)
+    if filter_nans:
+        nan_counts = metafeats[[col for col in metafeats.columns if col.startswith("f_")]].isna().sum(axis=0)
+        exclude_feats = nan_counts[nan_counts > 0].index
+        all_cors = all_cors.loc[~all_cors.index.isin(exclude_feats)]
+
     selected_feats = [all_cors.max(axis=1).idxmax()]
 
     while len(selected_feats) < num_feats:
