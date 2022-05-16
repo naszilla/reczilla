@@ -6,9 +6,12 @@ warnings.filterwarnings(action='ignore', category=UserWarning)
 import pickle
 from tqdm import tqdm
 from ReczillaClassifier.dataset_families import dataset_family_lookup
+from functools import lru_cache
+from datetime import datetime
 
 RESULTS_DIR = "metadatasets"
 
+@lru_cache(maxsize=None)
 def get_metafeats(metadataset_filename):
     """Merge metafeatures and metadataset. Return as dataframe."""
     metadataset_fn = f"{RESULTS_DIR}/{metadataset_filename}.pkl"
@@ -210,12 +213,18 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
 
     if train_datasets is not None:
         # TODO: The functionality of this line might be broken
-        # metafeats = metafeats[metafeats['dataset_family'].isin(train_datasets + test_datasets)]
-        raise NotImplementedError
+        train_dataset_families = [dataset_family_lookup(train_dataset) for train_dataset in train_datasets]
+        metafeats = metafeats[metafeats['dataset_family'].isin(train_dataset_families + exclude_test_dataset_families)]
 
+    time = datetime.now()
     # TODO: This function to be updated
+    print("selecting algs and features..")
     selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name)
+    print("done selecting algs in : ", datetime.now() - time)
+
+    time = datetime.now()
     selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs)
+    print("done selecting features in : ", datetime.now() - time)
     
     ##### Featurization
     final_feat_columns = selected_feats
