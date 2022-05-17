@@ -6,6 +6,7 @@ warnings.filterwarnings(action='ignore', category=UserWarning)
 import pickle
 from tqdm import tqdm
 from ReczillaClassifier.dataset_families import dataset_family_lookup
+from ReczillaClassifier.fixed_algs_feats import SELECTED_FEATS_100, SELECTED_ALGS_100
 from functools import lru_cache
 from datetime import datetime
 
@@ -203,7 +204,7 @@ def compute_feature_corrs(metafeats, exclude_dataset_families, metric_name, sele
             filtered_results = filtered_metafeats.loc[(filtered_metafeats["alg_param_name"] == alg)]
             frequencies = filtered_results['dataset_family'].map(filtered_results['dataset_family'].value_counts())
             freq_weighted_corr = lambda x, y: weighted_corr(x, y, 1.0 / frequencies.values)
-            alg_cors = filtered_results[all_features].corrwith(filtered_results[metric_name],                                                        method=freq_weighted_corr)
+            alg_cors = filtered_results[all_features].corrwith(filtered_results[metric_name], method=freq_weighted_corr)
 
         alg_cors.name = alg
         all_cors.append(alg_cors)
@@ -235,7 +236,7 @@ def select_features(metafeats, test_datasets, metric_name, selected_algs=None, n
 
 
 # TODO: pass number of algs & number of meta-features as an arg to this function
-def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None):
+def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False):
     # TODO: Filter based on minimum number of alg_param_name samples?
     metafeats = get_metafeats(dataset_name)
 
@@ -249,11 +250,11 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     time = datetime.now()
     # TODO: This function to be updated
     print("selecting algs and features..")
-    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name)
+    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name) if not fixed_algs_feats else SELECTED_ALGS_100[:10]
     print("done selecting algs in : ", datetime.now() - time)
 
     time = datetime.now()
-    selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs)
+    selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs) if not fixed_algs_feats else SELECTED_FEATS_100[:10]
     print("done selecting features in : ", datetime.now() - time)
     
     ##### Featurization
