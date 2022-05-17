@@ -5,6 +5,7 @@ These notebooks create a meta-dataset for all RecZilla experiments, using aggreg
 **v0:** uses only results from the workshop submission
 **v1:** uses all new results for the NeurIPS submission (as of May 9)
 **v1.1:** uses all new results for the NeurIPS submission (as of May 13)
+**v2:** this includes all experiments for the NeurIPS submission (May 16)
 
 ### meta-datasets
 
@@ -12,6 +13,7 @@ The meta-datasets can be downloaded from google drive. These should be read as a
 - v0 meta-dataset: this includes only the results from our workshop submission: [https://storage.cloud.google.com/reczilla-results/meta-datasets/metadata-v0.pkl](metadata-v0.pkl)
 - v1: this includes all results that have completed by May 9: [https://storage.cloud.google.com/reczilla-results/meta-datasets/metadata-v1.pkl](metadata-v1.pkl)
 - v1.1: this includes all results that have completed by May 13: [https://storage.cloud.google.com/reczilla-results/meta-datasets/metadata-v1.1.pkl](metadata-v1.1.pkl)
+- v2: https://storage.cloud.google.com/reczilla-results/meta-datasets/metadata-v2.pkl?authuser=7
   
 In these datasets, there is one row for each combination of algorhtm + hyperparameter set + dataset split. The important columns are:
 - `alg_family`: the algorithm family (e.g. TopPop or UserKNN)
