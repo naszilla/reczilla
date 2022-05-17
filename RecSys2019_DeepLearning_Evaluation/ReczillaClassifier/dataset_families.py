@@ -111,7 +111,7 @@ def dataset_family_lookup(dataset_name, strict_match=True):
     """Looks up the dataset family corresponding to the dataset."""
     if strict_match:
         if dataset_name not in reverse_family_map:
-            raise RuntimeError("Strict match for dataset name not found")
+            raise RuntimeError(f"Strict match for dataset name not found: {dataset_name}")
         return reverse_family_map[dataset_name]
     else:
         return reverse_family_map.get(dataset_name, dataset_name)
