@@ -15,7 +15,7 @@ from ReczillaClassifier.dataset_families import family_map as dataset_family_map
 
 ALL_DATASET_FAMILIES = sorted(get_dataset_families() - set(['GoogleLocalReviewsReader']))
 
-METADATASET_NAME = "metadata-v1.1"
+METADATASET_NAME = "metadata-v2"
 
 def run_metalearner(model_name, X_train, y_train, X_test):
     """
