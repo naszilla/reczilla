@@ -23,7 +23,7 @@ METRIC = "test_metric_PRECISION_cut_10"
 LOGGER = get_logger("meta_perf_vs_num_train_datasets")
 ALL_DATASETS = get_all_datasets()
 META_LEARNERS = ['xgboost', 'random', 'knn']
-FIXED_ALGS_FEATS = False
+FIXED_ALGS_FEATS = True
 
 # test_dataset_family = "Movielens"
 # test_datasets = list(dataset_family_map.get(test_dataset_family, (test_dataset_family, )))
@@ -65,4 +65,4 @@ for test_dataset_family in tqdm(ALL_DATASET_FAMILIES):
     # print_special("ALL RESULTS: \n", LOGGER)
 
     # print_special(f"{final_metrics}", LOGGER)
-pickle.dump(final_metrics, open("ReczillaClassifier/results/meta_perf_vs_num_train.pkl", "wb"))
+pickle.dump(final_metrics, open(f"ReczillaClassifier/results/meta_perf_vs_num_train_{'fixed' if FIXED_ALGS_FEATS else ''}.pkl", "wb"))
