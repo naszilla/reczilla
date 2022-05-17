@@ -70,6 +70,14 @@ def perc_diff_from_best_global(outputs, y_test, y_range_test):
         diff.append(m)
     return np.nanmean(diff)
 
+def perc_diff_from_worst_global(outputs, y_test, y_range_test):
+    diff = []
+    for output, label_score, score_range in zip(outputs, y_test, y_range_test):
+        best, worst = score_range
+        m = abs(label_score[output] - worst) / (best - worst)
+        diff.append(m)
+    return np.nanmean(diff)
+
 def perc_diff_from_best_subset(labels, outputs, y_test, preds):
     diff = []
     for label, output, label_score, output_score in zip(labels, outputs, y_test, preds):
@@ -94,6 +102,7 @@ def get_metrics(y_test, y_range_test, preds):
     # metrics['precision'] = np.mean(precision_score(labels, outputs, average=None))
     metrics['accuracy'] = accuracy_score(labels, outputs)
     metrics["perc_diff_from_best_global"] = perc_diff_from_best_global(outputs, y_test, y_range_test)
+    metrics["perc_diff_from_worst_global"] = perc_diff_from_worst_global(outputs, y_test, y_range_test)
     metrics['perc_diff_from_best_subset'] = perc_diff_from_best_subset(labels, outputs, y_test, preds)
     metrics['perc_diff_from_worst_subset'] = perc_diff_from_worst_subset(labels, outputs, y_test, preds)
     return metrics
