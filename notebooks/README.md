@@ -2,10 +2,10 @@
 
 These notebooks create a meta-dataset for all RecZilla experiments, using aggregated output from all experiments. The only input to this notebook is a CSV produced by the script `process_inbox.py` -- this script reads all zipped results from gcloud and creates an aggregated CSV.
 
-**v0:** uses only results from the workshop submission
-**v1:** uses all new results for the NeurIPS submission (as of May 9)
-**v1.1:** uses all new results for the NeurIPS submission (as of May 13)
-**v2:** this includes all experiments for the NeurIPS submission (May 16)
+- **v0:** uses only results from the workshop submission
+- **v1:** uses all new results for the NeurIPS submission (as of May 9)
+- **v1.1:** uses all new results for the NeurIPS submission (as of May 13)
+- **v2:** this includes all experiments for the NeurIPS submission (May 16)
 
 ### meta-datasets
 
