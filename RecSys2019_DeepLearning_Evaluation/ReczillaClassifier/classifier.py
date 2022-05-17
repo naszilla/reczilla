@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import sys
 from sklearn.metrics import accuracy_score, precision_score
@@ -11,7 +12,7 @@ from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection
 from ReczillaClassifier.dataset_families import get_all_datasets, dataset_family_lookup, get_dataset_families
 from ReczillaClassifier.dataset_families import family_map as dataset_family_map
 
-ALL_DATASET_FAMILIES = sorted(get_dataset_families())
+ALL_DATASET_FAMILIES = sorted(get_dataset_families() - set(['GoogleLocalReviewsReader']))
 
 METADATASET_NAME = "metadata-v1.1"
 
@@ -41,6 +42,13 @@ def run_metalearner(model_name, X_train, y_train, X_test):
         pipe.fit(X_train, y_train)
         preds = pipe.predict(X_test)
 
+    elif model_name == "random":
+        num_algs = len(y_train[0])
+        preds = []
+        for x_t in X_test:
+            one_hot = [0] * num_algs
+            one_hot[random.randint(0, num_algs-1)] = 1
+            preds.append(one_hot)
     else:
         raise NotImplementedError("{} not implemented".format(model_name))
 
