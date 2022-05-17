@@ -93,3 +93,11 @@ def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featu
     if test_families not in cached_featurized or train_datasets is not None:
         cached_featurized[test_families] = alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets, fixed_algs_feats=fixed_algs_feats)
     return cached_featurized[test_families]
+
+if __name__ == "__main__":
+    X_train, y_train, X_test, y_test = get_cached_featurized("test_metric_PRECISION_cut_10", ["AnimeReader"], METADATASET_NAME)
+
+    preds = run_metalearner("logreg", X_train, y_train, X_test)
+    metrics = get_metrics(y_test, preds)
+
+    print(f"metrics: {metrics}")
