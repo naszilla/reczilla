@@ -258,6 +258,10 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     print("done selecting features in : ", datetime.now() - time)
     
     ##### Featurization
+    # TODO: Group by original_split_path instead
+    best_performing = metafeats.groupby("dataset_name")[metric_name].max()
+    worst_performing = metafeats.groupby("dataset_name")[metric_name].min()
+
     final_feat_columns = selected_feats
     X_train = metafeats[metafeats['alg_param_name'].isin(selected_algs) & ~metafeats['dataset_family'].isin(exclude_test_dataset_families)]
 
@@ -269,6 +273,7 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     transforms = {f: 'last' for f in final_feat_columns}
     transforms.update({metric_col_name: list, 'alg_param_name': list})
 
+    # TODO: group by original_split_path instead
     X_train_grouped = X_train.groupby('dataset_name').agg(transforms)
 
     def get_ordered_target(row):
@@ -292,8 +297,11 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     X_test = X_test_grouped[final_feat_columns].values
     y_test = np.array(X_test_grouped['target'].to_list())
     # y_test = y_test.tolist()
+    y_best_test = best_performing.loc[X_test_grouped.index].values
+    y_worst_test = worst_performing.loc[X_test_grouped.index].values
+    y_range_test = np.stack([y_best_test, y_worst_test], axis=-1)
     
-    return X_train, y_train, X_test, y_test
+    return X_train, y_train, X_test, y_test, y_range_test
 
 # Test code
 if __name__ == '__main__':

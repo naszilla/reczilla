@@ -10,7 +10,7 @@ from ReczillaClassifier.dataset_families import get_all_datasets, dataset_family
 from ReczillaClassifier.dataset_families import family_map as dataset_family_map
 from ReczillaClassifier.utils import get_logger, print_special
 
-from ReczillaClassifier.classifier import perc_diff_from_best, perc_diff_from_worst, get_metrics, get_cached_featurized, ALL_DATASET_FAMILIES, METADATASET_NAME
+from ReczillaClassifier.classifier import perc_diff_from_best_subset, perc_diff_from_worst_subset, get_metrics, get_cached_featurized, ALL_DATASET_FAMILIES, METADATASET_NAME
 
 from sklearn.multioutput import RegressorChain
 from sklearn.dummy import DummyRegressor
@@ -56,8 +56,8 @@ for ml in META_LEARNERS:
     accuracies = [m['accuracy'] for m in all_metrics]
     print_special(f"Average leave-one-out accuracy is: {round(100 * np.mean(accuracies), 1)}", LOGGER)
 
-    perc_diff_best = [m['perc_diff_from_best'] for m in all_metrics]
+    perc_diff_best = [m['perc_diff_from_best_subset'] for m in all_metrics]
     print_special(f"Average leave-one-out percentage_diff_from_best is: {round(100 * np.mean(perc_diff_best), 1)}", LOGGER)
 
-    perc_diff_worst = [m['perc_diff_from_worst'] for m in all_metrics]
+    perc_diff_worst = [m['perc_diff_from_worst_subset'] for m in all_metrics]
     print_special(f"Average leave-one-out percentage_diff_from_worst is: {round(100 * np.nanmean(perc_diff_worst), 1)}", LOGGER)

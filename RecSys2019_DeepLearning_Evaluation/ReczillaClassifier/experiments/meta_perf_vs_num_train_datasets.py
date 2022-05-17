@@ -12,7 +12,7 @@ from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection
 from ReczillaClassifier.dataset_families import get_all_datasets, dataset_family_lookup, get_dataset_families
 from ReczillaClassifier.dataset_families import family_map as dataset_family_map
 
-from ReczillaClassifier.classifier import perc_diff_from_best, perc_diff_from_worst, get_metrics, get_cached_featurized, ALL_DATASET_FAMILIES, METADATASET_NAME, run_metalearner
+from ReczillaClassifier.classifier import perc_diff_from_best_subset, perc_diff_from_worst_subset, get_metrics, get_cached_featurized, ALL_DATASET_FAMILIES, METADATASET_NAME, run_metalearner
 
 from sklearn.multioutput import RegressorChain
 import xgboost as xgb
@@ -49,11 +49,13 @@ for test_dataset_family in tqdm(ALL_DATASET_FAMILIES):
             for tdf in train_dataset_families[num_train - jump:num_train]:
                 train_datasets += list(dataset_family_map.get(tdf, (tdf, )))
 
-            X_train, y_train, X_test, y_test = get_cached_featurized(METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets, fixed_algs_feats=FIXED_ALGS_FEATS)
+            X_train, y_train, X_test, y_test, y_range_test = get_cached_featurized(
+                METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets,
+                fixed_algs_feats=FIXED_ALGS_FEATS)
 
             for ml in META_LEARNERS:
                 preds = run_metalearner(ml, X_train, y_train, X_test)
-                metrics = get_metrics(y_test, preds)
+                metrics = get_metrics(y_test, y_range_test, preds)
                 all_metrics[ml].append(metrics)
             
             all_metrics['num_train'].append(num_train)
