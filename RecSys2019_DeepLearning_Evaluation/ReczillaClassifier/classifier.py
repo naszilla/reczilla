@@ -6,6 +6,7 @@ from sklearn.multioutput import RegressorChain
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 import xgboost as xgb
 
 from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized
@@ -39,6 +40,12 @@ def run_metalearner(model_name, X_train, y_train, X_test):
         n_training_samples = X_train.shape[0]
         pipe = Pipeline([("scaler", StandardScaler()),
                          ("knn", KNeighborsRegressor(n_neighbors=min(n_neighbors, n_training_samples)))])
+        pipe.fit(X_train, y_train)
+        preds = pipe.predict(X_test)
+
+    elif model_name == "logreg":
+        pipe = Pipeline([("scaler", StandardScaler()),
+                         ("logreg", LogisticRegression(solver='lbfgs', multi_class='multinomial', C=10))])
         pipe.fit(X_train, y_train)
         preds = pipe.predict(X_test)
 
