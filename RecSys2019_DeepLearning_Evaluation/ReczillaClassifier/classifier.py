@@ -81,8 +81,8 @@ def get_metrics(y_test, preds):
     metrics['perc_diff_from_worst'] = perc_diff_from_worst(labels, outputs, y_test, preds)
     return metrics
 
-def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None):
+def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None, fixed_algs_feats=False):
     test_families = tuple(sorted(set(dataset_family_lookup(test_dataset) for test_dataset in test_datasets)))
     if test_families not in cached_featurized or train_datasets is not None:
-        cached_featurized[test_families] = alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets)
+        cached_featurized[test_families] = alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets, fixed_algs_feats=fixed_algs_feats)
     return cached_featurized[test_families]

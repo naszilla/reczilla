@@ -49,7 +49,7 @@ for test_dataset_family in tqdm(ALL_DATASET_FAMILIES):
             for tdf in train_dataset_families[num_train - jump:num_train]:
                 train_datasets += list(dataset_family_map.get(tdf, (tdf, )))
 
-            X_train, y_train, X_test, y_test = get_cached_featurized(METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets)
+            X_train, y_train, X_test, y_test = get_cached_featurized(METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets, fixed_algs_feats=FIXED_ALGS_FEATS)
 
             for ml in META_LEARNERS:
                 preds = run_metalearner(ml, X_train, y_train, X_test)
