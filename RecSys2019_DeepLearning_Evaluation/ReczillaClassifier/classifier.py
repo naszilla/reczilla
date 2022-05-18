@@ -14,6 +14,7 @@ from ReczillaClassifier.dataset_families import get_all_datasets, dataset_family
 from ReczillaClassifier.dataset_families import family_map as dataset_family_map
 
 ALL_DATASET_FAMILIES = sorted(get_dataset_families() - set(['GoogleLocalReviewsReader']))
+META_LEARNERS = ['xgboost', 'random', 'knn', 'linear']
 
 METADATASET_NAME = "metadata-v2"
 

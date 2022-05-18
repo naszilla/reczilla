@@ -12,7 +12,7 @@ from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection
 from ReczillaClassifier.dataset_families import get_all_datasets, dataset_family_lookup, get_dataset_families
 from ReczillaClassifier.dataset_families import family_map as dataset_family_map
 
-from ReczillaClassifier.classifier import perc_diff_from_best_subset, perc_diff_from_worst_subset, get_metrics, get_cached_featurized, ALL_DATASET_FAMILIES, METADATASET_NAME, run_metalearner
+from ReczillaClassifier.classifier import perc_diff_from_best_subset, perc_diff_from_worst_subset, get_metrics, get_cached_featurized, ALL_DATASET_FAMILIES, METADATASET_NAME, run_metalearner, META_LEARNERS
 
 from sklearn.multioutput import RegressorChain
 import xgboost as xgb
@@ -22,7 +22,6 @@ from tqdm import tqdm
 METRIC = "test_metric_PRECISION_cut_10"
 LOGGER = get_logger("meta_perf_vs_num_train_datasets")
 ALL_DATASETS = get_all_datasets()
-META_LEARNERS = ['xgboost', 'random', 'knn']
 FIXED_ALGS_FEATS = True
 
 # test_dataset_family = "Movielens"
