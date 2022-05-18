@@ -235,8 +235,12 @@ def select_features(metafeats, test_datasets, metric_name, selected_algs=None, n
     return selected_feats
 
 
-# TODO: pass number of algs & number of meta-features as an arg to this function
-def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False):
+def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10):
+    
+    # TODO: num_algs and num_feats parameters are currently only implemented for fixed_alg_feats=True
+    if not fixed_algs_feats and (num_algs != 10 or num_feats != 10):
+        print('WARNING: alg/feat selection are hard-coded to 10!')
+    
     # TODO: Filter based on minimum number of alg_param_name samples?
     metafeats = get_metafeats(dataset_name)
 
@@ -250,11 +254,11 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     time = datetime.now()
     # TODO: This function to be updated
     print("selecting algs and features..")
-    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name) if not fixed_algs_feats else SELECTED_ALGS_100[:10]
+    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name) if not fixed_algs_feats else SELECTED_ALGS_100[:num_algs]
     print("done selecting algs in : ", datetime.now() - time)
 
     time = datetime.now()
-    selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs) if not fixed_algs_feats else SELECTED_FEATS_100[:10]
+    selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs) if not fixed_algs_feats else SELECTED_FEATS_100[:num_feats]
     print("done selecting features in : ", datetime.now() - time)
     
     ##### Featurization

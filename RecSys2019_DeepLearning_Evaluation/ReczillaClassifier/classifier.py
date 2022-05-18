@@ -93,6 +93,12 @@ def perc_diff_from_worst_subset(labels, outputs, y_test, preds):
         diff.append(m)
     return np.nanmean(diff)
 
+def get_mae(labels, outputs, y_test, preds):
+    mae = []
+    for label, output, label_score, output_score in zip(labels, outputs, y_test, preds):
+        mae.append(np.mean(np.abs(label_score - output_score)))
+    return np.nanmean(mae)
+
 def get_metrics(y_test, y_range_test, preds):
     metrics = {}
     labels = [np.argmax(yt) for yt in y_test]
@@ -103,15 +109,17 @@ def get_metrics(y_test, y_range_test, preds):
     # metrics['precision'] = np.mean(precision_score(labels, outputs, average=None))
     metrics['accuracy'] = accuracy_score(labels, outputs)
     metrics["perc_diff_from_best_global"] = perc_diff_from_best_global(outputs, y_test, y_range_test)
-    metrics["perc_diff_from_worst_global"] = perc_diff_from_worst_global(outputs, y_test, y_range_test)
+    #metrics["perc_diff_from_worst_global"] = perc_diff_from_worst_global(outputs, y_test, y_range_test)
     metrics['perc_diff_from_best_subset'] = perc_diff_from_best_subset(labels, outputs, y_test, preds)
-    metrics['perc_diff_from_worst_subset'] = perc_diff_from_worst_subset(labels, outputs, y_test, preds)
+    #metrics['perc_diff_from_worst_subset'] = perc_diff_from_worst_subset(labels, outputs, y_test, preds)
+    metrics['mae'] = get_mae(labels, outputs, y_test, preds)
     return metrics
 
-def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None, fixed_algs_feats=False):
+def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10):
     test_families = tuple(sorted(set(dataset_family_lookup(test_dataset) for test_dataset in test_datasets)))
     if test_families not in cached_featurized or train_datasets is not None:
-        cached_featurized[test_families] = alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets, fixed_algs_feats=fixed_algs_feats)
+        cached_featurized[test_families] = alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets, 
+                                                                            fixed_algs_feats=fixed_algs_feats, num_algs=num_algs, num_feats=num_feats)
     return cached_featurized[test_families]
 
 if __name__ == "__main__":
