@@ -23,11 +23,11 @@ METRIC = "test_metric_PRECISION_cut_10"
 LOGGER = get_logger("meta_perf_vs_num_feats")
 ALL_DATASETS = get_all_datasets()
 FIXED_ALGS_FEATS = True
-NUM_TRIALS = 200
+NUM_TRIALS = 50
 JUMP = 2
 NUM_ALGS = 10
 NUM_TRAIN = 10
-NUM_FEATS_LIST = [1, 2, 3, 6, 10, 19, 35, 64, 117, 211, 382]
+NUM_FEATS_LIST = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]
 # computed using 
 # [int(j) for j in np.logspace(start=0.9, stop=np.log(382)/np.log(2), num=10, endpoint=True, base=2.0)]
 # and then adding "2"

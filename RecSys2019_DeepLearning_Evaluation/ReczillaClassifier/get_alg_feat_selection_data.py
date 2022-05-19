@@ -251,7 +251,6 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
         # TODO: The functionality of this line might be broken
         train_dataset_families = [dataset_family_lookup(train_dataset) for train_dataset in train_datasets]
         metafeats = metafeats[metafeats['dataset_family'].isin(train_dataset_families + exclude_test_dataset_families)]
-    print(metafeats.shape, "shape")
 
     time = datetime.now()
     # TODO: This function to be updated
