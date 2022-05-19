@@ -115,12 +115,14 @@ def get_metrics(y_test, y_range_test, preds):
     metrics['mae'] = get_mae(labels, outputs, y_test, preds)
     return metrics
 
-def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_alg_feats=False):
+def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False, random_feats=False):
     test_families = tuple(sorted(set(dataset_family_lookup(test_dataset) for test_dataset in test_datasets)))
     if test_families not in cached_featurized or train_datasets is not None:
         cached_featurized[test_families] = alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets, 
                                                                             fixed_algs_feats=fixed_algs_feats, num_algs=num_algs, num_feats=num_feats,
-                                                                            random_alg_feats=random_alg_feats)
+                                                                            random_algs=random_algs,
+                                                                            random_feats=random_feats
+                                                                            )
     return cached_featurized[test_families]
 
 if __name__ == "__main__":
