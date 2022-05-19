@@ -23,11 +23,11 @@ METRIC = "test_metric_PRECISION_cut_10"
 LOGGER = get_logger("meta_perf_vs_num_feats")
 ALL_DATASETS = get_all_datasets()
 FIXED_ALGS_FEATS = True
-NUM_TRIALS = 200
+NUM_TRIALS = 50
 JUMP = 2
 NUM_ALGS = 10
 NUM_TRAIN = 10
-NUM_FEATS_LIST = [1, 2, 3, 6, 10, 19, 35, 64, 117, 211, 382]
+NUM_FEATS_LIST = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]
 # computed using 
 # [int(j) for j in np.logspace(start=0.9, stop=np.log(382)/np.log(2), num=10, endpoint=True, base=2.0)]
 # and then adding "2"
@@ -57,7 +57,7 @@ for test_dataset_family in tqdm(ALL_DATASET_FAMILIES):
 
             X_train, y_train, X_test, y_test, y_range_test = get_cached_featurized(
                 METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets,
-                fixed_algs_feats=FIXED_ALGS_FEATS, num_algs=NUM_ALGS, num_feats=num_feats)
+                fixed_algs_feats=FIXED_ALGS_FEATS, num_algs=NUM_ALGS, num_feats=num_feats, random_feats=True)
 
             for ml in META_LEARNERS:
                 preds = run_metalearner(ml, X_train, y_train, X_test)

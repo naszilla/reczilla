@@ -9,6 +9,7 @@ from ReczillaClassifier.dataset_families import dataset_family_lookup
 from ReczillaClassifier.fixed_algs_feats import SELECTED_FEATS_100, SELECTED_ALGS_100
 from functools import lru_cache
 from datetime import datetime
+import random
 
 RESULTS_DIR = "metadatasets"
 
@@ -235,7 +236,7 @@ def select_features(metafeats, test_datasets, metric_name, selected_algs=None, n
     return selected_feats
 
 
-def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10):
+def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False, random_feats=False):
     
     # TODO: num_algs and num_feats parameters are currently only implemented for fixed_alg_feats=True
     if not fixed_algs_feats and (num_algs != 10 or num_feats != 10):
@@ -255,11 +256,21 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     # TODO: This function to be updated
     print("selecting algs and features..")
     selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name) if not fixed_algs_feats else SELECTED_ALGS_100[:num_algs]
+    if random_algs:
+        selected_algs = SELECTED_ALGS_100[:40]
+        random.shuffle(selected_algs)
+        selected_algs = selected_algs[:num_algs]
     print("done selecting algs in : ", datetime.now() - time)
 
     time = datetime.now()
     selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs) if not fixed_algs_feats else SELECTED_FEATS_100[:num_feats]
+    if random_feats:
+        selected_feats = SELECTED_FEATS_100[:40]
+        random.shuffle(selected_feats)
+        selected_feats = selected_feats[:num_feats]
+
     print("done selecting features in : ", datetime.now() - time)
+    # print(test_datasets, num_algs, selected_algs, selected_feats)
     
     ##### Featurization
     # TODO: Group by original_split_path instead
