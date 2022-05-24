@@ -89,7 +89,7 @@ do
 
     LOG_FILE=${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt
 
-    run_experiment "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_FILE} 2>&1 &
+    run_experiment_GPU "${arg_str}" ${split_path_on_bucket} ${instance_name} >> ${LOG_FILE} 2>&1 &
 
     # add instance name to the instance list
     instance_list+=("${instance_name}")
