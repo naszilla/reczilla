@@ -37,7 +37,7 @@ bucket_base=gs://reczilla-results/dataset-splits/splits-v5
 
 # load functions and variables
 source ../utils.sh
-source v5_dataset_list.sh
+source ../neurips_experiments/v5_dataset_list.sh
 
 # set trap to sync log files and delete all instances
 mkdir ${PWD}/logs
