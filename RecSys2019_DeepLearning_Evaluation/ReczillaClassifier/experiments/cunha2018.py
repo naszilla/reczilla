@@ -50,7 +50,7 @@ for test_dataset_family in tqdm(ALL_DATASET_FAMILIES):
 
         X_train, y_train, X_test, y_test, y_range_test = get_cached_featurized(
             METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets,
-            fixed_algs_feats=FIXED_ALGS_FEATS, num_algs=NUM_ALGS, num_feats=NUM_FEATS, compare_cunha='cunha-2018')
+            fixed_algs_feats=FIXED_ALGS_FEATS, num_algs=NUM_ALGS, num_feats=NUM_FEATS, compare_cunha='cunha-2018', random_feats=True)
 
         for ml in ('svm-poly', ):
             preds = run_metalearner(ml, X_train, y_train, X_test)

@@ -50,7 +50,7 @@ for test_dataset_family in tqdm(ALL_DATASET_FAMILIES):
 
         X_train, y_train, X_test, y_test, y_range_test = get_cached_featurized(
             METRIC, test_datasets, METADATASET_NAME, cached_featurized, train_datasets,
-            fixed_algs_feats=FIXED_ALGS_FEATS, num_algs=NUM_ALGS, num_feats=NUM_FEATS, compare_cunha='cf4cf')
+            fixed_algs_feats=FIXED_ALGS_FEATS, num_algs=NUM_ALGS, num_feats=NUM_FEATS, compare_cunha='cf4cf', random_feats=True)
 
         for ml in META_LEARNERS:
             if ml != 'knn':
