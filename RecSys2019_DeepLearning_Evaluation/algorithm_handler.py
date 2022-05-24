@@ -484,7 +484,7 @@ def algorithm_handler(algorithm_name):
                 "p_dims"
             ] = None  # TODO: this uses default. define a reasonable parameter range
             # fit_keyword_args["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
-            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
+            fit_keyword_args["epochs"] = 200
             fit_keyword_args["batch_size"] = 500
 
         elif alg is DELF_EF_RecommenderWrapper or alg is DELF_MLP_RecommenderWrapper:
