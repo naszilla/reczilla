@@ -1,4 +1,3 @@
-from cv2 import compare
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np
