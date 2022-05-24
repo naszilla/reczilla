@@ -7,6 +7,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge
+from sklearn.svm import SVR
 import xgboost as xgb
 
 from ReczillaClassifier.get_alg_feat_selection_data import alg_feature_selection_featurized
@@ -47,6 +48,13 @@ def run_metalearner(model_name, X_train, y_train, X_test):
     elif model_name == "linear":
         pipe = Pipeline([("scaler", StandardScaler()),
                          ("linear", MultiOutputRegressor(Ridge(alpha=10))),
+                          ])
+        pipe.fit(X_train, y_train)
+        preds = pipe.predict(X_test)
+    
+    elif model_name == "svm-poly":
+        pipe = Pipeline([("scaler", StandardScaler()),
+                         ("svm-poly", MultiOutputRegressor(SVR(kernel='poly'))),
                           ])
         pipe.fit(X_train, y_train)
         preds = pipe.predict(X_test)
@@ -99,6 +107,12 @@ def get_mae(labels, outputs, y_test, preds):
         mae.append(np.mean(np.abs(label_score - output_score)))
     return np.nanmean(mae)
 
+def get_perf_of_best_predicted(labels, outputs, y_test, preds):
+    perf_best_predicted = []
+    for label, output, label_score, output_score in zip(labels, outputs, y_test, preds):
+        perf_best_predicted.append(label_score[output])
+    return np.nanmean(perf_best_predicted)
+
 def get_metrics(y_test, y_range_test, preds):
     metrics = {}
     labels = [np.argmax(yt) for yt in y_test]
@@ -113,15 +127,17 @@ def get_metrics(y_test, y_range_test, preds):
     metrics['perc_diff_from_best_subset'] = perc_diff_from_best_subset(labels, outputs, y_test, preds)
     #metrics['perc_diff_from_worst_subset'] = perc_diff_from_worst_subset(labels, outputs, y_test, preds)
     metrics['mae'] = get_mae(labels, outputs, y_test, preds)
+    metrics['perf_of_best_predicted'] = get_perf_of_best_predicted(labels, outputs, y_test, preds)
     return metrics
 
-def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False, random_feats=False):
+def get_cached_featurized(metric_name, test_datasets, dataset_name, cached_featurized = {}, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False, random_feats=False, compare_cunha=None):
     test_families = tuple(sorted(set(dataset_family_lookup(test_dataset) for test_dataset in test_datasets)))
     if test_families not in cached_featurized or train_datasets is not None:
         cached_featurized[test_families] = alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets, 
                                                                             fixed_algs_feats=fixed_algs_feats, num_algs=num_algs, num_feats=num_feats,
                                                                             random_algs=random_algs,
-                                                                            random_feats=random_feats
+                                                                            random_feats=random_feats,
+                                                                            compare_cunha=compare_cunha
                                                                             )
     return cached_featurized[test_families]
 

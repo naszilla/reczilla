@@ -1,3 +1,4 @@
+from cv2 import compare
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np
@@ -235,8 +236,20 @@ def select_features(metafeats, test_datasets, metric_name, selected_algs=None, n
                               .idxmax())
     return selected_feats
 
+def filter_for_cunha(selected_algs, selected_feats, compare_cunha):
+    
+    assert compare_cunha in ('cf4cf', 'cunha-2018')
 
-def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False, random_feats=False):
+    if compare_cunha == 'cf4cf':
+        algs = [alg for alg in selected_algs if 'default' in alg]
+        feats = [feat for feat in selected_feats]
+    elif compare_cunha == 'cunha-2018':
+        algs = [alg for alg in selected_algs if 'default' in alg]
+        feats = [feat for feat in selected_feats if '_landmarker' not in feat]
+    return algs, feats
+
+
+def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False, random_feats=False, compare_cunha=None):
     
     # TODO: num_algs and num_feats parameters are currently only implemented for fixed_alg_feats=True
     if not fixed_algs_feats and (num_algs != 10 or num_feats != 10):
@@ -251,21 +264,30 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
         # TODO: The functionality of this line might be broken
         train_dataset_families = [dataset_family_lookup(train_dataset) for train_dataset in train_datasets]
         metafeats = metafeats[metafeats['dataset_family'].isin(train_dataset_families + exclude_test_dataset_families)]
+    
+    fixed_algs = SELECTED_ALGS_100.copy()
+    fixed_feats = SELECTED_FEATS_100.copy()
+
+    if compare_cunha:
+        if fixed_algs_feats:
+            fixed_algs, fixed_feats = filter_for_cunha(fixed_algs, fixed_feats, compare_cunha)
+        else:
+            raise NotImplementedError
 
     time = datetime.now()
     # TODO: This function to be updated
     print("selecting algs and features..")
-    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name) if not fixed_algs_feats else SELECTED_ALGS_100[:num_algs]
+    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name) if not fixed_algs_feats else fixed_algs[:num_algs]
     if random_algs:
-        selected_algs = SELECTED_ALGS_100[:40]
+        selected_algs = fixed_algs[:40]
         random.shuffle(selected_algs)
         selected_algs = selected_algs[:num_algs]
     print("done selecting algs in : ", datetime.now() - time)
 
     time = datetime.now()
-    selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs) if not fixed_algs_feats else SELECTED_FEATS_100[:num_feats]
+    selected_feats = select_features(metafeats, exclude_test_dataset_families, metric_name, selected_algs) if not fixed_algs_feats else fixed_feats[:num_feats]
     if random_feats:
-        selected_feats = SELECTED_FEATS_100[:40]
+        selected_feats = fixed_feats[:40]
         random.shuffle(selected_feats)
         selected_feats = selected_feats[:num_feats]
 
