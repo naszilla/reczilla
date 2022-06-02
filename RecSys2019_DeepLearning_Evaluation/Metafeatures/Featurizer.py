@@ -2,12 +2,10 @@ from Data_manager.DataSplitter import DataSplitter
 import Metafeatures.DistributionFeatures
 import Metafeatures.Landmarkers
 import Metafeatures.Basic
-from Metafeatures.utils import register_func
 
 from pathlib import Path
 import pandas as pd
 import time
-from collections import OrderedDict
 
 
 dataset_folder = "../all_data"
