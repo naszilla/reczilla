@@ -3,16 +3,33 @@ from Metafeatures.utils import register_func
 
 import numpy as np
 import scipy.stats
+from collections import OrderedDict
 
 feature_func_lookup = {}
 
-# Returns the entropy of samples in an array. Modelled as discrete distribution.
 def sample_entropy(array):
+    """
+    Returns the entropy of samples in an array. Modeled as discrete distribution.
+    Args:
+        array: Input array
+
+    Returns:
+        Entropy
+    """
     _, counts = np.unique(array, return_counts=True)
     return scipy.stats.entropy(counts, base=2)
 
-# Compute mean across an axis
+
 def sparse_mean(mat, axis=0):
+    """
+    Compute the mean across an axis for sparse matrix mat. Zero entries (missing) are ignored.
+    Args:
+        mat: sparse matrix
+        axis: axis across which to compute the mean
+
+    Returns:
+        sparse mean
+    """
     return np.array(np.sum(mat, axis=axis)).squeeze() / mat.getnnz(axis=axis)
 
 
@@ -24,9 +41,8 @@ aggregation_functions = {
     "std": np.std,
     "median": np.median,
     "mode": lambda mat: scipy.stats.mode(mat)[0][0],
-    #"entropy": scipy.stats.differential_entropy,
     "entropy": sample_entropy,
-    "Gini": gini_index, # Gini index
+    "Gini": gini_index,
     "skewness": scipy.stats.skew,
     "kurtosis": scipy.stats.kurtosis,
 }
@@ -50,17 +66,28 @@ for kind in ["rating", "item", "user"]:
         for agg_func in aggregation_functions.keys():
             feature_list.append((
                 "dist_feature",
-                {
+                OrderedDict({
                     "kind": kind,
                     "pre_agg_func": pre_agg_func,
                     "agg_func": agg_func,
-                }
+                })
             ))
 
 
 # Distribution feature
 @register_func(feature_func_lookup)
 def dist_feature(train_set, kind, agg_func, pre_agg_func=None):
+    """
+    Compute a distribution feature.
+    Args:
+        train_set: train set, URM
+        kind: how to pre aggregate ratings. Can be "user", "item", or "rating" (when not pre-aggregating).
+        agg_func: function to describe distribution.
+        pre_agg_func: function to use to pre-aggregate items.
+
+    Returns:
+
+    """
     if kind == "rating":
         if pre_agg_func:
             raise RuntimeError("Cannot use pre aggregation function when using all ratings")

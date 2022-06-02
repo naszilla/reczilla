@@ -11,6 +11,7 @@ from MatrixFactorization.PureSVDRecommender import PureSVDRecommender
 
 import numpy as np
 import scipy
+from collections import OrderedDict
 
 feature_func_lookup = {}
 
@@ -40,12 +41,21 @@ landmark_algs = {
 }
 
 feature_list = [
-    ("landmarker", {"alg": alg_name}) for alg_name in landmark_algs.keys()
+    ("landmarker", OrderedDict({"alg": alg_name})) for alg_name in landmark_algs.keys()
 ]
 
-# Select =items that are not cold. If less than min_items warm items exist,
-# picks a random subset of the cold items to achieve the min.
+
 def select_warm_items(matrix, min_items):
+    """
+    Select items that are not cold. If less than min_items warm items exist, picks a random subset of the cold items to
+    achieve min_items total.
+    Args:
+        matrix: sparse matrix with ratings
+        min_items: minimum number of items to maintain.
+
+    Returns:
+        matrix sample
+    """
     mask = matrix.getnnz(axis=0) > 0
     item_idcs = np.argwhere(mask).squeeze()
     # Pick some of the cold items if needed
@@ -54,9 +64,18 @@ def select_warm_items(matrix, min_items):
         item_idcs = np.concatenate((item_idcs, np.random.choice(cold_idcs, size=min_items-len(item_idcs), replace=False)))
     return matrix[:, item_idcs]
 
-# Randomly select items from matrix. Ensures each user
-# has at least two items, if possible
+
 def random_item_selection(matrix, num_items, min_items_per_user=2):
+    """
+    Randomly select items from matrix. Ensures each user has at least min_items_per_user items, if possible.
+    Args:
+        matrix: sparse matrix with ratings
+        num_items: number of items to select.
+        min_items_per_user: minimum number of items per user to keep.
+
+    Returns:
+        matrix sample
+    """
     if not type(matrix) is scipy.sparse.csr.csr_matrix:
         matrix = matrix.tocsr()
     nonzero_item_idcs = np.split(matrix.indices, matrix.indptr[1:-1])
@@ -75,9 +94,19 @@ def random_item_selection(matrix, num_items, min_items_per_user=2):
 
     return matrix[:, item_idcs]
 
-# Landmark a basic algorithm
+
 @register_func(feature_func_lookup)
 def landmarker(train_set, alg, random_seed=42):
+    """
+    Landmark a basic algorithm
+    Args:
+        train_set: train set as URM
+        alg: algorithm string, picked from landmark_algs
+        random_seed: random seed to use
+
+    Returns:
+        Dictionary of metrics.
+    """
     np.random.seed(random_seed)
 
     n_users_subsample = 100 # Number of users in the subsample
