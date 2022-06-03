@@ -67,7 +67,7 @@ def featurize_dataset_split(dataset_split_path, feature_func_list=None, feature_
     """
     Featurize the dataset split specified in the path. Return features as dictionary.
     Args:
-        dataset_split_path: Folder that contains the dataset split. Must be a Path object.
+        dataset_split_path: Folder that contains the dataset split. Either Path object or string.
         feature_func_list: List of feature functions to call on the dataset, specified as string, kwarg pairs.
         feature_str_list: Names of features to be extracted (alternative to specifying feature_func_list). Only these
             will be kept in the output. Cannot be specified at the same time as feature_func_list. This is useful when
@@ -81,6 +81,8 @@ def featurize_dataset_split(dataset_split_path, feature_func_list=None, feature_
             raise RuntimeError("Cannot specify both feature_list and feature_str_list.")
         feature_func_list = [entry for entry in all_features if any(feat_str_name.startswith(feature_string(*entry))
                                                                     for feat_str_name in feature_str_list)]
+    if isinstance(dataset_split_path, str):
+        dataset_split_path = Path(dataset_split_path)
 
     dataReader_object, splitter_class, init_kwargs = DataSplitter.load_data_reader_splitter_class(dataset_split_path)
     init_kwargs["forbid_new_split"] = True

@@ -19,18 +19,21 @@ META_LEARNERS = ['xgboost', 'random', 'knn', 'linear']
 
 METADATASET_NAME = "metadata-v2"
 
-def run_metalearner(model_name, X_train, y_train, X_test):
+def run_metalearner(model_name, X_train, y_train, X_test, return_model=False):
     """
 
     Args:
         model_name: "xgboost", "knn"
         X_train: training data
         y_train: training target
-        X_test: testing data
+        X_test: testing data. If none, predictions will be generated on train set.
 
     Returns:
-        preds: predictions
+        preds: predictions (on either test set or train set).
     """
+    if X_test is None:
+        X_test = X_train
+
     if model_name == "xgboost":
         base_model = xgb.XGBRegressor(objective='reg:squarederror')
         model = RegressorChain(base_model)
@@ -40,24 +43,24 @@ def run_metalearner(model_name, X_train, y_train, X_test):
     elif model_name == "knn":
         n_neighbors = 5
         n_training_samples = X_train.shape[0]
-        pipe = Pipeline([("scaler", StandardScaler()),
+        model = Pipeline([("scaler", StandardScaler()),
                          ("knn", KNeighborsRegressor(n_neighbors=min(n_neighbors, n_training_samples)))])
-        pipe.fit(X_train, y_train)
-        preds = pipe.predict(X_test)
+        model.fit(X_train, y_train)
+        preds = model.predict(X_test)
 
     elif model_name == "linear":
-        pipe = Pipeline([("scaler", StandardScaler()),
+        model = Pipeline([("scaler", StandardScaler()),
                          ("linear", MultiOutputRegressor(Ridge(alpha=10))),
                           ])
-        pipe.fit(X_train, y_train)
-        preds = pipe.predict(X_test)
+        model.fit(X_train, y_train)
+        preds = model.predict(X_test)
     
     elif model_name == "svm-poly":
-        pipe = Pipeline([("scaler", StandardScaler()),
+        model = Pipeline([("scaler", StandardScaler()),
                          ("svm-poly", MultiOutputRegressor(SVR(kernel='poly'))),
                           ])
-        pipe.fit(X_train, y_train)
-        preds = pipe.predict(X_test)
+        model.fit(X_train, y_train)
+        preds = model.predict(X_test)
 
     elif model_name == "random":
         num_algs = len(y_train[0])
@@ -66,10 +69,14 @@ def run_metalearner(model_name, X_train, y_train, X_test):
             one_hot = [0] * num_algs
             one_hot[random.randint(0, num_algs-1)] = 1
             preds.append(one_hot)
+        model = None # No model can be returned
     else:
         raise NotImplementedError("{} not implemented".format(model_name))
 
-    return preds
+    if not return_model:
+        return preds
+    else:
+        return preds, model
 
 def perc_diff_from_best_global(outputs, y_test, y_range_test):
     diff = []

@@ -248,7 +248,9 @@ def filter_for_cunha(selected_algs, selected_feats, compare_cunha):
     return algs, feats
 
 
-def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None, fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False, random_feats=False, compare_cunha=None):
+def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None,
+                                     fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False,
+                                     random_feats=False, compare_cunha=None, get_extra_outputs=False):
     
     # TODO: num_algs and num_feats parameters are currently only implemented for fixed_alg_feats=True
     if not fixed_algs_feats and (num_algs != 10 or num_feats != 10):
@@ -323,21 +325,29 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
 
     X_train = X_train_grouped[final_feat_columns].values
     y_train = np.array(X_train_grouped['target'].to_list())
-    
-    test_data = metafeats[metafeats['dataset_name'].isin(test_datasets) & metafeats['alg_param_name'].isin(selected_algs)]
-    test_data = test_data[[metric_col_name] + ["dataset_name", "alg_param_name"] + final_feat_columns]
 
-    X_test_grouped = test_data.groupby('dataset_name').agg(transforms)
-    X_test_grouped['target'] = X_test_grouped.apply(get_ordered_target, axis=1)
+    if test_datasets:
+        test_data = metafeats[metafeats['dataset_name'].isin(test_datasets) & metafeats['alg_param_name'].isin(selected_algs)]
+        test_data = test_data[[metric_col_name] + ["dataset_name", "alg_param_name"] + final_feat_columns]
 
-    X_test = X_test_grouped[final_feat_columns].values
-    y_test = np.array(X_test_grouped['target'].to_list())
-    # y_test = y_test.tolist()
-    y_best_test = best_performing.loc[X_test_grouped.index].values
-    y_worst_test = worst_performing.loc[X_test_grouped.index].values
-    y_range_test = np.stack([y_best_test, y_worst_test], axis=-1)
-    
-    return X_train, y_train, X_test, y_test, y_range_test
+        X_test_grouped = test_data.groupby('dataset_name').agg(transforms)
+        X_test_grouped['target'] = X_test_grouped.apply(get_ordered_target, axis=1)
+
+        X_test = X_test_grouped[final_feat_columns].values
+        y_test = np.array(X_test_grouped['target'].to_list())
+        # y_test = y_test.tolist()
+        y_best_test = best_performing.loc[X_test_grouped.index].values
+        y_worst_test = worst_performing.loc[X_test_grouped.index].values
+        y_range_test = np.stack([y_best_test, y_worst_test], axis=-1)
+    else:
+        X_test, y_test, y_range_test = None, None, None
+
+    if not get_extra_outputs:
+        return X_train, y_train, X_test, y_test, y_range_test
+    else:
+        extra_outputs = {"selected_algs": selected_algs,
+                         "selected_feats": selected_feats}
+        return X_train, y_train, X_test, y_test, y_range_test, extra_outputs
 
 # Test code
 if __name__ == '__main__':
