@@ -142,10 +142,10 @@ def train_best_model(predictions, dataset_split_path, metric_name):
 def load_reczilla_model(filename):
     with open(filename, "rb") as f:
         model_save_dict = pickle.load(f)
+        return model_save_dict
 
 
-
-dataset_split_path = "all_data/splits-v5/CiaoDVD/DataSplitter_leave_k_out_last"
+# dataset_split_path = "all_data/splits-v5/CiaoDVD/DataSplitter_leave_k_out_last"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Reczilla on a new dataset.")
