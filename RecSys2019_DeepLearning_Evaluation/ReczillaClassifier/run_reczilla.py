@@ -35,7 +35,7 @@ def reczilla_train(metric_name, dataset_name=default_dataset_name, num_algs=defa
     Returns:
 
     """
-    if metric_name != "training_time":
+    if metric_name != "time_on_train":
         metric_name = "test_metric_" + metric_name
     X_train, y_train, _, _, _, extra_outputs = \
             alg_feature_selection_featurized(metric_name=metric_name,
