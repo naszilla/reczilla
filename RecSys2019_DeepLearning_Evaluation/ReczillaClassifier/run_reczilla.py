@@ -35,7 +35,8 @@ def reczilla_train(metric_name, dataset_name=default_dataset_name, num_algs=defa
     Returns:
 
     """
-    metric_name = "test_metric_" + metric_name
+    if metric_name != "training_time":
+        metric_name = "test_metric_" + metric_name
     X_train, y_train, _, _, _, extra_outputs = \
             alg_feature_selection_featurized(metric_name=metric_name,
                                              test_datasets=[],
@@ -152,8 +153,10 @@ if __name__ == "__main__":
     parser.add_argument('--train_meta', action='store_true',
                         help="Use to train a new metalearner Reczilla model (instead of loading).")
     parser.add_argument('--metamodel_filepath', required=True, help="Filepath of Reczilla model (to save or load).")
-    parser.add_argument('--dataset_split_path', required=True,
-                        help="Path of dataset split to perform inference on.")
+
+    # If performing inference
+    parser.add_argument('--dataset_split_path',
+                        help="Path of dataset split to perform inference on. Only required if performing inference")
 
     # Arguments for training reczilla
     parser.add_argument('--metadataset_name', default=default_dataset_name,
@@ -169,6 +172,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # Training
     if args.train_meta:
         model_save_dict = reczilla_train(args.target_metric,
                                          dataset_name=args.metadataset_name,
@@ -176,9 +180,12 @@ if __name__ == "__main__":
                                          num_feats=args.num_metafeatures,
                                          model_name=args.metamodel_name,
                                          out_filename=args.metamodel_filepath)
+        print(f"Metamodel saved to {args.metamodel_filepath}")
     else:
+        print(f"Loading metamodel from {args.metamodel_filepath}")
         model_save_dict = load_reczilla_model(args.metamodel_filepath)
 
-    predictions = reczilla_inference(model_save_dict, args.dataset_split_path)
-
-    train_best_model(predictions, args.dataset_split_path, args.target_metric)
+    # Inference
+    if args.dataset_split_path is not None:
+        predictions = reczilla_inference(model_save_dict, args.dataset_split_path)
+        train_best_model(predictions, args.dataset_split_path, args.target_metric)
