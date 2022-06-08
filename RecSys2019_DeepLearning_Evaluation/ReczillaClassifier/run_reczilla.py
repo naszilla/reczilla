@@ -17,8 +17,18 @@ default_model_name = "xgboost"
 default_num_algs = 10
 default_num_feats = 10
 metalearner_options = ["xgboost", "knn", "linear", "svm-poly"]
-#default_metric_name = 'test_metric_PRECISION_cut_10'
 default_metric_name = 'PRECISION_cut_10'
+
+def is_time_metric(metric_name):
+    """
+    Returns true iff the metric is to be minimized and not maximized
+    Args:
+        metric_name: The name of the metric.
+
+    Returns:
+
+    """
+    return "time" in metric_name
 
 def reczilla_train(metric_name, dataset_name=default_dataset_name, num_algs=default_num_algs,
                    num_feats=default_num_feats, model_name=default_model_name, out_filename=None):
@@ -35,22 +45,30 @@ def reczilla_train(metric_name, dataset_name=default_dataset_name, num_algs=defa
     Returns:
 
     """
-    if metric_name != "time_on_train":
-        metric_name = "test_metric_" + metric_name
+
+    if is_time_metric(metric_name):
+        minimize_metric = True
+        metric_df_name = metric_name
+    else:
+        metric_df_name = "test_metric_" + metric_name
+        minimize_metric = False
+
     X_train, y_train, _, _, _, extra_outputs = \
-            alg_feature_selection_featurized(metric_name=metric_name,
+            alg_feature_selection_featurized(metric_name=metric_df_name,
                                              test_datasets=[],
                                              dataset_name=dataset_name,
                                              num_algs=num_algs,
                                              num_feats=num_feats,
-                                             get_extra_outputs=True
+                                             get_extra_outputs=True,
+                                             minimize_metric=minimize_metric
                                              )
     selected_feats, selected_algs = extra_outputs["selected_feats"], extra_outputs["selected_algs"]
 
     _, model = run_metalearner(model_name, X_train, y_train, X_test=None, return_model=True)
     save_dict = {"model": model,
                  "selected_feats": selected_feats,
-                 "selected_algs": selected_algs}
+                 "selected_algs": selected_algs,
+                 "metric_name": metric_name}
 
     if out_filename is not None:
         with open(out_filename, "wb") as f:
@@ -119,7 +137,9 @@ def train_best_model(predictions, dataset_split_path, metric_name):
     splitter.load_data()
 
     # Initialize algorithm
-    alg_perf =  sorted(predictions, key=lambda entry: entry[1], reverse=True)
+    reverse_order = not is_time_metric(metric_name)
+    alg_perf = sorted(predictions, key=lambda entry: entry[1], reverse=reverse_order)
+
     best_alg, best_alg_pred = alg_perf[0]
     print(f"Chose {best_alg} for {metric_name} with predicted value {best_alg_pred}")
     alg_class, alg_kwargs = alg_setting_from_name(best_alg)
@@ -145,8 +165,6 @@ def load_reczilla_model(filename):
         model_save_dict = pickle.load(f)
         return model_save_dict
 
-
-# dataset_split_path = "all_data/splits-v5/CiaoDVD/DataSplitter_leave_k_out_last"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Reczilla on a new dataset.")
@@ -188,4 +206,4 @@ if __name__ == "__main__":
     # Inference
     if args.dataset_split_path is not None:
         predictions = reczilla_inference(model_save_dict, args.dataset_split_path)
-        train_best_model(predictions, args.dataset_split_path, args.target_metric)
+        train_best_model(predictions, args.dataset_split_path, model_save_dict["metric_name"])

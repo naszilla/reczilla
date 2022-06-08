@@ -87,7 +87,7 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
         raise Exception(e)
 
     if len(tmp_df) == 0:
-        raise Exception(f"no rows found after excluding dataset_family_list {dataset_family_list}")
+        raise Exception(f"no rows found after excluding dataset_family_list {exclude_dataset_families}")
 
     # for all datasets, find the best (maximum) metric achieved by any parameterized algs
     # all datasets are uniquely identified by their original path on gcloud (original_split_path)
@@ -101,7 +101,7 @@ def select_algs(metafeats, exclude_dataset_families, metric_name, num_algs=10, v
     tmp_df = tmp_df.merge(dataset_best_metrics, on="original_split_path", how="left")
 
     # calculate the pct-difference-from-best for each parameterized alg (row) in the meta-dataset
-    tmp_df.loc[:, "pct_diff_opt"] = 100.0 * (tmp_df[metric_name].values - tmp_df["max_metric"].values) / tmp_df["max_metric"].values
+    tmp_df.loc[:, "pct_diff_opt"] = 100.0 * -abs((tmp_df[metric_name].values - tmp_df["max_metric"].values) / tmp_df["max_metric"].values)
 
     # create a list of performance on each dataset (ordered by list "all_datasets") , for all parameterized algs
     performance_dict = dict()
@@ -250,7 +250,8 @@ def filter_for_cunha(selected_algs, selected_feats, compare_cunha):
 
 def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, train_datasets=None,
                                      fixed_algs_feats=False, num_algs=10, num_feats=10, random_algs=False,
-                                     random_feats=False, compare_cunha=None, get_extra_outputs=False):
+                                     random_feats=False, compare_cunha=None, get_extra_outputs=False,
+                                     minimize_metric=False):
     
     # TODO: num_algs and num_feats parameters are currently only implemented for fixed_alg_feats=True
     if not fixed_algs_feats and (num_algs != 10 or num_feats != 10):
@@ -258,6 +259,12 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     
     # TODO: Filter based on minimum number of alg_param_name samples?
     metafeats = get_metafeats(dataset_name)
+    if minimize_metric:
+        metafeats = metafeats.copy() # Need to copy metafeats to perform in-place changes since it is cached
+        metafeats["neg_metric"] = -metafeats[metric_name]
+        metric_for_alg_selection = "neg_metric"
+    else:
+        metric_for_alg_selection = metric_name
 
     exclude_test_dataset_families = [dataset_family_lookup(test_dataset) for test_dataset in test_datasets]
 
@@ -276,9 +283,10 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
             raise NotImplementedError
 
     time = datetime.now()
-    # TODO: This function to be updated
     print("selecting algs and features..")
-    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_name) if not fixed_algs_feats else fixed_algs[:num_algs]
+
+    selected_algs = select_algs(metafeats, exclude_test_dataset_families, metric_for_alg_selection) \
+                                if not fixed_algs_feats else fixed_algs[:num_algs]
     if random_algs:
         selected_algs = fixed_algs[:40]
         random.shuffle(selected_algs)
@@ -303,8 +311,6 @@ def alg_feature_selection_featurized(metric_name, test_datasets, dataset_name, t
     final_feat_columns = selected_feats
     X_train = metafeats[metafeats['alg_param_name'].isin(selected_algs) & ~metafeats['dataset_family'].isin(exclude_test_dataset_families)]
 
-    # TODO: This line to be updated (should just be metric_name), like this:
-    # metric_col_name = metric_name. DONE: (Sujay)
     metric_col_name = metric_name
     X_train = X_train[[metric_col_name] + ["dataset_name", "alg_param_name"] + final_feat_columns]
 
