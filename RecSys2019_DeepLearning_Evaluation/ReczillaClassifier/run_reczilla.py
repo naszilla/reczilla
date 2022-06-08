@@ -116,7 +116,7 @@ def parse_metric_name(metric_name):
     new_tokens = tokens[:cut_idx] + tokens[cut_idx+2:]
     return cut, "_".join(new_tokens)
 
-def train_best_model(predictions, dataset_split_path, metric_name):
+def train_best_model(predictions, dataset_split_path, metric_name, rec_model_save_path=None):
     """
     Use the predictions output by reczilla_inference to train the best algorithm on the dataset in dataset_split_path
     Args:
@@ -158,6 +158,9 @@ def train_best_model(predictions, dataset_split_path, metric_name):
 
     print(f"Actual performance: {best_alg_actual}")
 
+    if rec_model_save_path is not None:
+        print(f"Saving model to {rec_model_save_path}")
+        recommender.save_model(rec_model_save_path)
 
 # Load model
 def load_reczilla_model(filename):
@@ -175,6 +178,8 @@ if __name__ == "__main__":
     # If performing inference
     parser.add_argument('--dataset_split_path',
                         help="Path of dataset split to perform inference on. Only required if performing inference")
+    parser.add_argument('--rec_model_save_path',
+                        help="Destination path for recommender model trained on dataset on dataset_split_path.")
 
     # Arguments for training reczilla
     parser.add_argument('--metadataset_name', default=default_dataset_name,
@@ -206,4 +211,5 @@ if __name__ == "__main__":
     # Inference
     if args.dataset_split_path is not None:
         predictions = reczilla_inference(model_save_dict, args.dataset_split_path)
-        train_best_model(predictions, args.dataset_split_path, model_save_dict["metric_name"])
+        train_best_model(predictions, args.dataset_split_path, model_save_dict["metric_name"],
+                         rec_model_save_path=args.rec_model_save_path)
