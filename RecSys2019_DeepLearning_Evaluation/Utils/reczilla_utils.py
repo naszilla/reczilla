@@ -13,6 +13,8 @@ import tensorflow as tf
 
 from Base.DataIO import DataIO
 
+from algorithm_handler import algorithm_handler
+
 TIME_FORMAT = "%Y%m%d_%H%M%S"
 
 
@@ -233,3 +235,77 @@ def result_to_df(result_zip_path):
     df = pd.DataFrame(row_list)
 
     return df
+
+def get_parameterized_alg(alg_param_string, param_seed=3):
+    """
+    given a string in the format "<alg name>:<hyperparameter source>", return the algorithm class and hyperparameters
+
+    these strings can be found in the meta-datasets produced by notebooks/prepare_metadataset_v#.ipynb,
+    in column "alg_param_name"
+    """
+
+    # split the string into alg and hyperparameter source
+    split_str = alg_param_string.split(":")
+    assert len(split_str) == 2, f"alg_param_string must have format '<alg name>:<hyperparameter source>'. alg_param_string = {alg_param_string}"
+    alg_name = split_str[0]
+    hyperparam_source = split_str[1]
+
+    # if alg_name contains KNN, we handle it differently..
+    if "KNN" in alg_name:
+        split_hparam_string = hyperparam_source.split("_")
+        knn_sim_type = split_hparam_string[0]
+        knn_param_source = "_".join(split_hparam_string[1:])
+
+        alg_name = alg_name + "_" + knn_sim_type
+        hyperparam_source = knn_param_source
+
+    # retrieve algorithm class and parameter space
+    (
+        alg_class,
+        parameter_search_space,
+        search_input_recommender_args,
+        max_points,
+    ) = algorithm_handler(alg_name)
+
+    # parse hyperparams source string and generate hyperparams
+    if hyperparam_source == "default":
+        hparams = parameter_search_space.default
+    else:
+        assert hyperparam_source[:len("random_")] == "random_", f"hyperparam source stirng not recognized: {hyperparam_source}"
+        sample_number = int(hyperparam_source[len("random_"):])  # zero-indexed
+
+        # this code is adapted from RandomSearch.search()
+        use_default_params = True  # this is the default in RandomSearch.search()
+        hyperparam_rs = np.random.RandomState(param_seed)
+
+        # sample random hyperparam values. if we're using the default param set, take (n_samples - 1) samples
+        n_random_samples = sample_number + 1
+        assert n_random_samples > 0
+        hyperparam_samples = parameter_search_space.random_samples(
+            n_random_samples,
+            rs=hyperparam_rs,
+        )
+        assert len(hyperparam_samples) == n_random_samples
+        hparams = hyperparam_samples[-1]
+
+    ###### DEBUGGING ######
+    # test code
+    # import pickle
+    # metadata_file = '/Users/duncan/research/active_projects/reczilla/RecSys2019_DeepLearning_Evaluation/metadatasets/metadata-v2.pkl'
+    # with open(metadata_file, "rb") as f:
+    #     meta_dataset = pickle.load(f)
+    ### get a random alg string
+    # alg_param_string = meta_dataset["alg_param_name"].sample().values[0]
+    # ## parse it
+    # alg, hp, search = get_parameterized_alg(alg_param_string, param_seed=3)
+    # print(alg_param_string)
+    # print(f"alg: {alg}")
+    # print(f"hyperparams: {hp}")
+    # ## check the original params in meta-dataset
+    # check_row = meta_dataset.loc[meta_dataset["alg_param_name"] == alg_param_string, :].iloc[0]
+    # print("params:")
+    # print({param: check_row["param_" + param] for param in hp.keys()})
+
+    return alg_class, hparams, search_input_recommender_args
+
+
