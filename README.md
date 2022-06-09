@@ -1,5 +1,7 @@
 <p align="center"><img src="img/logo3.png" width=700 /></p>
 
+----
+
 The `RecZilla` codebase provides functionality to perform metalearning for algorithm selection on recommender systems datasets.
 
 See our NeurIPS Datasets Track paper at https://arxiv.org/abs/2106.12543.
