@@ -19,7 +19,7 @@ pip install -r requirements.txt
 ```
 
 ## Sample Usage
-A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained RecZilla models (located in the folder `RecZillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
+A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
 
 The script `train_reczilla_models.sh` shows samples for training metalearners for different metrics.
 
