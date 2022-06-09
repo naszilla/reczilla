@@ -5,10 +5,12 @@ from ReczillaClassifier.classifier import run_metalearner
 from Metafeatures.Featurizer import featurize_dataset_split
 from Data_manager.DataSplitter import DataSplitter
 from Base.Evaluation.Evaluator import EvaluatorHoldout
+from Utils.reczilla_utils import get_parameterized_alg
 
 import pickle
 import numpy as np
 import argparse
+import time
 from pathlib import Path
 
 # Default values for command line parser
@@ -96,11 +98,6 @@ def reczilla_inference(model_save_dict, dataset_split_path):
     return alg_perf
 
 
-def alg_setting_from_name(alg_param_name):
-    """Return algorithm class and keyword arguments based on its alg_param_name string descriptor"""
-    # return alg_class, alg_kwargs
-    return None, None
-
 def parse_metric_name(metric_name):
     """
     Separate a metric name into the cut value and the metric name.
@@ -142,24 +139,40 @@ def train_best_model(predictions, dataset_split_path, metric_name, rec_model_sav
 
     best_alg, best_alg_pred = alg_perf[0]
     print(f"Chose {best_alg} for {metric_name} with predicted value {best_alg_pred}")
-    alg_class, alg_kwargs = alg_setting_from_name(best_alg)
+    alg_class, alg_kwargs, search_input_recommender_args = get_parameterized_alg(best_alg)
 
     # Train
-    recommender = alg_class(splitter.SPLIT_URM_DICT["URM_train"])
+    start = time.time()
+    recommender = alg_class(splitter.SPLIT_URM_DICT["URM_train"],
+                            *search_input_recommender_args.CONSTRUCTOR_POSITIONAL_ARGS,
+                            **search_input_recommender_args.CONSTRUCTOR_KEYWORD_ARGS)
     recommender.fit(**alg_kwargs)
+    train_time = time.time() - start
 
     # Evaluate
-    cut, metric_name = parse_metric_name(metric_name)
-    evaluator_validation = EvaluatorHoldout(
-        splitter.SPLIT_URM_DICT["URM_test"], [cut], exclude_seen=False
-    )
-    results_dict, _ = evaluator_validation.evaluateRecommender(recommender)
-    best_alg_actual = results_dict[cut][metric_name]
+    if not is_time_metric(metric_name):
+        cut, metric_name = parse_metric_name(metric_name)
+        evaluator_validation = EvaluatorHoldout(
+            splitter.SPLIT_URM_DICT["URM_test"], [cut], exclude_seen=False
+        )
+        results_dict, _ = evaluator_validation.evaluateRecommender(recommender)
+        best_alg_actual = results_dict[cut][metric_name]
+    else:
+        if metric_name != "time_on_train":
+            raise NotImplementedError(f"Performance evaluation for {metric_name} not implemented")
+        best_alg_actual = train_time
 
+    print()
+    print("*" * 50)
+    print("Done training recommender. Summary:")
+    print(f"Metric to optimize: {metric_name}")
+    print(f"Chosen algorithm: {best_alg}")
+    print(f"Predicted performance: {best_alg_pred}")
     print(f"Actual performance: {best_alg_actual}")
+    print("*" * 50)
+    print()
 
     if rec_model_save_path is not None:
-        print(f"Saving model to {rec_model_save_path}")
         recommender.save_model(rec_model_save_path)
 
 # Load model
