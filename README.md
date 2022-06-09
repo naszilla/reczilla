@@ -2,7 +2,7 @@ TODO
 
 <p align="center"><img src="img/banner.svg" width=700 /></p>
 
-`XAI-Bench` is a library for benchmarking feature attribution techniques using synthetic data. Unlike real-world datasets, synthetic datasets allow the efficient computation of conditional expected values that are needed to evaluate many explainability metrics such as ground-truth Shapley values, faithfulness, and monotonicity. This repository can be used to benchmark six different feature attribution techniques across five popular evaluation metrics.
+The `RecZilla` codebase provides functionality to perform metalearning for algorithm selection on recommender systems datasets.
 
 See our NeurIPS Datasets Track paper at https://arxiv.org/abs/2106.12543.
 
@@ -19,63 +19,54 @@ pip install -r requirements.txt
 ```
 
 ## Sample Usage
-TODO
+A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained RecZilla models (located in the folder `RecZillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
 
-We use an `Experiment` to benchmark various datasets, models, explainers, metrics. This is the recommended way to access our library.
-
-To run a sample benchmarking experiment on our `GaussianPiecewiseConstant` dataset using the sample config `configs/experiment_config.json`, run
-```
-python main_driver.py --mode regression --seed 7 --experiment --experiment-json configs/experiment_config.jsonc --no-logs
-```
-For running several experiments across multiple datasets, use a script as shown in,
-```
-./script.sh
-```
-Each `Experiment` object is saved after execution for checkpointing. This way, additional experiments can be run without having to rerun previous computation.
+The script `train_reczilla_models.sh` shows samples for training metalearners for different metrics.
 
 ---
 ## More details
-TODO
 
 
-The API uses `main_driver.py` which takes in the arguments - 
+The main script is `run_reczilla.py`, which must be run from RecSys2019_DeepLearning_Evaluation. It takes in these arguments:
 
 ```
-> python main_driver.py -h
+> python -m ReczillaClassifier.run_reczilla -h
+usage: run_reczilla.py [-h] [--train_meta] --metamodel_filepath
+                       METAMODEL_FILEPATH
+                       [--dataset_split_path DATASET_SPLIT_PATH]
+                       [--rec_model_save_path REC_MODEL_SAVE_PATH]
+                       [--metadataset_name METADATASET_NAME]
+                       [--metamodel_name {xgboost,knn,linear,svm-poly}]
+                       [--target_metric TARGET_METRIC]
+                       [--num_algorithms NUM_ALGORITHMS]
+                       [--num_metafeatures NUM_METAFEATURES]
 
-usage: Driver for the explainability project [-h] [--mode {classification,regression}] --dataset DATASET --model MODEL --explainer
-                                             EXPLAINER [--metric METRIC]
-                                             [--data-kwargs DATA_KWARGS | --data-kwargs-json DATA_KWARGS_JSON]
-                                             [--model-kwargs MODEL_KWARGS | --model-kwargs-json MODEL_KWARGS_JSON] [--seed SEED]
-                                             [--experiment] [--rho RHO] [--rhos RHOS [RHOS ...]] [--experiment-json EXPERIMENT_JSON]
-                                             [--no-logs] [--results-dir RESULTS_DIR]
+Run Reczilla on a new dataset.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --mode {classification,regression}
-                        Classification or regression?
-  --dataset DATASET     Name of the dataset to train on
-  --model MODEL         Algorithm to use for training
-  --explainer EXPLAINER
-                        Explainer to use
-  --metric METRIC       Metric to evaluate the explanation
-  --data-kwargs DATA_KWARGS
-                        Custom data args needed to generate the dataset.\n Default = '{}'
-  --data-kwargs-json DATA_KWARGS_JSON
-                        Path to json file containing custom data args.
-  --model-kwargs MODEL_KWARGS
-                        Custom data args needed to generate the dataset.\n Default = '{}'
-  --model-kwargs-json MODEL_KWARGS_JSON
-                        Path to json file containing custom data args.
-  --seed SEED           Setting a seed to make everything deterministic.
-  --experiment          Run multiple experiments using an experiment config file.
-  --rho RHO             Control the rho of an experiment.
-  --rhos RHOS [RHOS ...]
-                        Control the rhos of a mixture experiment.
-  --experiment-json EXPERIMENT_JSON
-  --no-logs             whether to save results or not. You can use this avoid overriding your result files while testing.
-  --results-dir RESULTS_DIR
-                        Path to save results in csv files.
+  --train_meta          Use to train a new metalearner Reczilla model (instead
+                        of loading).
+  --metamodel_filepath METAMODEL_FILEPATH
+                        Filepath of Reczilla model (to save or load).
+  --dataset_split_path DATASET_SPLIT_PATH
+                        Path of dataset split to perform inference on. Only
+                        required if performing inference
+  --rec_model_save_path REC_MODEL_SAVE_PATH
+                        Destination path for recommender model trained on
+                        dataset on dataset_split_path.
+  --metadataset_name METADATASET_NAME
+                        Name of metadataset (required if training metamodel).
+  --metamodel_name {xgboost,knn,linear,svm-poly}
+                        Name of metalearner to use (required if training
+                        metamodel).
+  --target_metric TARGET_METRIC
+                        Target metric to optimize.
+  --num_algorithms NUM_ALGORITHMS
+                        Number of algorithms to use in Reczilla (required if
+                        training metamodel).
+  --num_metafeatures NUM_METAFEATURES
+                        Number of metafeatures to select for metalearner.
 ```
 
 ## Citation 
