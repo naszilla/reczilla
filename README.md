@@ -3,7 +3,9 @@
 
 ----
 
-The `RecZilla` codebase provides functionality to perform metalearning for algorithm selection on recommender systems datasets.
+`RecZilla` is a framework which provides the functionality to perform metalearning for algorithm selection on recommender systems datasets. It uses a meta-learner model to predict the best algorithm and hyperparameters for new, unseen datasets. 
+
+## Overview
 
 <p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
 
