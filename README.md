@@ -5,7 +5,7 @@
 
 The `RecZilla` codebase provides functionality to perform metalearning for algorithm selection on recommender systems datasets.
 
-<p align="center"><img src="img/overview_figure.svg" width=700 /></p>
+<p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
 
 
 ## Installation
