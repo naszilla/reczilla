@@ -2,6 +2,7 @@
 <p align="center"><img src="img/logo3.png" width=700 /></p>
 
 ----
+![Crates.io](https://img.shields.io/crates/l/Ap)
 
 `RecZilla` is a framework which provides the functionality to perform metalearning for algorithm selection on recommender systems datasets. It uses a meta-learner model to predict the best algorithm and hyperparameters for new, unseen datasets. 
 
