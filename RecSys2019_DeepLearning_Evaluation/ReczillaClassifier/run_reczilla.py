@@ -158,9 +158,11 @@ def train_best_model(predictions, dataset_split_path, metric_name, rec_model_sav
         results_dict, _ = evaluator_validation.evaluateRecommender(recommender)
         best_alg_actual = results_dict[cut][metric_name_short]
     else:
-        if metric_name != "time_on_train":
-            raise NotImplementedError(f"Performance evaluation for {metric_name} not implemented")
-        best_alg_actual = train_time
+        if metric_name == "time_on_train":
+            best_alg_actual = train_time
+        else:
+            best_alg_actual = "?"
+            print(f"Performance evaluation for {metric_name} not implemented")
 
     print()
     print("*" * 50)
