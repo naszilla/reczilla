@@ -13,30 +13,27 @@ from dataset_handler import DATASET_READER_LIST
 from Data_manager.DataSplitter_leave_k_out import DataSplitter_leave_k_out
 from Data_manager.DataSplitter_global_timestamp import DataSplitter_global_timestamp
 
-# ALL_SPLITTERS = [
-#     (DataSplitter_leave_k_out, {
-#         "k_out_value": 1, 
-#         "forbid_new_split": False, 
-#         "force_new_split": False, 
-#         "use_validation_set": True,
-#         "leave_random_out": False  # this controls whether we leave the last k or random k out as test/val. False = keep last k as test/eval
-#     }),
-#     (DataSplitter_leave_k_out, {
-#         "k_out_value": 1, 
-#         "forbid_new_split": False, 
-#         "force_new_split": False, 
-#         "use_validation_set": True,
-#         "leave_random_out": True 
-#     }),
-#     ]
-
 ALL_SPLITTERS = [
+    (DataSplitter_leave_k_out, {
+        "k_out_value": 1, 
+        "forbid_new_split": False, 
+        "force_new_split": False, 
+        "use_validation_set": True,
+        "leave_random_out": False  # this controls whether we leave the last k or random k out as test/val. False = keep last k as test/eval
+    }),
+    (DataSplitter_leave_k_out, {
+        "k_out_value": 1, 
+        "forbid_new_split": False, 
+        "force_new_split": False, 
+        "use_validation_set": True,
+        "leave_random_out": True 
+    }),
     (DataSplitter_global_timestamp, {
         "k_out_percent": 20, 
         "forbid_new_split": False, 
         "force_new_split": False, 
         "use_validation_set": True,
-        "leave_random_out": False  # this controls whether we leave the last k or random k out as test/val. False = keep last k as test/eval
+        "leave_random_out": False
     }),
     ]
 
