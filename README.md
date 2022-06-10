@@ -27,11 +27,6 @@ Once you're done with the above step, you need to install all the dependencies i
 pip install -r requirements.txt
 ```
 
-To use our package, make sure you install all the dependencies in `requirements.txt` using 
-```
-pip install -r requirements.txt
-```
-
 Next step, you need to compile all the Cython algorithms. For that you will need to install `gcc` and `python3-dev`. You can install it on Linux as,
 ```
 sudo apt install gcc 
