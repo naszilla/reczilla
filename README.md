@@ -68,17 +68,4 @@ optional arguments:
                         training metamodel).
   --num_metafeatures NUM_METAFEATURES
                         Number of metafeatures to select for metalearner.
-```
 
-## Citation 
-TODO
-
-Please cite our work if you use code from this repo:
-```bibtex
-@inproceedings{xai-bench-2021,
-  title={Synthetic Benchmarks for Scientific Research in Explainable Machine Learning}, 
-  author={Liu, Yang and Khandagale, Sujay and White, Colin and Neiswanger, Willie}, 
-  booktitle={Advances in Neural Information Processing Systems Datasets Track},
-  year={2021}, 
-} 
-```
