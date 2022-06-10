@@ -7,7 +7,7 @@ python -m ReczillaClassifier.run_reczilla \
 	
 read -p "Press enter to continue"
 	
-python -m ReczillaClassifier.run_reczilla ^
+python -m ReczillaClassifier.run_reczilla \
 	--dataset_split_path="all_data/splits-v5/AmazonGiftCards/DataSplitter_leave_k_out_last" \
 	--metamodel_filepath="../ReczillaModels/time_on_train.pickle" \
 	--rec_model_save_path="../train_time_"
