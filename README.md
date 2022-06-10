@@ -32,6 +32,18 @@ To use our package, make sure you install all the dependencies in `requirements.
 pip install -r requirements.txt
 ```
 
+Next step, you need to compile all the Cython algorithms. For that you will need to install `gcc` and `python3-dev`. You can install it on Linux as,
+```
+sudo apt install gcc 
+sudo apt-get install python3-dev
+```
+
+Once installed, you can compile all the Cython algorithms by running the below command in the `RecSys2019_DeepLearning_Evaluation` directory,
+```
+python run_compile_all_cython.py
+```
+And, you're all setup!
+
 ## Sample Usage
 A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
 
