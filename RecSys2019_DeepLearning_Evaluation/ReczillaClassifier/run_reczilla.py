@@ -151,12 +151,12 @@ def train_best_model(predictions, dataset_split_path, metric_name, rec_model_sav
 
     # Evaluate
     if not is_time_metric(metric_name):
-        cut, metric_name = parse_metric_name(metric_name)
+        cut, metric_name_short = parse_metric_name(metric_name)
         evaluator_validation = EvaluatorHoldout(
             splitter.SPLIT_URM_DICT["URM_test"], [cut], exclude_seen=False
         )
         results_dict, _ = evaluator_validation.evaluateRecommender(recommender)
-        best_alg_actual = results_dict[cut][metric_name]
+        best_alg_actual = results_dict[cut][metric_name_short]
     else:
         if metric_name != "time_on_train":
             raise NotImplementedError(f"Performance evaluation for {metric_name} not implemented")
