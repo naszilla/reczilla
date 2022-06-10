@@ -12,7 +12,20 @@
 
 ## Installation
 
-TODO
+You need Python 3.6 to use this repository.
+
+You can start by first creating a new environment using `conda` or your preferred method.
+
+```
+# using conda
+conda create -n DLevaluation python=3.6 anaconda
+conda activate DLevaluation
+```
+
+Once you're done with the above step, you need to install all the dependencies in the `requirements.txt` file using,
+```
+pip install -r requirements.txt
+```
 
 To use our package, make sure you install all the dependencies in `requirements.txt` using 
 ```
