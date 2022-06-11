@@ -6,13 +6,13 @@
 
 `RecZilla` is a framework which provides the functionality to perform metalearning for algorithm selection on recommender systems datasets. It uses a meta-learner model to predict the best algorithm and hyperparameters for new, unseen datasets. 
 
-## Overview
+# Overview
 The figure below shows the overview of the end-to-end `RecZilla` framework pipeline.
 
 <p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
 
 
-## Installation
+# Installation
 
 You need Python 3.6 to use this repository.
 
@@ -40,6 +40,94 @@ Once installed, you can compile all the Cython algorithms by running the below c
 python run_compile_all_cython.py
 ```
 And, you're all setup!
+
+# Datasets
+
+Each recsys dataset is managed using an instance of class [`Data_manager.DataReader`](TBD). All datasets in our paper are implemented as custom subclasses of `DataReader` objects---this object handles downloading, splitting, and i/o. However, you can load datasets without creating a custom class.
+
+**Note:** Before using any recsys dataset for training, testing, or meta-learning tasks, you need to **load the dataset using an instance of a `DataReader` object and call its `load_data()` function**, which writes a version of the dataset locally. This can be done with datasets we've implemented, or with a new dataset. We describe both cases below.
+
+### Loading Implemented Datasets
+
+Each dataset used in our experiment has a custom `DataReader` class; a list of these classes can be found in `Data_manager.dataset_handler.DATASET_READER_LIST`. For example, the following code downloads the `MovieLens1M` dataset to a local folder, creates a global-timestamp split, and saves the split in a different folder:
+
+```python
+from Data_manager.Movielens.Movielens1MReader import Movielens1MReader
+from Data_manager.DataSplitter_global_timestamp import DataSplitter_global_timestamp
+
+# Folder where dataset will be loaded from. The dataset will be downloaded if it's not found here.
+data_folder = "/home/datasets"
+
+# Folder where dataset splits will be written
+split_folder = "/home/splits/MovieLens1M"
+
+# load the dataset
+data_reader = Movielens1MReader(folder=data_folder)
+loaded_dataset = data_reader.load_data()
+
+# split the dataset, and write it to file
+data_splitter = DataSplitter_global_timestamp(data_reader)
+data_splitter.load_data(save_folder_path=split_folder)
+```
+
+The script `Data_manager.create_all_data_splits` runs this procedure on all datasets used in our experiments:
+
+```commandline
+usage: create_all_data_splits.py [-h] --data-dir DATA_DIR --splits-dir
+                                 SPLITS_DIR
+
+arguments:
+  --data-dir DATA_DIR   Directory where the downloaded dataseta have been
+                        stored. If a dataset is not downloaded, it will be
+                        downloaded.
+  --splits-dir SPLITS_DIR
+                        Directory where the splits will be saved.
+```
+
+### Loading New Datasets
+
+To load a recsys dataset that is not currently implemented, we recommend creating a subclass of `Data_manager.DataReader`, which specifies the loading procedure for the dataset. Once a `DataReader` object is created, the same splitting and loading process from above can be used with this object.
+
+If the dataset is in CSV format with columns `user_id, item_id, rating, timestamp`, then it is simple to create a class based on the example class `ExampleCSVDatasetReader`, which loads a dataset from a sample CSV included in this repository. 
+
+This class reads a CSV from a fixed path, and loads it using shared functions:
+```python
+#### from Dataset_manager/ExampleCSVDataset/ExampleCSVDatasetReader.py
+...
+
+URM_path = "../examples/random_rating_list.csv"
+
+(
+    URM_all,
+    URM_timestamp,
+    item_original_ID_to_index,
+    user_original_ID_to_index,
+) = load_CSV_into_SparseBuilder(
+    URM_path, separator=",", header=True, remove_duplicates=True, timestamp=True
+)
+
+loaded_URM_dict = {"URM_all": URM_all, "URM_timestamp": URM_timestamp}
+
+loaded_dataset = Dataset(
+    dataset_name=self._get_dataset_name(),
+    URM_dictionary=loaded_URM_dict,
+    ICM_dictionary=None,
+    ICM_feature_mapper_dictionary=None,
+    UCM_dictionary=None,
+    UCM_feature_mapper_dictionary=None,
+    user_original_ID_to_index=user_original_ID_to_index,
+    item_original_ID_to_index=item_original_ID_to_index,
+    is_implicit=self.IS_IMPLICIT,
+)
+
+...
+```
+
+## Using Loaded Dataset Splits
+
+Calling the function `load_dataset()` (see above) will create local copies of the datasets in the specified directory. These the `DataReader` objects and split files can be used for training individual recsys algorithms, or for meta-learning tasks described below.
+
+---
 
 ## Sample Usage
 A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
@@ -90,4 +178,34 @@ optional arguments:
                         training metamodel).
   --num_metafeatures NUM_METAFEATURES
                         Number of metafeatures to select for metalearner.
+```
 
+# Experiments
+
+Results from our paper were generated by training and evaluating several parameterized algorithms on all datasets implemented in this codebase. 
+
+To generate results for each algorithm-dataset pair, we use the script `Experiment_handler.run_experiment`, which takes several positional arguments: 
+
+```
+usage: run_experiment.py [-h]
+                         time_limit dataset_name split_type alg_name split_dir
+                         alg_seed param_seed num_samples result_dir
+                         experiment_name original_split_path
+
+positional arguments:
+  time_limit           time limit in seconds
+  dataset_name         name of dataset. we use this to find the dataset and
+                       split.
+  split_type           name of datasplitter to use. we use this to find the
+                       split directory.
+  alg_name             name of the algorithm to use.
+  split_dir            directory containing split data files.
+  alg_seed             random seed passed to the recommender algorithm. only
+                       for random algorithms.
+  param_seed           random seed for generating random hyperparameters.
+  num_samples          number of hyperparameter samples.
+  result_dir           directory where result dir structure will be written.
+                       this directory should exist.
+  experiment_name      name of the result directory that will be created.
+  original_split_path  full path to the split data. only used for bookkeeping.
+```
