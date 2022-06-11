@@ -291,7 +291,7 @@ def get_parameterized_alg(alg_param_string, param_seed=3):
     ###### DEBUGGING ######
     # test code
     # import pickle
-    # metadata_file = '/Users/duncan/research/active_projects/reczilla/RecSys2019_DeepLearning_Evaluation/metadatasets/metadata-v2.pkl'
+    # metadata_file = '/Users/zzzzzz/research/active_projects/reczilla/RecSys2019_DeepLearning_Evaluation/metadatasets/metadata-v2.pkl'
     # with open(metadata_file, "rb") as f:
     #     meta_dataset = pickle.load(f)
     ### get a random alg string

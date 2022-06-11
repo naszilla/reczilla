@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 
-@author: Maurizio Ferrari Dacrema and Sujay Khandagale
+@author: Maurizio Ferrari Dacrema and yyyyy yyyyyyyyyy
 """
 
 from matplotlib import use
