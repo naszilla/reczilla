@@ -123,6 +123,9 @@ from Data_manager.CiaoDVD.CiaoDVDReader import CiaoDVDReader
 from Data_manager.GoogleLocalReviews.GoogleLocalReviewsReader import GoogleLocalReviewsReader
 from Data_manager.LastFM.LastFMReader import LastFMReader
 
+from Data_manager.YahooMusic.YahooMusicReader import YahooMusicReader
+from Data_manager.YahooMovies.YahooMoviesReader import YahooMoviesReader
+
 DATASET_READER_LIST = [
     AmazonAllBeautyReader,
     AmazonAllCreditCardsReader,
@@ -229,6 +232,8 @@ DATASET_READER_LIST = [
     CiaoDVDReader,
     GoogleLocalReviewsReader,
     LastFMReader,
+    YahooMusicReader,
+    YahooMoviesReader
 ]
 
 DATASET_READER_NAME_LIST = [c.__name__ for c in DATASET_READER_LIST]

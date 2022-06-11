@@ -377,7 +377,7 @@ class Evaluator(object):
                           self._n_users_evaluated,
                           100.0* float(self._n_users_evaluated)/len(self.users_to_evaluate),
                           new_time_value, new_time_unit,
-                          float(self._n_users_evaluated)/elapsed_time))
+                          float(self._n_users_evaluated)/max(elapsed_time, 1e-3)))
 
             sys.stdout.flush()
             sys.stderr.flush()

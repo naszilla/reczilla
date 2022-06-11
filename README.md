@@ -1,42 +1,94 @@
-# reczilla
+<br/>
+<p align="center"><img src="img/logo3.png" width=700 /></p>
 
-## Install Auto Surprise
-```bash
-cd Auto-Surprise
-$ sudo python setup.py install
+----
+![Crates.io](https://img.shields.io/crates/l/Ap?color=orange)
+
+`RecZilla` is a framework which provides the functionality to perform metalearning for algorithm selection on recommender systems datasets. It uses a meta-learner model to predict the best algorithm and hyperparameters for new, unseen datasets. 
+
+## Overview
+The figure below shows the overview of the end-to-end `RecZilla` framework pipeline.
+
+<p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
+
+
+## Installation
+
+You need Python 3.6 to use this repository.
+
+You can start by first creating a new environment using `conda` or your preferred method.
+
 ```
-For more information and instructions, see the [Auto-Surprise README](Auto-Surprise/README.md).
-
-
-## Download datasets
-
-All datasets are automatically downloaded, except `recipes` (since you need a Kaggle account).
-Download `recipes` from [here](https://www.kaggle.com/shuyangli94/food-com-recipes-and-user-interactions/version/2?select=RAW_interactions.csv).
-Place `RAW_interactions.csv` inside `Auto-Surprise/sandbox/data/recipes`.
-
-## Run rec sys algorithms
-
-Specify the dataset inside [`experiment.py`](Auto-Surprise/sandbox/experiment.py)
-```bash
-cd Auto-Surprise/sandbox
-python experiment.py
+# using conda
+conda create -n DLevaluation python=3.6 anaconda
+conda activate DLevaluation
 ```
 
-## Add more datasets
-Look at the methods in [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py), e.g., `get_dating()`, `get_recipes()`. Choose a dataset from our list: https://docs.google.com/spreadsheets/d/1c36DOxVqbMwFe0Wnnoo6lCwH_FUEo6flJtuEGtmeoms/edit#gid=0. Add it to [`data_handler.py`](Auto-Surprise/sandbox/data_handler.py). If you have any questions, ask xxxxx.
 
-Note: for now, we are keeping it pretty simple. We only load the interaction matrix of the dataset, which consists of three rows: `user`, `item`, and `rating`. Later on in the project, we will add user features, item features, and more interaction data such as temporal data.
+Once you're done with the above step, you need to install all the dependencies in the `requirements.txt` file using,
+```
+pip install -r requirements.txt
+```
 
-## Add more algorithms
-Our plan is to at least add the algorithms from this paper: https://arxiv.org/abs/1907.06902.
+Next step, you need to compile all the Cython algorithms. For that you will need to install `gcc` and `python3-dev`. You can install it on Linux as,
+```
+sudo apt install gcc 
+sudo apt-get install python3-dev
+```
 
-New algorithms should be added using the Surprise base class, and they should have a set of legal hyperparameters defined somewhere. An example algorithm is given in [`custom_algorithms.py`](Auto-Surprise/sandbox/custom_algorithms.py). The hyperparameters here are defined using package hyperopt, which seems like a reasonable choice.
+Once installed, you can compile all the Cython algorithms by running the below command in the `RecSys2019_DeepLearning_Evaluation` directory,
+```
+python run_compile_all_cython.py
+```
+And, you're all setup!
 
-The file [`model_handler.py`](Auto-Surprise/sandbox/model_handler.py) prepares the objects `ALL_ALGORITHMS` and  `ALL_SPACES`.
-- `ALL_ALGORITHMS` (dict): each key is an algorithm name and each value is an algorithm (child of surprise.prediction_algorithms.AlgoBase)
-- `ALL_SPACES` (dict): each key is an algorithm name, and each value is a parameter space for the corresponding algorithm (a dict consisting of hyperopt.hp objects)
+## Sample Usage
+A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
 
-## Run full experiments
-Once we have 20 or 30 datasets, and enough algorithms, we will start preliminary experiments and then build an algorithm selector.
+The script `train_reczilla_models.sh` shows samples for training metalearners for different metrics.
 
-The script [`calculate_algorithm_metrics.py`](Auto-Surprise/sandbox/calculate_algorithm_metrics.py) iterates over a list of algorithms and datasets, and calculates some metrics. For each algorithm we sample some random parameter sets using the hyperopt objects defined in [`model_handler.py`](Auto-Surprise/sandbox/model_handler.py).
+---
+## More details
+
+
+The main script is `run_reczilla.py`, which must be run from RecSys2019_DeepLearning_Evaluation. It takes in these arguments:
+
+```
+> python -m ReczillaClassifier.run_reczilla -h
+usage: run_reczilla.py [-h] [--train_meta] --metamodel_filepath
+                       METAMODEL_FILEPATH
+                       [--dataset_split_path DATASET_SPLIT_PATH]
+                       [--rec_model_save_path REC_MODEL_SAVE_PATH]
+                       [--metadataset_name METADATASET_NAME]
+                       [--metamodel_name {xgboost,knn,linear,svm-poly}]
+                       [--target_metric TARGET_METRIC]
+                       [--num_algorithms NUM_ALGORITHMS]
+                       [--num_metafeatures NUM_METAFEATURES]
+
+Run Reczilla on a new dataset.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --train_meta          Use to train a new metalearner Reczilla model (instead
+                        of loading).
+  --metamodel_filepath METAMODEL_FILEPATH
+                        Filepath of Reczilla model (to save or load).
+  --dataset_split_path DATASET_SPLIT_PATH
+                        Path of dataset split to perform inference on. Only
+                        required if performing inference
+  --rec_model_save_path REC_MODEL_SAVE_PATH
+                        Destination path for recommender model trained on
+                        dataset on dataset_split_path.
+  --metadataset_name METADATASET_NAME
+                        Name of metadataset (required if training metamodel).
+  --metamodel_name {xgboost,knn,linear,svm-poly}
+                        Name of metalearner to use (required if training
+                        metamodel).
+  --target_metric TARGET_METRIC
+                        Target metric to optimize.
+  --num_algorithms NUM_ALGORITHMS
+                        Number of algorithms to use in Reczilla (required if
+                        training metamodel).
+  --num_metafeatures NUM_METAFEATURES
+                        Number of metafeatures to select for metalearner.
+
