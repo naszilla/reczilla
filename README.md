@@ -24,6 +24,7 @@ conda create -n DLevaluation python=3.6 anaconda
 conda activate DLevaluation
 ```
 
+
 Once you're done with the above step, you need to install all the dependencies in the `requirements.txt` file using,
 ```
 pip install -r requirements.txt

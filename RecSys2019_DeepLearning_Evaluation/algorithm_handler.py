@@ -3,7 +3,7 @@
 """
 Created on 1 Feb 2022
 
-@author: Duncan C McElfresh
+@author: yyyyyy C yyyyyy
 
 code for iterating over the set of recommender algorithms
 - list ALGORITHM_NAME_LIST contains all valid algorithm names

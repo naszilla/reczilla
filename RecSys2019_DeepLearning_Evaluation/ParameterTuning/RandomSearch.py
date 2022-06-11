@@ -3,7 +3,7 @@
 """
 Created on 31 Jan 2022
 
-@author: Duncan C McElfresh
+@author: yyyyyy C yyyyyy
 
 NOTE: requires a newer version of scikit-optimize than the original codebase. Used v0.9 for development
 """
