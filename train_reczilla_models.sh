@@ -1,4 +1,4 @@
-mkdir ReczillaModels
+mkdir -p ReczillaModels
 cd RecSys2019_DeepLearning_Evaluation
 
 python -m ReczillaClassifier.run_reczilla \
