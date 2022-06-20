@@ -39,38 +39,80 @@ Once installed, you can compile all the Cython algorithms by running the below c
 ```
 python run_compile_all_cython.py
 ```
-And, you're all setup!
+And you're all set!
 
 # Datasets
 
-Each recsys dataset is managed using an instance of class [`Data_manager.DataReader`](TBD). All datasets in our paper are implemented as custom subclasses of `DataReader` objects---this object handles downloading, splitting, and i/o. However, you can load datasets without creating a custom class.
+Each recsys dataset is managed using an instance of class `DataReader` in [`Data_manager.py`](RecSys2019_DeepLearning_Evaluation/Data_manager/DataReader.py). All datasets in our paper are implemented as custom subclasses of `DataReader` objects---this object handles downloading, splitting, and i/o. In the current implementation **datasets must be read using a `DataReader` object.**
 
-**Note:** Before using any recsys dataset for training, testing, or meta-learning tasks, you need to **load the dataset using an instance of a `DataReader` object and call its `load_data()` function**, which writes a version of the dataset locally. This can be done with datasets we've implemented, or with a new dataset. We describe both cases below.
+Before using any recsys dataset for training, testing, or meta-learning tasks, you need to **load the dataset by calling the `load_data()` function of its `DataReader object.** This function writes a version of the dataset locally.
 
 ### Loading Implemented Datasets
 
 Each dataset used in our experiment has a custom `DataReader` class; a list of these classes can be found in `Data_manager.dataset_handler.DATASET_READER_LIST`. For example, the following code downloads the `MovieLens1M` dataset to a local folder, creates a global-timestamp split, and saves the split in a different folder:
 
 ```python
-from Data_manager.Movielens.Movielens1MReader import Movielens1MReader
-from Data_manager.DataSplitter_global_timestamp import DataSplitter_global_timestamp
+from Data_manager.Movielens.Movielens100KReader import Movielens100KReader
 
 # Folder where dataset will be loaded from. The dataset will be downloaded if it's not found here.
 data_folder = "/home/datasets"
 
-# Folder where dataset splits will be written
-split_folder = "/home/splits/MovieLens1M"
-
 # load the dataset
 data_reader = Movielens1MReader(folder=data_folder)
 loaded_dataset = data_reader.load_data()
+```
+expected output:
+```commandline
+Movielens100K: reload_from_original_data is 'as-needed', will only reload original data if it cannot be found.
+Movielens100K: Preloaded data not found, reading from original files...
+Movielens100K: Loading original data
+Movielens100K: Unable to fild data zip file. Downloading...
+Downloading: http://files.grouplens.org/datasets/movielens/ml-100k.zip
+In folder: /code/reczilla/RecSys2019_DeepLearning_Evaluation/Data_manager/../Data_manager_split_datasets/Movielens100K/ml-100k.zip
+DataReader: Downloaded 100.00%, 4.70 MB, 922 KB/s, 5 seconds passed
+Movielens100K: cleaning temporary files
+Movielens100K: loading complete
+Movielens100K: Verifying data consistency...
+Movielens100K: Verifying data consistency... Passed!
+Movielens100K: Found already existing folder '/home/datasets'
+Movielens100K: Saving complete!
+```
+
+And the following code creates a global timestamp split for this dataset:
+
+```python
+from Data_manager.DataSplitter_global_timestamp import DataSplitter_global_timestamp
+
+# Folder where dataset splits will be written
+split_folder = "/home/splits/MovieLens1M"
 
 # split the dataset, and write it to file
 data_splitter = DataSplitter_global_timestamp(data_reader)
 data_splitter.load_data(save_folder_path=split_folder)
 ```
+expected output:
+```commandline
+DataSplitter_global_timestamp: Cold users not allowed
+DataSplitter_global_timestamp: Preloaded data not found, reading from original files...
+Movielens100K: Verifying data consistency...
+Movielens100K: Verifying data consistency... Passed!
+split_data_on_global_timestamp: 192 cold users of total 943 users skipped
+DataSplitter_global_timestamp: Split complete
+DataSplitter_global_timestamp: Verifying data consistency...
+DataSplitter_global_timestamp: Verifying data consistency... Passed!
+DataSplitter_global_timestamp: Preloaded data not found, reading from original files... Done
+DataSplitter_global_timestamp: DataReader: Movielens100K
+	Num items: 1682
+	Num users: 751
+	Train 		interactions 79999, 	density 6.33E-02
+	Validation 	interactions 1535, 	density 1.22E-03
+	Test 		interactions 1418, 	density 1.12E-03
+DataSplitter_global_timestamp: 
+DataSplitter_global_timestamp: Done.
+```
 
-The script `Data_manager.create_all_data_splits` runs this procedure on all datasets used in our experiments:
+### Preparing All Datasets
+The script `Data_manager.create_all_data_splits` runs the above procedure on all datasets used in our experiments:
 
 ```commandline
 usage: create_all_data_splits.py [-h] --data-dir DATA_DIR --splits-dir
@@ -86,7 +128,7 @@ arguments:
 
 ### Loading New Datasets
 
-To load a recsys dataset that is not currently implemented, we recommend creating a subclass of `Data_manager.DataReader`, which specifies the loading procedure for the dataset. Once a `DataReader` object is created, the same splitting and loading process from above can be used with this object.
+To load a recsys dataset that is not currently implemented, you need to create a subclass of `Data_manager.DataReader`, which specifies the loading procedure for the dataset. Once you create a `DataReader` for your dataset, you can use the same splitting and loading process from above.
 
 If the dataset is in CSV format with columns `user_id, item_id, rating, timestamp`, then it is simple to create a class based on the example class `ExampleCSVDatasetReader`, which loads a dataset from a sample CSV included in this repository. 
 
@@ -122,11 +164,6 @@ loaded_dataset = Dataset(
 
 ...
 ```
-
-## Using Loaded Dataset Splits
-
-Calling the function `load_dataset()` (see above) will create local copies of the datasets in the specified directory. These the `DataReader` objects and split files can be used for training individual recsys algorithms, or for meta-learning tasks described below.
-
 ---
 
 ## Sample Usage
@@ -180,9 +217,9 @@ optional arguments:
                         Number of metafeatures to select for metalearner.
 ```
 
-# Experiments
+# Evaluating Recsys Algorithms
 
-Results from our paper were generated by training and evaluating several parameterized algorithms on all datasets implemented in this codebase. 
+The main results from our paper are based on a "meta-dataset", which consists of performance metrics for a large number of parameterized recsys algorithms on all recsys datasets implemented in this codebase.
 
 To generate results for each algorithm-dataset pair, we use the script `Experiment_handler.run_experiment`, which takes several positional arguments: 
 
