@@ -14,9 +14,11 @@ The figure below shows the overview of the end-to-end `RecZilla` framework pipel
 # Table of contents
 1. [Installation](#Installation)
 2. [Datasets](#Datasets)
-    1. [Loading Implemented Datasets](#LoadingImplementedDatasets)
-
-
+    1. [Loading An Implemented Dataset](#LoadingAnImplementedDataset)
+    2. [Loading All Implemented Datasets](#LoadingAllImplementedDatasets)
+    3. [Loading New Datasets](#LoadingNewDatasets)
+3. [Evaluating Recsys Algorithms](#EvaluatingRecsysAlgorithms)
+4. [Meta-Learning](#Meta-Learning)
 # Installation <a name="Installation"></a>
 
 You need Python 3.6 to use this repository.
@@ -52,7 +54,7 @@ Each recsys dataset is managed using an instance of class `DataReader` in [`Data
 
 Before using any recsys dataset for training, testing, or meta-learning tasks, you need to **load the dataset by calling the `load_data()` function of its `DataReader object.** This function writes a version of the dataset locally.
 
-## Loading Implemented Datasets <a name="LoadingImplementedDatasets"></a>
+## Loading An Implemented Dataset <a name="LoadingAnImplementedDataset"></a>
 
 Each dataset used in our experiment has a custom `DataReader` class; a list of these classes can be found in `Data_manager.dataset_handler.DATASET_READER_LIST`. For example, the following code downloads the `MovieLens1M` dataset to a local folder, creates a global-timestamp split, and saves the split in a different folder:
 
@@ -116,7 +118,7 @@ DataSplitter_global_timestamp:
 DataSplitter_global_timestamp: Done.
 ```
 
-### Loading All Implemented Datasets
+## Loading All Implemented Datasets <a name="LoadingAllImplementedDatasets"></a>
 The script `Data_manager.create_all_data_splits` runs the above procedure on all datasets used in our experiments:
 
 ```commandline
@@ -131,7 +133,7 @@ arguments:
                         Directory where the splits will be saved.
 ```
 
-### Loading New Datasets
+## Loading New Datasets <a name="LoadingNewDatasets"></a>
 
 To load a recsys dataset that is not currently implemented, you need to create a subclass of `Data_manager.DataReader`, which specifies the loading procedure for the dataset. Once you create a `DataReader` for your dataset, you can use the same splitting and loading process from above.
 
@@ -171,13 +173,52 @@ loaded_dataset = Dataset(
 ```
 ---
 
+
+# Evaluating Recsys Algorithms <a name="EvaluatingRecsysAlgorithms"></a>
+
+The main results from our paper are based on a "meta-dataset", which consists of performance metrics for a large number of parameterized recsys algorithms on all recsys datasets implemented in this codebase.
+
+To generate results for each algorithm-dataset pair, we use the script `Experiment_handler.run_experiment`, which takes several positional arguments: 
+
+```
+usage: run_experiment.py [-h]
+                         time_limit dataset_name split_type alg_name split_dir
+                         alg_seed param_seed num_samples result_dir
+                         experiment_name original_split_path
+
+positional arguments:
+  time_limit           time limit in seconds
+  dataset_name         name of dataset. we use this to find the dataset and
+                       split.
+  split_type           name of datasplitter to use. we use this to find the
+                       split directory.
+  alg_name             name of the algorithm to use.
+  split_dir            directory containing split data files.
+  alg_seed             random seed passed to the recommender algorithm. only
+                       for random algorithms.
+  param_seed           random seed for generating random hyperparameters.
+  num_samples          number of hyperparameter samples.
+  result_dir           directory where result dir structure will be written.
+                       this directory should exist.
+  experiment_name      name of the result directory that will be created.
+  original_split_path  full path to the split data. only used for bookkeeping.
+```
+
+---
+# Meta-Learning <a name="Meta-Learning"></a>
+
+
 ## Sample Usage
 A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
 
 The script `train_reczilla_models.sh` shows samples for training metalearners for different metrics.
 
 ---
-## More details
+
+## Using a Trained Meta-Model for Inference
+TBD
+
+## Training a New Meta-Model
 
 
 The main script is `run_reczilla.py`, which must be run from RecSys2019_DeepLearning_Evaluation. It takes in these arguments:
@@ -220,34 +261,4 @@ optional arguments:
                         training metamodel).
   --num_metafeatures NUM_METAFEATURES
                         Number of metafeatures to select for metalearner.
-```
-
-# Evaluating Recsys Algorithms
-
-The main results from our paper are based on a "meta-dataset", which consists of performance metrics for a large number of parameterized recsys algorithms on all recsys datasets implemented in this codebase.
-
-To generate results for each algorithm-dataset pair, we use the script `Experiment_handler.run_experiment`, which takes several positional arguments: 
-
-```
-usage: run_experiment.py [-h]
-                         time_limit dataset_name split_type alg_name split_dir
-                         alg_seed param_seed num_samples result_dir
-                         experiment_name original_split_path
-
-positional arguments:
-  time_limit           time limit in seconds
-  dataset_name         name of dataset. we use this to find the dataset and
-                       split.
-  split_type           name of datasplitter to use. we use this to find the
-                       split directory.
-  alg_name             name of the algorithm to use.
-  split_dir            directory containing split data files.
-  alg_seed             random seed passed to the recommender algorithm. only
-                       for random algorithms.
-  param_seed           random seed for generating random hyperparameters.
-  num_samples          number of hyperparameter samples.
-  result_dir           directory where result dir structure will be written.
-                       this directory should exist.
-  experiment_name      name of the result directory that will be created.
-  original_split_path  full path to the split data. only used for bookkeeping.
 ```
