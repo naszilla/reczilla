@@ -11,8 +11,13 @@ The figure below shows the overview of the end-to-end `RecZilla` framework pipel
 
 <p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
 
+# Table of contents
+1. [Installation](#Installation)
+2. [Datasets](#Datasets)
+    1. [Loading Implemented Datasets](#LoadingImplementedDatasets)
 
-# Installation
+
+# Installation <a name="Installation"></a>
 
 You need Python 3.6 to use this repository.
 
@@ -41,13 +46,13 @@ python run_compile_all_cython.py
 ```
 And you're all set!
 
-# Datasets
+# Datasets <a name="Datasets"></a>
 
-Each recsys dataset is managed using an instance of class `DataReader` in [`Data_manager.py`](RecSys2019_DeepLearning_Evaluation/Data_manager/DataReader.py). All datasets in our paper are implemented as custom subclasses of `DataReader` objects---this object handles downloading, splitting, and i/o. In the current implementation **datasets must be read using a `DataReader` object.**
+Each recsys dataset is managed using an instance of class `DataReader` in [`DataReader.py`](RecSys2019_DeepLearning_Evaluation/Data_manager/DataReader.py). All datasets in our paper are implemented as custom subclasses of `DataReader` objects---this object handles downloading, splitting, and i/o. In the current implementation **datasets must be read using a `DataReader` object.**
 
 Before using any recsys dataset for training, testing, or meta-learning tasks, you need to **load the dataset by calling the `load_data()` function of its `DataReader object.** This function writes a version of the dataset locally.
 
-### Loading Implemented Datasets
+## Loading Implemented Datasets <a name="LoadingImplementedDatasets"></a>
 
 Each dataset used in our experiment has a custom `DataReader` class; a list of these classes can be found in `Data_manager.dataset_handler.DATASET_READER_LIST`. For example, the following code downloads the `MovieLens1M` dataset to a local folder, creates a global-timestamp split, and saves the split in a different folder:
 
@@ -111,7 +116,7 @@ DataSplitter_global_timestamp:
 DataSplitter_global_timestamp: Done.
 ```
 
-### Preparing All Datasets
+### Loading All Implemented Datasets
 The script `Data_manager.create_all_data_splits` runs the above procedure on all datasets used in our experiments:
 
 ```commandline
