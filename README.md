@@ -208,20 +208,12 @@ positional arguments:
 # Meta-Learning <a name="Meta-Learning"></a>
 
 
-## Sample Usage
-A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
-
-The script `train_reczilla_models.sh` shows samples for training metalearners for different metrics.
-
----
-
-## Using a Trained Meta-Model for Inference
-TBD
-
-## Training a New Meta-Model
+## Main script overview
 
 
-The main script is `run_reczilla.py`, which must be run from RecSys2019_DeepLearning_Evaluation. It takes in these arguments:
+The main script is `run_reczilla.py`, which must be run from the folder `RecSys2019_DeepLearning_Evaluation`. It can be used to train a new meta-model, use a pre-trained meta-model to train a new recommender on a dataset, or perform both tasks at once.
+
+The script takes in these arguments:
 
 ```
 > python -m ReczillaClassifier.run_reczilla -h
@@ -262,3 +254,179 @@ optional arguments:
   --num_metafeatures NUM_METAFEATURES
                         Number of metafeatures to select for metalearner.
 ```
+
+
+
+## Training a new meta-model
+The following files are required for training a new metamodel:
+
+1. `RecSys2019_DeepLearning_Evaluation/Metafeatures/Metafeatures.csv`: file with metafeatures.
+2. `RecSys2019_DeepLearning_Evaluation/metadatasets/metadata-v2.pkl`: file with metadataset (performance of algorithms on each RecSys dataset.)
+
+The script `train_reczilla_models.sh` shows samples for training metalearners for different metrics. The script does the following:
+1. Trains a model for precision @ 10 and saves it to `ReczillaModels/prec_10.pickle`
+2. Trains a model for training time and saves it to `ReczillaModels/time_on_train.pickle`
+3. Trains a model for MRR @ 10 and saves it to `ReczillaModels/mrr_10.pickle`
+4. Trains a model for item hit coverage @ 10 and saves it to `ReczillaModels/item_hit_cov.pickle`
+
+For this script, the expected output should be similar to the following:
+```commandline
+python -m ReczillaClassifier.run_reczilla     --train_meta     --metamodel_filepath="../ReczillaModels/prec_10.pickle"     --target_metric="PRECISION_cut_10"     --num_algorithms=10     --num_metafeatures=10
+selecting algs and features..
+done selecting algs in :  0:00:21.533609
+Computing correlations...
+done selecting features in :  0:00:02.300044
+Metamodel saved to ../ReczillaModels/prec_10.pickle
+
+python -m ReczillaClassifier.run_reczilla     --train_meta     --metamodel_filepath="../ReczillaModels/time_on_train.pickle"     --target_metric="time_on_train"     --num_algorithms=10     --num_metafeatures=10
+selecting algs and features..
+done selecting algs in :  0:00:25.295785
+Computing correlations...
+done selecting features in :  0:00:02.587050
+Metamodel saved to ../ReczillaModels/time_on_train.pickle
+
+python -m ReczillaClassifier.run_reczilla      --train_meta    --metamodel_filepath="../ReczillaModels/mrr_10.pickle"  --target_metric="MRR_cut_10"   --num_algorithms=10      --num_metafeatures=10
+selecting algs and features..
+done selecting algs in :  0:00:15.817387
+Computing correlations...
+done selecting features in :  0:00:01.631595
+Metamodel saved to ../ReczillaModels/mrr_10.pickle
+
+python -m ReczillaClassifier.run_reczilla     --train_meta     --metamodel_filepath="../ReczillaModels/item_hit_cov.pickle"     --target_metric="COVERAGE_ITEM_HIT_cut_10"     --num_algorithms=10     --num_metafeatures=10
+selecting algs and features..
+done selecting algs in :  0:00:20.211772
+Computing correlations...
+done selecting features in :  0:00:03.447911
+Metamodel saved to ../ReczillaModels/item_hit_cov.pickle
+```
+
+
+## Using a Trained Meta-Model for Inference
+A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
+
+The only required files for execution is a pre-trained metamodel and a dataset to perform inference on. In the case of `run_reczilla_inference.sh`, these correspond to:
+1. `ReczillaModels/prec_10.pickle` (metamodel)
+2. `ReczillaModels/time_on_train.pickle` (metamodel)
+3. `all_data/splits-v5/AmazonGiftCards/DataSplitter_leave_k_out_last` (folder with dataset split to perform inference on)
+
+The script does the following:
+1. Use the pre-trained precision @ 10 meta-model to select an algorithm to train on the dataset under `all_data/splits-v5/AmazonGiftCards/DataSplitter_leave_k_out_last`, and saves the recommender to a zip file with the prefix `prec_10_`.
+2. Use the pre-trained time on train meta-model to select an algorithm to train on the dataset under `all_data/splits-v5/AmazonGiftCards/DataSplitter_leave_k_out_last`, and saves the recommender to a zip file with the prefix `train_time_`.
+
+The output for this script should be similar to this:
+
+```commandline
+python -m ReczillaClassifier.run_reczilla      --dataset_split_path="all_data/splits-v5/AmazonGiftCards/DataSplitter_leave_k_out_last"         --metamodel_filepath="../ReczillaModels/prec_10.pickle"         --rec_model_save_path="../prec_10_"
+Loading metamodel from ../ReczillaModels/prec_10.pickle
+DataSplitter_leave_k_out_last: Cold users not allowed
+DataSplitter_leave_k_out_last: Verifying data consistency...
+DataSplitter_leave_k_out_last: Verifying data consistency... Passed!
+DataSplitter_leave_k_out_last: DataReader: AmazonReviewData_AmazonGiftCards
+        Num items: 345
+        Num users: 144
+        Train           interactions 237,       density 4.77E-03
+        Validation      interactions 144,       density 2.90E-03
+        Test            interactions 144,       density 2.90E-03
+
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last:  ICM name: ICM_metadata, Num features: 671, feature occurrences: 15965, density 6.90E-02
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last: Done.
+TopPopRecommender: URM Detected 10 (16.39 %) cold items.
+EvaluatorHoldout: Processed 43 (100.0%) in 0.03 sec. Users per second: 1550
+UserKNNCFRecommender: URM Detected 10 (16.39 %) cold items.
+Similarity column 43 (100.0%), 55562.25 column/sec. Elapsed time 0.00 sec
+EvaluatorHoldout: Processed 43 (100.0%) in 0.03 sec. Users per second: 1677
+DataSplitter_leave_k_out_last: Cold users not allowed
+DataSplitter_leave_k_out_last: Verifying data consistency...
+DataSplitter_leave_k_out_last: Verifying data consistency... Passed!
+DataSplitter_leave_k_out_last: DataReader: AmazonReviewData_AmazonGiftCards
+        Num items: 345
+        Num users: 144
+        Train           interactions 237,       density 4.77E-03
+        Validation      interactions 144,       density 2.90E-03
+        Test            interactions 144,       density 2.90E-03
+
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last:  ICM name: ICM_metadata, Num features: 671, feature occurrences: 15965, density 6.90E-02
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last: Done.
+Chose PureSVDRecommender:random_20 for PRECISION_cut_10 with predicted value 0.027155032381415367
+PureSVDRecommender: URM Detected 266 (77.10 %) cold items.
+PureSVDRecommender: Computing SVD decomposition...
+PureSVDRecommender: Computing SVD decomposition... done in 0.12 sec
+EvaluatorHoldout: Processed 144 (100.0%) in 0.14 sec. Users per second: 1007
+
+**************************************************
+Done training recommender. Summary:
+Metric to optimize: PRECISION_cut_10
+Chosen algorithm: PureSVDRecommender:random_20
+Predicted performance: 0.027155032381415367
+Actual performance: 0.023611111111111124
+**************************************************
+
+PureSVDRecommender: Saving model in file '../prec_10_PureSVDRecommender'
+PureSVDRecommender: Saving complete
+
+
+Press enter to continue
+
+python -m ReczillaClassifier.run_reczilla      --dataset_split_path="all_data/splits-v5/AmazonGiftCards/DataSplitter_leave_k_out_last"         --metamodel_filepath="../ReczillaModels/time_on_train.pickle"   --rec_model_save_path="../train_time_"
+Loading metamodel from ../ReczillaModels/time_on_train.pickle
+DataSplitter_leave_k_out_last: Cold users not allowed
+DataSplitter_leave_k_out_last: Verifying data consistency...
+DataSplitter_leave_k_out_last: Verifying data consistency... Passed!
+DataSplitter_leave_k_out_last: DataReader: AmazonReviewData_AmazonGiftCards
+        Num items: 345
+        Num users: 144
+        Train           interactions 237,       density 4.77E-03
+        Validation      interactions 144,       density 2.90E-03
+        Test            interactions 144,       density 2.90E-03
+
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last:  ICM name: ICM_metadata, Num features: 671, feature occurrences: 15965, density 6.90E-02
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last: Done.
+DataSplitter_leave_k_out_last: Cold users not allowed
+DataSplitter_leave_k_out_last: Verifying data consistency...
+DataSplitter_leave_k_out_last: Verifying data consistency... Passed!
+DataSplitter_leave_k_out_last: DataReader: AmazonReviewData_AmazonGiftCards
+        Num items: 345
+        Num users: 144
+        Train           interactions 237,       density 4.77E-03
+        Validation      interactions 144,       density 2.90E-03
+        Test            interactions 144,       density 2.90E-03
+
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last:  ICM name: ICM_metadata, Num features: 671, feature occurrences: 15965, density 6.90E-02
+DataSplitter_leave_k_out_last:
+
+DataSplitter_leave_k_out_last: Done.
+Chose IALSRecommender:random_0 for time_on_train with predicted value 0.0016423999331891537
+IALSRecommender: URM Detected 266 (77.10 %) cold items.
+IALSRecommender: Epoch 1 of 300. Elapsed time 0.10 sec
+IALSRecommender: Epoch 2 of 300. Elapsed time 0.19 sec
+IALSRecommender: Epoch 3 of 300. Elapsed time 0.24 sec
+[...]
+IALSRecommender: Epoch 300 of 300. Elapsed time 22.91 sec
+IALSRecommender: Terminating at epoch 300. Elapsed time 22.91 sec
+
+**************************************************
+Done training recommender. Summary:
+Metric to optimize: time_on_train
+Chosen algorithm: IALSRecommender:random_0
+Predicted performance: 0.0016423999331891537
+Actual performance: 22.916834831237793
+**************************************************
+
+IALSRecommender: Saving model in file '../train_time_IALSRecommender'
+IALSRecommender: Saving complete
+```
+---
