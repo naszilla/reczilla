@@ -19,6 +19,7 @@ The figure below shows the overview of the end-to-end `RecZilla` framework pipel
     3. [Loading New Datasets](#LoadingNewDatasets)
 3. [Evaluating Recsys Algorithms](#EvaluatingRecsysAlgorithms)
 4. [Meta-Learning](#Meta-Learning)
+
 # Installation <a name="Installation"></a>
 
 You need Python 3.6 to use this repository.
@@ -85,13 +86,13 @@ Movielens100K: Found already existing folder '/home/datasets'
 Movielens100K: Saving complete!
 ```
 
-And the following code creates a global timestamp split for this dataset:
+Now, the dataset `Moviekens100K` has been downloaded to folder `/home/datasets`. The following code creates a global timestamp split for this dataset:
 
 ```python
 from Data_manager.DataSplitter_global_timestamp import DataSplitter_global_timestamp
 
 # Folder where dataset splits will be written
-split_folder = "/home/splits/MovieLens1M"
+split_folder = "/home/splits/MovieLens100K"
 
 # split the dataset, and write it to file
 data_splitter = DataSplitter_global_timestamp(data_reader)
@@ -117,6 +118,8 @@ DataSplitter_global_timestamp: DataReader: Movielens100K
 DataSplitter_global_timestamp: 
 DataSplitter_global_timestamp: Done.
 ```
+
+Now, the global timestamp split of `Movielens100K` has been written to `/home/splits/MovieLens100K`.
 
 ## Loading All Implemented Datasets <a name="LoadingAllImplementedDatasets"></a>
 The script `Data_manager.create_all_data_splits` runs the above procedure on all datasets used in our experiments:
@@ -204,9 +207,79 @@ positional arguments:
   original_split_path  full path to the split data. only used for bookkeeping.
 ```
 
+For example, the following call trains and evaluates 5 hyperparameter samples for algorithm `P3alphaRecommender`, using the split created in the previous section. The results of this experiment will be written to `/home/results`.
+
+```commandline
+
+# first, create a directory to write results in
+mkdir ./example-results
+
+python -m Experiment_handler.run_experiment \
+    7200 \
+    Movielens100K \
+    DataSplitter_global_timestamp \
+    P3alphaRecommender \
+    /home/splits/MovieLens100K \
+    0 \
+    0 \
+    5 \
+    ./example-results \
+    example-experiment \
+    original-split-path
+```
+
+Sample output:
+
+```commandline
+[2022-06-21 12:06:57,142] [Experiment.py:__init__] : initializing Experiment: base_directory=/code/reczilla/RecSys2019_DeepLearning_Evaluation/example-results, result_directory=/code/reczilla/RecSys2019_DeepLearning_Evaluation/example-results/example-experiment, data_directory=None
+[2022-06-21 12:06:57,143] [Experiment.py:__init__] : found result directory: /code/reczilla/RecSys2019_DeepLearning_Evaluation/example-results/example-experiment
+[2022-06-21 12:06:57,143] [Experiment.py:prepare_dataset] : initialized dataset in Movielens100K
+[2022-06-21 12:06:57,254] [Experiment.py:prepare_split] : found a split in directory /home/splits/MovieLens100K_splits
+[2022-06-21 12:06:57,254] [Experiment.py:prepare_split] : initialized split Movielens100K/DataSplitter_global_timestamp
+[2022-06-21 12:06:57,254] [Experiment.py:run_experiment] : WARNING: URM_validation not found in URM_dict for split Movielens100K/DataSplitter_global_timestamp
+EvaluatorHoldout: Ignoring 81 (89.2%) Users that have less than 1 test interactions
+EvaluatorHoldout: Ignoring 69 (90.8%) Users that have less than 1 test interactions
+[2022-06-21 12:06:57,257] [Experiment.py:run_experiment] : starting experiment, writing results to example-results
+[2022-06-21 12:06:57,292] [RandomSearch.py:_log_info] : RandomSearch: Starting parameter set
+
+P3alphaRecommender: URM Detected 66 (3.92 %) cold items.
+EvaluatorHoldout: Processed 81 (100.0%) in 0.34 sec. Users per second: 240
+EvaluatorHoldout: Processed 69 (100.0%) in 0.32 sec. Users per second: 213
+DataIO: Json dumps supports only 'str' as dictionary keys. Transforming keys to string, note that this will alter the mapper content.
+[2022-06-21 12:06:58,182] [RandomSearch.py:_log_info] : RandomSearch: Starting parameter set 1 of 5
+
+P3alphaRecommender: URM Detected 66 (3.92 %) cold items.
+EvaluatorHoldout: Processed 81 (100.0%) in 0.33 sec. Users per second: 243
+EvaluatorHoldout: Processed 69 (100.0%) in 0.30 sec. Users per second: 227
+[2022-06-21 12:07:00,094] [RandomSearch.py:_log_info] : RandomSearch: Starting parameter set 2 of 5
+
+P3alphaRecommender: URM Detected 66 (3.92 %) cold items.
+EvaluatorHoldout: Processed 81 (100.0%) in 0.32 sec. Users per second: 250
+EvaluatorHoldout: Processed 69 (100.0%) in 0.31 sec. Users per second: 221
+[2022-06-21 12:07:01,058] [RandomSearch.py:_log_info] : RandomSearch: Starting parameter set 3 of 5
+
+P3alphaRecommender: URM Detected 66 (3.92 %) cold items.
+EvaluatorHoldout: Processed 81 (100.0%) in 0.38 sec. Users per second: 215
+EvaluatorHoldout: Processed 69 (100.0%) in 0.31 sec. Users per second: 220
+[2022-06-21 12:07:02,465] [RandomSearch.py:_log_info] : RandomSearch: Starting parameter set 4 of 5
+
+P3alphaRecommender: URM Detected 66 (3.92 %) cold items.
+EvaluatorHoldout: Processed 81 (100.0%) in 0.33 sec. Users per second: 248
+EvaluatorHoldout: Processed 69 (100.0%) in 0.27 sec. Users per second: 257
+[2022-06-21 12:07:04,678] [RandomSearch.py:_log_info] : RandomSearch: Search complete. Output written to: example-results/
+
+[2022-06-21 12:07:04,684] [Experiment.py:run_experiment] : results written to file: example-results/result_20220621_120657_metadata.zip
+initial result file: example-results/result_20220621_120657_metadata.zip
+renaming to: example-results/result.zip
+```
+
+There are two files of interest created by this experiment script, both written to the results folder provided (`example-results`):
+- a log file with namning convention `result_yyyymmdd_hhmmss_RandomSearch.txt`
+- the hyperparameters and evaluation metrics, stored in a zip archive named `result.zip`
+
+
 ---
 # Meta-Learning <a name="Meta-Learning"></a>
-
 
 ## Main script overview
 
@@ -254,7 +327,6 @@ optional arguments:
   --num_metafeatures NUM_METAFEATURES
                         Number of metafeatures to select for metalearner.
 ```
-
 
 
 ## Training a new meta-model
