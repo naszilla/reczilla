@@ -11,6 +11,13 @@ The figure below shows the overview of the end-to-end `RecZilla` framework pipel
 
 <p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
 
+This repository is based on the public repository [RecSys2019_DeepLearning_Evaluation](https://github.com/MaurizioFD/RecSys2019_DeepLearning_Evaluation). We use several core functions of this codebase---for training and evaluating algorithms, and for reading and splitting datasets. This repo extends the original `RecSys2019_DeepLearning_Evaluation` repo in several ways:
+- added several datasets (classes) to the folder `Data_manager`
+- removed several large dataset files from the repo
+- made several small changes and bug fixes required for our experiments
+
+**Note:** unless specified otherwise, all code should be run from the directory `reczilla/RecSys2019_DeepLearning_Evaluation/`.
+
 # Table of contents
 1. [Installation](#Installation)
 2. [Datasets](#Datasets)
