@@ -34,7 +34,7 @@ This repository is based on the public repository [RecSys2019_DeepLearning_Evalu
 4. [Meta-Learning](#Meta-Learning)
    1. [Main script overview](#MainScriptOverview)
    2. [Training a new meta-model](#TrainingANewMetaModel)
-   3. [Using a Trained Meta-Model for Inference](#UsingTrainedMetaModelForInference)
+   3. [Using a Trained Meta-Model for Inference](#UsingATrainedMetaModelForInference)
 # Installation <a name="Installation"></a>
 
 You need Python 3.6 to use this repository.
