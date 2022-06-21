@@ -32,7 +32,9 @@ This repository is based on the public repository [RecSys2019_DeepLearning_Evalu
     3. [Loading New Datasets](#LoadingNewDatasets)
 3. [Evaluating Recsys Algorithms](#EvaluatingRecsysAlgorithms)
 4. [Meta-Learning](#Meta-Learning)
-
+   1. [Main script overview](#MainScriptOverview)
+   2. [Training a new meta-model](#TrainingANewMetaModel)
+   3. [Using a Trained Meta-Model for Inference](#UsingTrainedMetaModelForInference)
 # Installation <a name="Installation"></a>
 
 You need Python 3.6 to use this repository.
@@ -294,7 +296,7 @@ There are two files of interest created by this experiment script, both written 
 ---
 # Meta-Learning <a name="Meta-Learning"></a>
 
-## Main script overview
+## Main script overview <a name="MainScriptOverview"></a>
 
 
 The main script is `run_reczilla.py`, which must be run from the folder `RecSys2019_DeepLearning_Evaluation`. It can be used to train a new meta-model, use a pre-trained meta-model to train a new recommender on a dataset, or perform both tasks at once.
@@ -342,7 +344,7 @@ optional arguments:
 ```
 
 
-## Training a new meta-model
+## Training a new meta-model <a name="TrainingANewMetaModel"></a>
 The following files are required for training a new metamodel:
 
 1. `RecSys2019_DeepLearning_Evaluation/Metafeatures/Metafeatures.csv`: file with metafeatures.
@@ -386,7 +388,7 @@ Metamodel saved to ../ReczillaModels/item_hit_cov.pickle
 ```
 
 
-## Using a Trained Meta-Model for Inference
+## Using a Trained Meta-Model for Inference <a name="UsingATrainedMetaModelForInference"></a>
 A sample script to perform inference on a new dataset is provided in `run_reczilla_inference.sh`. It uses pre-trained Reczilla models (located in the folder `ReczillaModels`) to select and train a recommender on a dataset specified on a path. This script can be modified to run inference on new datasets.
 
 The only required files for execution is a pre-trained metamodel and a dataset to perform inference on. In the case of `run_reczilla_inference.sh`, these correspond to:
