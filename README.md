@@ -12,9 +12,15 @@ The figure below shows the overview of the end-to-end `RecZilla` framework pipel
 <p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
 
 This repository is based on the public repository [RecSys2019_DeepLearning_Evaluation](https://github.com/MaurizioFD/RecSys2019_DeepLearning_Evaluation). We use several core functions of this codebase---for training and evaluating algorithms, and for reading and splitting datasets. This repo extends the original `RecSys2019_DeepLearning_Evaluation` repo in several ways:
-- added several datasets (classes) to the folder `Data_manager`
+- [Data_manager/](RecSys2019_DeepLearning_Evaluation/Data_manager): added several datasets, and added a global timestamp splitting function
+- [Experiment_handler/](RecSys2019_DeepLearning_Evaluation/Experiment_handler): added classes and scripts for training and evaluating recsys algorithms on datasets
+- [Metafeatures/](RecSys2019_DeepLearning_Evaluation/Metafeatures): added classess and scripts for calculating meta-features of recsys datasets
+- [ParameterTuning/](RecSys2019_DeepLearning_Evaluation/ParameterTuning): added a `ParameterSpace` class and `RandomSearch` class for random hyperparameter search
+- [ReczillaClassifier/](RecSys2019_DeepLearning_Evaluation/ReczillaClassifier): added classes and scripts for training and using a recsys meta-model
+- [algorithm_handler.py](RecSys2019_DeepLearning_Evaluation/algorithm_handler.py): added a function for accessing all implemented algorithms and their hyperparameter spaces
+- [dataset_handler.py](RecSys2019_DeepLearning_Evaluation/algorithm_handler.py): added a function for 
 - removed several large dataset files from the repo
-- made several small changes and bug fixes required for our experiments
+- made several small changes and bug fixes to support our experiments
 
 **Note:** unless specified otherwise, all code should be run from the directory `reczilla/RecSys2019_DeepLearning_Evaluation/`.
 
