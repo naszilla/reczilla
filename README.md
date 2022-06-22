@@ -11,7 +11,7 @@ The figure below shows the overview of the end-to-end `RecZilla` framework pipel
 
 <p align="center"><img src="img/reczilla_overview.png" width=700 /></p>
 
-This repository is based on the public repository [RecSys2019_DeepLearning_Evaluation](https://github.com/MaurizioFD/RecSys2019_DeepLearning_Evaluation). We use several core functions of this codebase---for training and evaluating algorithms, and for reading and splitting datasets. This repo extends the original `RecSys2019_DeepLearning_Evaluation` repo in several ways:
+This repository is based on the public repository [RecSys2019_DeepLearning_Evaluation](https://github.com/MaurizioFD/RecSys2019_DeepLearning_Evaluation). We use several core functions of this codebase---for training and evaluating algorithms, and for reading and splitting datasets. This repo extends the original in several ways:
 - [Data_manager/](RecSys2019_DeepLearning_Evaluation/Data_manager): added several datasets, and added a global timestamp splitting function
 - [Experiment_handler/](RecSys2019_DeepLearning_Evaluation/Experiment_handler): added classes and scripts for training and evaluating recsys algorithms on datasets
 - [Metafeatures/](RecSys2019_DeepLearning_Evaluation/Metafeatures): added classess and scripts for calculating meta-features of recsys datasets
@@ -84,7 +84,8 @@ data_folder = "/home/datasets"
 data_reader = Movielens1MReader(folder=data_folder)
 loaded_dataset = data_reader.load_data()
 ```
-expected output:
+<details>
+  <summary>expected output</summary>
 ```commandline
 Movielens100K: reload_from_original_data is 'as-needed', will only reload original data if it cannot be found.
 Movielens100K: Preloaded data not found, reading from original files...
@@ -100,6 +101,7 @@ Movielens100K: Verifying data consistency... Passed!
 Movielens100K: Found already existing folder '/home/datasets'
 Movielens100K: Saving complete!
 ```
+</details>
 
 Now, the dataset `Moviekens100K` has been downloaded to folder `/home/datasets`. The following code creates a global timestamp split for this dataset:
 
