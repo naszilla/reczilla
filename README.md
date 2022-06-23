@@ -22,7 +22,7 @@ This repository is based on the public repository [RecSys2019_DeepLearning_Evalu
 - removed several large dataset files from the repo
 - made several small changes and bug fixes to support our experiments
 
-**NOTE: unless specified otherwise, all code should be run from the directory `reczilla/RecSys2019_DeepLearning_Evaluation/`.**
+**NOTE: unless specified otherwise, all code should be run from the directory `reczilla/RecSys2019_DeepLearning_Evaluation/`**
 
 # Table of contents
 1. [Installation](#Installation)
