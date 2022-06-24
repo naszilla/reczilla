@@ -6,6 +6,8 @@
 
 `RecZilla` is a framework which provides the functionality to perform metalearning for algorithm selection on recommender systems datasets. It uses a meta-learner model to predict the best algorithm and hyperparameters for new, unseen datasets. 
 
+See our paper at [https://arxiv.org/abs/2206.11886](https://arxiv.org/abs/2206.11886).
+
 # Overview
 The figure below shows the overview of the end-to-end `RecZilla` framework pipeline.
 
@@ -480,3 +482,14 @@ IALSRecommender: Saving model in file '../prec_10_IALSRecommender'
 IALSRecommender: Saving complete
 ```
 </details>
+
+## Citation 
+Please cite our work if you use code from this repo:
+```bibtex
+@article{reczilla-2022,
+  title={On the Generalizability and Predictability of Recommender Systems}, 
+  author={McElfresh, Duncan and Khandagale, Sujay and Valverde, Jonathan and Dickerson, John P. and White, Colin}, 
+  journal={arXiv preprint arXiv:2206.11886},
+  year={2022}, 
+} 
+```
