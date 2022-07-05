@@ -61,6 +61,22 @@ class Mult_VAE_RecommenderWrapper(BaseRecommender, Incremental_Training_Early_St
 
         return item_scores
 
+    def _compute_item_score_for_new_URM(self, URM_new, items_to_compute = None):
+
+        if sparse.isspmatrix(URM_new):
+            URM_new = URM_new.toarray()
+
+        URM_new = URM_new.astype('float32')
+
+        item_scores_to_compute = self.sess.run(self.logits_var, feed_dict={self.vae.input_ph: URM_new})
+
+        if items_to_compute is not None:
+            item_scores = - np.ones(URM_new.shape) * np.inf
+            item_scores[:, items_to_compute] = item_scores_to_compute[:, items_to_compute]
+        else:
+            item_scores = item_scores_to_compute
+
+        return item_scores
 
 
     def fit(self,
@@ -152,6 +168,7 @@ class Mult_VAE_RecommenderWrapper(BaseRecommender, Incremental_Training_Early_St
 
 
     def _run_epoch(self, num_epoch):
+        print(f"Training ... num_epoch: {num_epoch}")
 
         user_index_list_train = list(range(self.n_users))
 
@@ -159,7 +176,8 @@ class Mult_VAE_RecommenderWrapper(BaseRecommender, Incremental_Training_Early_St
 
         # train for one epoch
         for bnum, st_idx in enumerate(range(0, self.n_users, self.batch_size)):
-
+            print(f"batch number: {bnum}")
+            
             end_idx = min(st_idx + self.batch_size, self.n_users)
             X = self.URM_train[user_index_list_train[st_idx:end_idx]]
 

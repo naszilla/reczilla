@@ -91,6 +91,19 @@ class BaseItemSimilarityMatrixRecommender(BaseSimilarityMatrixRecommender):
 
         return item_scores
 
+    def _compute_item_score_for_new_URM(self, URM_new, items_to_compute=None):
+
+        self._check_format()
+
+        if items_to_compute is not None:
+            item_scores = - np.ones(URM_new.shape, dtype=np.float32)*np.inf
+            item_scores_all = URM_new.dot(self.W_sparse).toarray()
+            item_scores[:, items_to_compute] = item_scores_all[:, items_to_compute]
+        else:
+            item_scores = URM_new.dot(self.W_sparse).toarray()
+
+        return item_scores
+
 
 class BaseUserSimilarityMatrixRecommender(BaseSimilarityMatrixRecommender):
 
