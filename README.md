@@ -20,7 +20,7 @@ This repository is based on the public repository [RecSys2019_DeepLearning_Evalu
 - [ParameterTuning/](RecSys2019_DeepLearning_Evaluation/ParameterTuning): added a `ParameterSpace` class and `RandomSearch` class for random hyperparameter search
 - [ReczillaClassifier/](RecSys2019_DeepLearning_Evaluation/ReczillaClassifier): added classes and scripts for training and using a recsys meta-model
 - [algorithm_handler.py](RecSys2019_DeepLearning_Evaluation/algorithm_handler.py): added a function for accessing all implemented algorithms and their hyperparameter spaces
-- [dataset_handler.py](RecSys2019_DeepLearning_Evaluation/algorithm_handler.py): added a function for 
+- [dataset_handler.py](RecSys2019_DeepLearning_Evaluation/dataset_handler.py): added a function for accessing all implemented datasets
 - removed several large dataset files from the repo
 - made several small changes and bug fixes to support our experiments
 
