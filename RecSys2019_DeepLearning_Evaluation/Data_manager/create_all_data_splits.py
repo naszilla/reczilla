@@ -63,8 +63,8 @@ def create_all_splits(data_dir, splits_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-dir", required=True, help="directory where the downloaded dataset has been stored. If a dataset is not downloaded, it will be downloaded.")
-    parser.add_argument("--splits-dir", required=True, help="directory where the splits will be saved")
+    parser.add_argument("--data-dir", required=True, help="Directory where the downloaded dataseta have been stored. If a dataset is not downloaded, it will be downloaded.")
+    parser.add_argument("--splits-dir", required=True, help="Directory where the splits will be saved.")
     args = parser.parse_args()
     create_all_splits(args.data_dir, args.splits_dir)
 
