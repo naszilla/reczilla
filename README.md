@@ -6,6 +6,8 @@
 
 `RecZilla` is a framework which provides the functionality to perform metalearning for algorithm selection on recommender systems datasets. It uses a meta-learner model to predict the best algorithm and hyperparameters for new, unseen datasets. 
 
+See our paper at [https://arxiv.org/abs/2206.11886](https://arxiv.org/abs/2206.11886).
+
 # Overview
 The figure below shows the overview of the end-to-end `RecZilla` framework pipeline.
 
@@ -18,11 +20,11 @@ This repository is based on the public repository [RecSys2019_DeepLearning_Evalu
 - [ParameterTuning/](RecSys2019_DeepLearning_Evaluation/ParameterTuning): added a `ParameterSpace` class and `RandomSearch` class for random hyperparameter search
 - [ReczillaClassifier/](RecSys2019_DeepLearning_Evaluation/ReczillaClassifier): added classes and scripts for training and using a recsys meta-model
 - [algorithm_handler.py](RecSys2019_DeepLearning_Evaluation/algorithm_handler.py): added a function for accessing all implemented algorithms and their hyperparameter spaces
-- [dataset_handler.py](RecSys2019_DeepLearning_Evaluation/algorithm_handler.py): added a function for 
+- [dataset_handler.py](RecSys2019_DeepLearning_Evaluation/dataset_handler.py): added a function for accessing all implemented datasets
 - removed several large dataset files from the repo
 - made several small changes and bug fixes to support our experiments
 
-**NOTE: unless specified otherwise, all code should be run from the directory `reczilla/RecSys2019_DeepLearning_Evaluation/`.**
+**NOTE: unless specified otherwise, all code should be run from the directory `reczilla/RecSys2019_DeepLearning_Evaluation/`**
 
 # Table of contents
 1. [Installation](#Installation)
@@ -480,3 +482,14 @@ IALSRecommender: Saving model in file '../prec_10_IALSRecommender'
 IALSRecommender: Saving complete
 ```
 </details>
+
+## Citation 
+Please cite our work if you use code from this repo:
+```bibtex
+@article{reczilla-2022,
+  title={On the Generalizability and Predictability of Recommender Systems}, 
+  author={McElfresh, Duncan and Khandagale, Sujay and Valverde, Jonathan and Dickerson, John P. and White, Colin}, 
+  journal={arXiv preprint arXiv:2206.11886},
+  year={2022}, 
+} 
+```
