@@ -11,8 +11,13 @@ from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from Conferences.WWW.MultiVAE_our_interface.MultiVAE_RecommenderWrapper import (
 	Mult_VAE_RecommenderWrapper,
 )
-RECOMMENDERS = ["item-knn", "mult-vae"]
 
+from LIME_utils.perturb import perturb_rated_items, perturb_all_items
+
+RECOMMENDERS = ["item-knn", "mult-vae"]
+PERTURB_MODES = ['all-items', 'rated-items']
+
+np.random.seed(42)
 
 data_reader = MovieTweetingsReader()
 dataset = data_reader.load_data()
@@ -39,7 +44,7 @@ num_users, num_items = URM_train.shape
 
 ########## Recsys model part ##########
 
-recommender_name = "mult-vae"
+recommender_name = "item-knn"
 
 if recommender_name == "item-knn":
 	recommender = ItemKNNCFRecommender(URM_train)
@@ -59,30 +64,45 @@ elif recommender_name == "mult-vae":
 
 ########## Generate the surrogate's dataset ##########
 
-user_num = 0
-URM_row = URM_train[user_num]
+
+user_num = 3
+user_history = URM_train[user_num]
 
 scores = recommender._compute_item_score([user_num])
-
 item_num = np.argmax(scores[0])
+
+# in CSR matrices, column indices for row i are stored in indices[indptr[i]:indptr[i+1]]
+# and their corresponding values are stored in data[indptr[i]:indptr[i+1]]
+indptr = URM_train.indptr
+start_ptr, end_ptr = indptr[user_num], indptr[user_num + 1] 
+rated_items = URM_train.indices[start_ptr:end_ptr]
+user_history_projected = URM_train.data[start_ptr:end_ptr]
 
 
 num_perturbed_pts = 1000
 
-np.random.seed(42)
-# gaussian noise -- sampled from randn: Normal(0,1)  
-random_matrix = sparse.random(num_perturbed_pts, num_items, 
-							density=0.01, data_rvs=np.random.randn)
+perturb_mode = 'rated-items'
 
-URM_perturbed = URM_row[np.zeros(num_perturbed_pts), :] + random_matrix 
+if perturb_mode == 'all-items':
+	URM_perturbed =	perturb_all_items(user_history, num_perturbed_pts)
 
+else:
+	URM_perturbed, random_data = \
+		perturb_rated_items(user_history, rated_items, num_perturbed_pts)
 
 scores_perturbed = recommender._compute_item_score_for_new_URM(URM_perturbed)
 
 
 ########## Train the surrogate ##########
 
-X = URM_perturbed.todense()
+if perturb_mode == 'all-items':
+	URM_surrogate = URM_perturbed.toarray()
+else:
+	# = URM_perturbed[:, items_rated] but column slicing is slow on CSR matrices
+	URM_surrogate = np.tile(user_history_projected, (num_perturbed_pts, 1)) + \
+					random_data.reshape(num_perturbed_pts, rated_items.size)
+
+X = URM_surrogate
 y = scores_perturbed[:, item_num]
 
 surrogate = LinearRegression().fit(X, y)
@@ -91,8 +111,13 @@ weights = surrogate.coef_
 
 ########## Generate the explanation ##########
 
-imp_items = np.argsort(-weights)[:5]
+indices_sorted = np.argsort(-weights)[:5]
+
+if perturb_mode == 'all-items':
+	items_sorted = indices_sorted
+else:
+	items_sorted = np.array(rated_items)[indices_sorted].tolist()
 
 print(f"user: {user_num}, item: {item_num}, \
 	predicted rating: {scores[0, item_num]}")
-print(f'Important items for this rating: {imp_items}')
+print(f'Important items for this rating: {items_sorted[:5]}')
