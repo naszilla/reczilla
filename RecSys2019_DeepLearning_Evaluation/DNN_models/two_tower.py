@@ -20,6 +20,11 @@ from Base.BaseTempFolder import BaseTempFolder
 from Base.Incremental_Training_Early_Stopping import Incremental_Training_Early_Stopping
 from Base.DataIO import DataIO
 
+import tensorflow_datasets as tfds
+import tensorflow_recommenders as tfrs
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 
 
@@ -34,7 +39,7 @@ class RetrievalModel(tfrs.models.Model):
  
   def compute_loss(self, features, training=False) -> tf.Tensor:
     query_embeddings = self.query_model(features['user_id'])
-    positive_candidate_embeddings = self.candidate_model(features["movie_id"])
+    positive_candidate_embeddings = self.candidate_model(features["item_id"])
 
     loss = self.retrieval_task_layer(
         query_embeddings,
@@ -69,7 +74,7 @@ class RankingModel(tfrs.models.Model):
 
   def compute_loss(self, features, training=False) -> tf.Tensor:
     query_embeddings = self.query_model(features['user_id'])
-    candidate_embeddings = self.candidate_model(features["movie_id"])
+    candidate_embeddings = self.candidate_model(features["item_id"])
     rating_predictions = self.rating_model(
         tf.concat(
             [query_embeddings, candidate_embeddings],
@@ -96,21 +101,42 @@ class Two_Tower_Recommender(BaseRecommender):
 
     def __init__(self, URM_train):
         super(Two_Tower_Recommender, self).__init__(URM_train)
+        self.task = 'Ranking'
         self.process_attributes = False
         self.transform_data()
         self.get_models()
 
     def _compute_item_score(self, user_id_array, items_to_compute = None):
+        import numpy as np
+        if items_to_compute is not None:
+            item_scores = - np.ones((len(user_id_array), self.n_items)) * np.inf
+            item_scores[:, items_to_compute] = np.dot(self.user_embeddings[user_id_array,:], self.item_embeddings[items_to_compute,:].T)
+        else:
+            item_scores = np.dot(self.user_embeddings[user_id_array,:], self.item_embeddings.T)
 
-        afinity_scores, item_ids = self.brute_force_layer(tf.constant([user_id_array]))
-
-        return afinity_scores
+        return item_scores
 
     def transform_data(self):
-        self.ratings_df = pd.DataFrame.sparse.from_spmatrix(URM_train).unstack().reset_index()
-        self.ratings_df.columns = ['item_id','user_id', 'rating']
+        import pandas as pd
+        self.ratings_df = pd.DataFrame({'item_id':self.URM_train.tocoo().col,
+                                        'user_id':self.URM_train.tocoo().row,
+                                        'user_rating':self.URM_train.tocoo().data})
+        self.ratings_df['item_id'] = self.ratings_df['item_id'].astype(str) 
+        self.ratings_df['user_id'] = self.ratings_df['user_id'].astype(str) 
+        self.ratings_df = self.ratings_df[self.ratings_df.user_rating!=0]
         assert len(self.ratings_df) == self.URM_train.count_nonzero()
-        self.ratings_dataset = tf.data.Dataset.from_tensor_slices(self.ratings_df.to_dict())
+        self.ratings_dataset = tf.data.Dataset.from_tensor_slices(self.ratings_df.to_dict(orient="list"))
+        self.ratings_dataset = self.ratings_dataset.map(lambda rating: {
+                                                    # `user_id` is useful as a user identifier.
+                                                    'user_id': rating['user_id'],
+                                                    # `movie_id` is useful as a movie identifier.
+                                                    'item_id': rating['item_id'],
+                                                    # `movie_title` is useful as a textual information about the movie.
+                                                    # `user_rating` shows the user's level of interest to a movie.
+                                                    'user_rating': rating['user_rating'],
+                                                    # `timestamp` will allow us to model the effect of time.
+            }
+        )
         self.trainset_size = 0.8 * self.ratings_dataset.__len__().numpy()
         self.ratings_dataset_shuffled = self.ratings_dataset.shuffle(
             # the new dataset will be sampled from a buffer window of first `buffer_size`
@@ -123,8 +149,9 @@ class Two_Tower_Recommender(BaseRecommender):
             reshuffle_each_iteration=False
         )
         
-        self.training_dataset = self.ratings_dataset_shuffled.take(trainset_size)
-        self.testing_dataset = self.ratings_dataset_shuffled.skip(trainset_size)
+        self.training_dataset = self.ratings_dataset_shuffled.take(self.trainset_size)
+        self.testing_dataset = self.ratings_dataset_shuffled.skip(self.trainset_size)
+        print("dataset set")
 
     def get_query_model(self):
         user_id_lookup_layer = StringLookup(mask_token=None)
@@ -132,7 +159,7 @@ class Two_Tower_Recommender(BaseRecommender):
         # StringLookup layer is a non-trainable layer and its state (the vocabulary)
         # must be constructed and set before training in a step called "adaptation".
         user_id_lookup_layer.adapt(
-            training_dataset.map(
+            self.training_dataset.map(
                 lambda x: x['user_id']
             )
         )
@@ -147,23 +174,22 @@ class Two_Tower_Recommender(BaseRecommender):
             # Dimension of the dense embedding
             output_dim=user_id_embedding_dim
         )
-        if process_attributes:
+        if self.process_attributes:
             pass
             ## process attribute features and concatenate to embeddings
         
         # A model that takes raw string feature values (user_id) in and yields embeddings
-        user_id_model = tf.keras.Sequential(
+        self.query_model = tf.keras.Sequential(
             [
                 user_id_lookup_layer,
                 user_id_embedding_layer
             ]
         )
         
-        return user_id_model
     
     def get_candidate_model(self):
-        item_id_lookup_layer = tf.keras.layers.experimental.preprocessing.StringLookup(mask_token=None)
-        item_id_lookup_layer.adapt(ratings_trainset.map(lambda x: x['item_id']))
+        item_id_lookup_layer = StringLookup(mask_token=None)
+        item_id_lookup_layer.adapt(self.training_dataset.map(lambda x: x['item_id']))
 
         # Same as user_id_embedding_dim to be able to measure the similarity
         item_id_embedding_dim = 32
@@ -173,12 +199,11 @@ class Two_Tower_Recommender(BaseRecommender):
             output_dim=item_id_embedding_dim
         )
  
-        item_id_model = tf.keras.Sequential([
+        self.candidate_model = tf.keras.Sequential([
             item_id_lookup_layer,
             item_id_embedding_layer
             ]
         )
-        return item_id_model
 
     def get_loss_layer(self):
         import tensorflow_recommenders as tfrs
@@ -186,71 +211,74 @@ class Two_Tower_Recommender(BaseRecommender):
         self.candidates_corpus_dataset = self.training_dataset.map(lambda item_id: item_id['item_id'])
         factorized_top_k_metrics = tfrs.metrics.FactorizedTopK(
         # dataset of candidate embeddings from which candidates should be retrieved
-        candidates=candidates_corpus_dataset.batch(128).map(
-        candidate_model)
+        candidates=self.candidates_corpus_dataset.batch(128).map(
+        self.candidate_model)
         )
-        retrieval_task_layer = tfrs.tasks.Retrieval(metrics=factorized_top_k_metrics)
-        return retrieval_task_layer
+        self.loss_layer = tfrs.tasks.Retrieval(metrics=factorized_top_k_metrics)
 
     def get_models(self):
         ### get individual models
-        query_model = self.get_query_model()
-        candidate_model = self.get_candidate_model()
-        loss_layer = self.get_loss_layer()
+        self.get_query_model()
+        self.get_candidate_model()
+        self.get_loss_layer()
 
         ### get retreival model
-        retrieval_model = RetrievalModel(query_model,candidate_model,loss_layer)
+        retrieval_model = RetrievalModel(self.query_model,self.candidate_model,self.loss_layer)
         optimizer_step_size = 0.1
         retrieval_model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=optimizer_step_size))
         self.retrieval_model = retrieval_model
 
         ### get ranking model
-        ranking_model = RankingModel(query_model,candidate_model,loss_layer)
+        ranking_model = RankingModel(self.query_model,self.candidate_model)
         optimizer_step_size = 0.1
         ranking_model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=optimizer_step_size))
         self.ranking_model = ranking_model
     
-    def train_models(self):
-        retrieval_cached_ratings_trainset = self.training_dataset.shuffle(100_000).batch(8192).cache()
-        retrieval_cached_ratings_testset = self.testing_dataset.batch(4096).cache()
-        
-        num_epochs = 5 
-        history_retreival = self.retrieval_model.fit(
-            retrieval_cached_ratings_trainset,
-            validation_data=retrieval_cached_ratings_testset,
-            validation_freq=1,
-            epochs=num_epochs
-        )
+    def fit(self):
+        num_epochs = 5
+        if self.task=='Retreival':
+            retrieval_cached_ratings_trainset = self.training_dataset.shuffle(100_000).batch(32).cache()
+            retrieval_cached_ratings_testset = self.testing_dataset.batch(4096).cache()
+            
+            history_retreival = self.retrieval_model.fit(
+                retrieval_cached_ratings_trainset,
+                validation_data=retrieval_cached_ratings_testset,
+                validation_freq=1,
+                epochs=num_epochs
+            )
 
-        ranking_ratings_trainset = self.training_dataset.shuffle(100_000).batch(8192).cache()
-        ranking_ratings_testset = self.testing_dataset.batch(4096).cache()
-
-
-        history_ranking = self.ranking_model.fit(
-            retrieval_cached_ratings_trainset,
-            validation_data=retrieval_cached_ratings_testset,
-            validation_freq=1,
-            epochs=num_epochs
-        )
-        self.brute_force_layer = tfrs.layers.factorized_top_k.BruteForce(self.retrieval_model.query_model)
-
-        self.brute_force_layer.index(
-            self.candidates_corpus_dataset.batch(100).map(
-                self.retrieval_model.candidate_model
-            ),
-            self.candidates_corpus_dataset
-        )
+        elif self.task=='Ranking':
+            retrieval_cached_ratings_trainset = self.training_dataset.shuffle(100_000).batch(32).cache()
+            retrieval_cached_ratings_testset = self.testing_dataset.batch(4096).cache()
+            history_ranking = self.ranking_model.fit(
+                retrieval_cached_ratings_trainset,
+                validation_data=retrieval_cached_ratings_testset,
+                validation_freq=1,
+                epochs=num_epochs
+            )
+        num_users, num_items = self.URM_train.shape
+        self.user_embeddings = self.query_model(tf.constant(np.arange(num_users).astype(str))).numpy()
+        self.item_embeddings = self.candidate_model(tf.constant(np.arange(num_items).astype(str))).numpy()
+            
 
     def save_model(self):
         import os
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            retrieval_model_path = os.path.join(tmp_dir, "retrieval_model")
-
-
-            scann_layer.save(
-                retrieval_model_path,
-                options=tf.saved_model.SaveOptions(namespace_whitelist=["Scann"])
+            query_model_path = os.path.join(tmp_dir, "query_model")
+            self.query_model.save(
+                query_model_path,
+                options=tf.saved_model.SaveOptions(namespace_whitelist=["query"])
                 )
-        
+            candidate_model_path = os.path.join(tmp_dir, "candidate_model")
+            self.query_model.save(
+                query_model_path,
+                options=tf.saved_model.SaveOptions(namespace_whitelist=["candidate"])
+                )
+
+    def load_model(self):
+        query_model_path = os.path.join(tmp_dir, "query_model")
+        candidate_model_path = os.path.join(tmp_dir, "candidate_model")
+        self.query_model = tf.keras.models.load_model(query_model_path)
+        self.candidate_model = tf.keras.models.load_model(candidate_model_path)
