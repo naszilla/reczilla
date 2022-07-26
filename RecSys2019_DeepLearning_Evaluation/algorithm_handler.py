@@ -112,7 +112,6 @@ ALGORITHM_NAME_LIST = [
     "Mult_VAE_RecommenderWrapper",  # see run_WWW_18_Mult_VAE.py
     "DELF_MLP_RecommenderWrapper",  # see run_IJCAI_17_DELF.py
     "DELF_EF_RecommenderWrapper",  # see run_IJCAI_17_DELF.py
-    # "ConvNCF_RecommenderWrapper",  # see run_IJCAI_18_ConvNCF.py  # TODO: there are some bugs in this implementation.
     "MFBPR_Wrapper",  # see run_IJCAI_18_ConvNCF_CNN_embedding.py
     "CoClustering",
     "SlopeOne",
@@ -132,6 +131,7 @@ DEFAULT_USER_REG = 1e-3
 DEFAULT_LEARNING_RATE = 1e-3
 DEFAULT_SGD_MODE = "sgd"
 DEFAULT_EPOCHS = 500
+DEFAULT_BATCH_SIZE = 256
 
 
 def algorithm_handler(algorithm_name):
@@ -444,19 +444,19 @@ def algorithm_handler(algorithm_name):
             }
 
             fit_keyword_args["epochs"] = DEFAULT_EPOCHS
-            fit_keyword_args["batch_size"] = 1024
+            fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
 
         elif alg is SpectralCF_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space
             space = {
-                "batch_size": 256,
+                "batch_size": DEFAULT_BATCH_SIZE,
                 "embedding_size": Categorical([4, 8, 16, 32]),
                 "decay": Real(low=1e-5, high=1e-1, prior="log-uniform"),
                 "learning_rate": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "k": Integer(low=1, high=6),
             }
             default = {
-                "batch_size": 1024,
+                "batch_size": DEFAULT_BATCH_SIZE,
                 "embedding_size": 16,
                 "decay": 0.001,
                 "learning_rate": DEFAULT_LEARNING_RATE,
@@ -485,7 +485,7 @@ def algorithm_handler(algorithm_name):
             ] = None  # TODO: this uses default. define a reasonable parameter range
             # fit_keyword_args["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
             fit_keyword_args["epochs"] = 200
-            fit_keyword_args["batch_size"] = 500
+            fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
 
         elif alg is DELF_EF_RecommenderWrapper or alg is DELF_MLP_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space. see DELFWrapper._DELF_RecommenderWrapper.fit()
@@ -511,36 +511,8 @@ def algorithm_handler(algorithm_name):
                 0,
                 0,
             )
-            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
-            fit_keyword_args["batch_size"] = 256
-
-        elif alg is ConvNCF_RecommenderWrapper:
-            raise NotImplementedError("there are some bugs in the implementation.")
-            # space = {
-            #     "embedding_size": Categorical([32, 64, 128]),
-            #     "hidden_size": Categorical([32, 64, 128]),
-            #     "regularization_users_items": Real(1e-4, 1e-1, prior="log-uniform"),
-            #     "learning_rate_embeddings": Real(1e-4, 1e-1, prior="log-uniform"),
-            #     "learning_rate_CNN": Real(1e-4, 1e-1, prior="log-uniform"),
-            # }
-            # fit_keyword_args["negative_sample_per_positive"] = 1
-            # fit_keyword_args["negative_instances_per_positive"] = 4
-            # fit_keyword_args["regularization_weights"] = 10
-            # fit_keyword_args["regularization_filter_weights"] = 1
-            # fit_keyword_args["channel_size"] = [
-            #     32,
-            #     32,
-            #     32,
-            #     32,
-            #     32,
-            #     32,
-            # ]
-            # fit_keyword_args["dropout"] = 0.0
-            # fit_keyword_args["epoch_verbose"] = 1
-            #
-            # fit_keyword_args["batch_size"] = 512
-            # fit_keyword_args["epochs"] = 1500
-            # fit_keyword_args["epochs_MFBPR"] = 500
+            fit_keyword_args["epochs"] = 500
+            fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
 
         elif alg is MFBPR_Wrapper:
             # TODO: make sure this is a reasonable parameter space
@@ -554,8 +526,8 @@ def algorithm_handler(algorithm_name):
             }
             fit_keyword_args["negative_sample_per_positive"] = 1
 
-            fit_keyword_args["batch_size"] = 512
-            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
+            fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
+            fit_keyword_args["epochs"] = 500
             fit_keyword_args[
                 "path_partial_results"
             ] = "./TMP/"  # TODO: we shouldn't be defining paths here.
