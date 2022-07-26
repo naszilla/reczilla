@@ -21,6 +21,7 @@ def run(args):
 
     # pull all files
     os.system(f"gsutil -m rsync gs://reczilla-results/inbox {inbox_path}")
+    # os.system(f"gsutil -m cp gs://reczilla-results/inbox/result_052*.zip  {inbox_path}")
 
     # create a reader object
     dataIO = DataIO(str(inbox_path) + os.sep)
