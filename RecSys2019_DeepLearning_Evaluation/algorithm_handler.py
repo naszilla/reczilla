@@ -130,7 +130,7 @@ DEFAULT_ITEM_REG = 1e-4
 DEFAULT_USER_REG = 1e-3
 DEFAULT_LEARNING_RATE = 1e-3
 DEFAULT_SGD_MODE = "sgd"
-DEFAULT_EPOCHS = 500
+DEFAULT_EPOCHS = 100
 DEFAULT_BATCH_SIZE = 256
 
 
@@ -488,7 +488,7 @@ def algorithm_handler(algorithm_name):
                 "p_dims"
             ] = None  # TODO: this uses default. define a reasonable parameter range
             # fit_keyword_args["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
-            fit_keyword_args["epochs"] = 200
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
             use_early_stopping = True
 
@@ -516,7 +516,7 @@ def algorithm_handler(algorithm_name):
                 0,
                 0,
             )
-            fit_keyword_args["epochs"] = 500
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
             use_early_stopping = True
 
@@ -533,7 +533,7 @@ def algorithm_handler(algorithm_name):
             fit_keyword_args["negative_sample_per_positive"] = 1
 
             fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
-            fit_keyword_args["epochs"] = 500
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args[
                 "path_partial_results"
             ] = "./TMP/"  # TODO: we shouldn't be defining paths here.
