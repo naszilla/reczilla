@@ -4,8 +4,8 @@
 ####################################
 # BEGIN: user-defined parameters
 
-# time limit = 20hrs (in seconds) for each job - a single train/test cycle
-time_limit=72000
+# time limit = 10hrs (in seconds) for each job - a single train/test cycle
+time_limit=36000
 
 # base name for the gcloud instances
 instance_base=test-neural
