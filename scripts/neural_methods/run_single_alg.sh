@@ -63,10 +63,10 @@ echo "running experiments for ALG = $alg_name"
 
 num_experiments=1
 count=1
-for j in ${!v5_dataset_list[@]};
+for j in ${!v5_dataset_list_small[@]};
 do
   # get alg name and dataset name
-  dataset_name=${v5_dataset_list[j]}
+  dataset_name=${v5_dataset_list_small[j]}
   echo "DATASET = $dataset_name"
 
   # argument string that will be passed to Experiment_handler.run_experiment
