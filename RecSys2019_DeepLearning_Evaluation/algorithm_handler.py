@@ -449,14 +449,12 @@ def algorithm_handler(algorithm_name):
         elif alg is SpectralCF_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space
             space = {
-                "batch_size": DEFAULT_BATCH_SIZE,
                 "embedding_size": Categorical([4, 8, 16, 32]),
                 "decay": Real(low=1e-5, high=1e-1, prior="log-uniform"),
                 "learning_rate": Real(low=1e-5, high=1e-2, prior="log-uniform"),
                 "k": Integer(low=1, high=6),
             }
             default = {
-                "batch_size": DEFAULT_BATCH_SIZE,
                 "embedding_size": 16,
                 "decay": 0.001,
                 "learning_rate": DEFAULT_LEARNING_RATE,
@@ -464,6 +462,7 @@ def algorithm_handler(algorithm_name):
             }
 
             fit_keyword_args["epochs"] = DEFAULT_EPOCHS
+            fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
 
         elif alg is Mult_VAE_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space
