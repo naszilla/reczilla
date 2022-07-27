@@ -252,12 +252,12 @@ run_experiment_GPU() {
   while [ $COUNT -le $MAX_TRIES ]; do
 
     ACCELERATOR_TYPE=nvidia-tesla-t4
-    ACCELERATOR_COUNT=2
+    ACCELERATOR_COUNT=1
 
     # attempt to create instance
     gcloud compute instances create $instance_name --zone=$zone \
     --project=$project --image-family=$image_family \
-    --machine-type=n1-highmem-8 \
+    --machine-type=n1-highmem-16 \
     --accelerator type=${ACCELERATOR_TYPE},count=${ACCELERATOR_COUNT} \
     --service-account $service_account \
     --maintenance-policy TERMINATE \
