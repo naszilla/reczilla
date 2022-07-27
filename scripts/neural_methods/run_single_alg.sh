@@ -21,7 +21,7 @@
 time_limit=36000
 
 # maximum number of experiments (background processes) that can be running
-MAX_PROCESSES=10
+MAX_PROCESSES=5
 
 # params
 alg_seed=0
