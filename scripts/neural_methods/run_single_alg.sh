@@ -20,12 +20,6 @@
 # time limit = 10hrs (in seconds) for each job - a single train/test cycle
 time_limit=36000
 
-# base name for the gcloud instances
-instance_base=dl-delfef
-
-# name of the expeirment
-experiment_base=dl-delfef
-
 # maximum number of experiments (background processes) that can be running
 MAX_PROCESSES=10
 
