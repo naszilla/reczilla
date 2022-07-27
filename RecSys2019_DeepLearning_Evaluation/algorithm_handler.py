@@ -140,7 +140,7 @@ def algorithm_handler(algorithm_name):
         - alg: handle of algorithm class
         - space: dict of search space
         - search_input_recommender_args (SearchInputRecommenderArgs): fixed arguments passed to algorithm init and fit
-
+        - early_stopping: bool = True if we should add early stopping args for this alg
     Each space is a dict: keys are names (string) of the hyperparameter, and values are of type
     skopt.space.{Real | Integer | Categorical}.
 
@@ -181,6 +181,9 @@ def algorithm_handler(algorithm_name):
 
     # maximum number of points to sample.
     max_points = 1e10
+
+    # by default, don't use early stopping
+    use_early_stopping = False
 
     # ---- for all KNN algorithms ----
     # in the original codebase, the constant params were included in the search space. here, we instead add them to
@@ -445,6 +448,7 @@ def algorithm_handler(algorithm_name):
 
             fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
+            use_early_stopping = True
 
         elif alg is SpectralCF_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space
@@ -463,6 +467,7 @@ def algorithm_handler(algorithm_name):
 
             fit_keyword_args["epochs"] = DEFAULT_EPOCHS
             fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
+            use_early_stopping = True
 
         elif alg is Mult_VAE_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space
@@ -485,6 +490,7 @@ def algorithm_handler(algorithm_name):
             # fit_keyword_args["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
             fit_keyword_args["epochs"] = 200
             fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
+            use_early_stopping = True
 
         elif alg is DELF_EF_RecommenderWrapper or alg is DELF_MLP_RecommenderWrapper:
             # TODO: make sure this is a reasonable parameter space. see DELFWrapper._DELF_RecommenderWrapper.fit()
@@ -512,6 +518,7 @@ def algorithm_handler(algorithm_name):
             )
             fit_keyword_args["epochs"] = 500
             fit_keyword_args["batch_size"] = DEFAULT_BATCH_SIZE
+            use_early_stopping = True
 
         elif alg is MFBPR_Wrapper:
             # TODO: make sure this is a reasonable parameter space
@@ -530,6 +537,7 @@ def algorithm_handler(algorithm_name):
             fit_keyword_args[
                 "path_partial_results"
             ] = "./TMP/"  # TODO: we shouldn't be defining paths here.
+            use_early_stopping = True
 
         elif alg is CoClustering:
             # Based on Autosurprise
@@ -563,4 +571,5 @@ def algorithm_handler(algorithm_name):
         ParameterSpace(space, default),
         search_input_recommender_args,
         max_points,
+        use_early_stopping,
     )
