@@ -83,10 +83,10 @@ do
   ${param_seed} \
   ${num_samples}
   /home/shared \
-  ${experiment_base}-${count} \
+  ${basename}-${count} \
   ${split_path_on_bucket}"
 
-  instance_name=${instance_base}-${count}
+  instance_name=${basename}-${count}
 
   LOG_FILE=${LOG_DIR}/log_${count}_$(date +"%m%d%y_%H%M%S").txt
 
