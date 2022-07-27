@@ -193,6 +193,7 @@ def get_parameterized_alg(alg_param_string, param_seed=3):
         parameter_search_space,
         search_input_recommender_args,
         max_points,
+        use_early_stopping,
     ) = algorithm_handler(alg_name)
 
     # parse hyperparams source string and generate hyperparams

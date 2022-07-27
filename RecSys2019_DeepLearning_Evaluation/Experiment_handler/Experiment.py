@@ -401,12 +401,23 @@ class Experiment(object):
             parameter_search_space,
             search_input_recommender_args,
             max_points,
+            use_early_stopping,
         ) = algorithm_handler(alg_name)
 
         # add the training dataset to recommender_input_args (this is then passed to the alg constructor...)
         search_input_recommender_args.CONSTRUCTOR_POSITIONAL_ARGS = [
             urm_dict["URM_train"]
         ]
+
+        # if we're using a DL alg, then add early stopping parameters. stop if NDCG does not improve
+        if use_early_stopping:
+            earlystopping_keywargs = {"validation_every_n": 5,
+                                      "stop_on_validation": True,
+                                      "evaluator_object": evaluator_validation,
+                                      "lower_validations_allowed": 5,
+                                      "validation_metric": "NDCG",
+                                      }
+            search_input_recommender_args.FIT_KEYWORD_ARGS.update(earlystopping_keywargs)
 
         # create a search object for the random parameter search
         # we need to re-initialize this for each algorithm
