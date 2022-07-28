@@ -1,6 +1,9 @@
 import numpy as np
 from scipy import sparse
 
+# NOTE: need to think about size of perturbation
+# currenty it is Gaussain with std_dev=1
+
 def perturb_all_items(user_history, num_perturbed_pts):
 	num_items = user_history.shape[1]
 
