@@ -17,8 +17,8 @@
 ####################################
 # BEGIN: user-defined parameters
 
-# time limit = 10hrs (in seconds) for each job - a single train/test cycle
-time_limit=36000
+# time limit = 15hrs (in seconds) for each job - a single train/test cycle
+time_limit=54000
 
 # maximum number of experiments (background processes) that can be running
 MAX_PROCESSES=5
