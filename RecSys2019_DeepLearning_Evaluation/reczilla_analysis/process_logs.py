@@ -17,7 +17,7 @@ def run(args):
 
     # pull all files
     os.system(f"gsutil -m rsync gs://reczilla-results/inbox/logs {inbox_path}")
-    # os.system(f"gsutil -m cp gs://reczilla-results/inbox/logs/log*_052*.txt  {inbox_path}")
+    # os.system(f"gsutil -m cp gs://reczilla-results/inbox/logs/log*_07*_*.txt  {inbox_path}")
 
     # gather results here
     filename_list = []
