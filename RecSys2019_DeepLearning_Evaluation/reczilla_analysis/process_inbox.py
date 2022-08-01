@@ -11,13 +11,11 @@ def run(args):
 
     base_path = Path(args.base_dir)
     inbox_path = base_path.joinpath("inbox")
-    result_path = base_path.joinpath("structured_results")
 
     # make sure that directories we will create do not exist, and that the base dir does exist
     assert base_path.exists(), f"base dir does not exist: {base_path}"
 
     inbox_path.mkdir(exist_ok=True)
-    result_path.mkdir(exist_ok=True)
 
     # pull all files
     os.system(f"gsutil -m rsync gs://reczilla-results/inbox {inbox_path}")
@@ -34,28 +32,9 @@ def run(args):
     for result_file in inbox_path.glob("*.zip"):
 
         try:
-            # read metadata
-            data = dataIO.load_data(result_file.name)
-
-            # fields that will be used to place the file in a structured dir
-            alg_name = data["search_params"]["alg_name"]
-            dataset_name = data["search_params"]["dataset_name"]
-            split_name = data["search_params"]["split_name"]
-
-            new_path = result_path.joinpath(
-                dataset_name, split_name, alg_name, result_file.name
-            )
-
-            # create directory if it doesn't exist
-            new_path.parent.mkdir(parents=True, exist_ok=True)
-
-            # move the file to the appropriate directory
-            result_file.rename(new_path)
-
             # create a csv with useful results
-            result_df = result_to_df(new_path)
+            result_df = result_to_df(result_file)
             df_list.append(result_df)
-            result_df.to_csv(str(new_path.parent.joinpath(f"{new_path.stem}.csv")), sep=";", index=False)
 
         except Exception as e:
             print(f"exception while reading file {result_file}. skipping this file")
