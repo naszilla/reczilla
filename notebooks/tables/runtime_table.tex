@@ -1,0 +1,28 @@
+\begin{tabular}{lrrrrrrr}
+\toprule
+{} & \multicolumn{3}{l}{time_on_train} & \multicolumn{3}{l}{time_on_test} & alg_family \\
+{} &           min &    mean &      max &          min &   mean &      max &       size \\
+alg_family                         &               &         &          &              &        &          &            \\
+\midrule
+CoClustering                       &          0.02 &  167.45 & 25766.23 &         0.05 &  51.09 & 11393.36 &       5106 \\
+EASE_R_Recommender                 &          0.00 &   13.85 &   454.14 &         0.05 &  14.99 &   341.97 &       4376 \\
+GlobalEffects                      &          0.00 &    0.43 &    12.73 &         0.05 & 639.58 &  8191.36 &         85 \\
+IALSRecommender                    &          0.69 &  369.30 & 24283.54 &         0.05 &  10.26 &  3558.97 &       3502 \\
+ItemKNNCF                          &          0.00 &  100.28 & 13617.51 &         0.05 & 159.03 &  8192.90 &      12847 \\
+MatrixFactorization_AsySVD_Cython  &          0.03 &  207.76 & 28463.53 &         0.05 &  40.37 & 13293.74 &       4254 \\
+MatrixFactorization_BPR_Cython     &          0.02 &   82.19 &  9635.26 &         0.06 &  69.99 & 12117.41 &       5659 \\
+MatrixFactorization_FunkSVD_Cython &          0.02 &  172.61 & 15650.11 &         0.05 &  50.49 & 12793.54 &       4938 \\
+Mult_VAE_RecommenderWrapper        &          3.20 & 3691.87 & 37286.48 &         0.05 & 113.86 &  1064.58 &         68 \\
+NMFRecommender                     &          0.01 &  221.50 & 20369.45 &         0.06 &  87.42 & 11471.30 &       2957 \\
+P3alphaRecommender                 &          0.00 &   78.17 &  6264.47 &         0.05 &  62.40 &  6563.46 &       5816 \\
+PureSVDRecommender                 &          0.00 &    3.58 &   353.12 &         0.05 &  99.06 & 10393.31 &       6132 \\
+RP3betaRecommender                 &          0.00 &   80.45 &  7043.17 &         0.05 &  61.24 &  7067.75 &       5900 \\
+Random                             &          0.00 &    0.09 &     2.35 &         0.06 & 937.67 & 16529.64 &         85 \\
+SLIMElasticNetRecommender          &          0.06 &  142.95 & 25731.74 &         0.05 &  11.63 &  1816.69 &       4706 \\
+SLIM_BPR_Cython                    &          0.03 &   82.57 & 31063.87 &         0.05 &  21.89 &  1962.25 &       5176 \\
+SlopeOne                           &          0.05 &   17.73 &   470.27 &         0.07 &  45.77 &   803.25 &         48 \\
+TopPop                             &          0.00 &    0.13 &     3.66 &         0.05 & 626.50 &  7501.84 &         85 \\
+UNeuRec_RecommenderWrapper         &          3.80 & 3296.18 & 38499.99 &         0.04 &   6.19 &   181.92 &         41 \\
+UserKNNCF                          &          0.00 &   73.28 & 30975.03 &         0.05 & 158.07 &  6327.46 &      13097 \\
+\bottomrule
+\end{tabular}
