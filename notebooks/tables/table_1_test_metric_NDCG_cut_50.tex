@@ -2,25 +2,29 @@
 \toprule
                                Alg. & AmazonLuxuryBeautyReader & AnimeReader & CiaoDVDReader & DatingReader & MovieTweetingsReader & Movielens100KReader & Movielens1MReader & NetflixPrizeReader & YahooMoviesReader \\
 \midrule
-                       CoClustering &                19 (0.14) &   16 (0.13) &     18 (0.03) &    14 (0.00) &            17 (0.00) &           18 (0.20) &         18 (0.14) &                NaN &         18 (0.00) \\
+                       CoClustering &                19 (0.14) &   16 (0.13) &     19 (0.03) &    14 (0.00) &            17 (0.00) &           20 (0.20) &         18 (0.14) &                NaN &         19 (0.00) \\
+         DELF\_EF\_RecommenderWrapper &                      NaN &         NaN &     12 (0.63) &          NaN &                  NaN &           16 (0.69) &               NaN &                NaN &         14 (0.67) \\
+        DELF\_MLP\_RecommenderWrapper &                      NaN &         NaN &     21 (0.01) &          NaN &                  NaN &           23 (0.02) &               NaN &                NaN &         20 (0.00) \\
                  EASE\_R\_Recommender &                 2 (0.94) &    2 (0.90) &      5 (0.96) &          NaN &                  NaN &            3 (0.96) &          2 (0.97) &                NaN &          5 (0.91) \\
-                      GlobalEffects &                18 (0.18) &   13 (0.33) &     15 (0.47) &    12 (0.23) &            14 (0.26) &           17 (0.34) &         17 (0.33) &          11 (0.11) &         16 (0.19) \\
+                      GlobalEffects &                18 (0.18) &   13 (0.33) &     16 (0.47) &    12 (0.23) &            14 (0.26) &           19 (0.34) &         17 (0.33) &          11 (0.11) &         17 (0.19) \\
                     IALSRecommender &                 1 (1.00) &    6 (0.69) &      3 (0.97) &     7 (0.81) &             6 (0.87) &           11 (0.86) &         13 (0.73) &                NaN &          8 (0.75) \\
+         INeuRec\_RecommenderWrapper &                      NaN &         NaN &           NaN &          NaN &                  NaN &           13 (0.80) &               NaN &                NaN &               NaN \\
                           ItemKNNCF &                 4 (0.93) &    4 (0.85) &      2 (0.97) &     3 (0.95) &             2 (0.94) &            4 (0.94) &          4 (0.91) &           2 (0.99) &          1 (1.00) \\
-  MatrixFactorization\_AsySVD\_Cython &                11 (0.76) &         NaN &     12 (0.61) &          NaN &            15 (0.17) &            7 (0.92) &         10 (0.75) &                NaN &         14 (0.64) \\
-     MatrixFactorization\_BPR\_Cython &                12 (0.74) &    8 (0.63) &     16 (0.41) &     8 (0.70) &            12 (0.49) &           14 (0.71) &         14 (0.63) &           8 (0.40) &         13 (0.68) \\
- MatrixFactorization\_FunkSVD\_Cython &                14 (0.55) &   11 (0.55) &     13 (0.61) &    10 (0.63) &            11 (0.65) &            5 (0.93) &          9 (0.78) &                NaN &         11 (0.72) \\
-        Mult\_VAE\_RecommenderWrapper &                15 (0.55) &    9 (0.62) &     10 (0.79) &     9 (0.66) &            10 (0.67) &           13 (0.77) &         11 (0.75) &                NaN &          9 (0.74) \\
+  MatrixFactorization\_AsySVD\_Cython &                11 (0.76) &         NaN &     13 (0.61) &          NaN &            15 (0.17) &            7 (0.92) &         10 (0.75) &                NaN &         15 (0.64) \\
+     MatrixFactorization\_BPR\_Cython &                12 (0.74) &    8 (0.63) &     17 (0.41) &     8 (0.70) &            12 (0.49) &           15 (0.71) &         14 (0.63) &           8 (0.40) &         13 (0.68) \\
+ MatrixFactorization\_FunkSVD\_Cython &                14 (0.55) &   11 (0.55) &     14 (0.61) &    10 (0.63) &            11 (0.65) &            5 (0.93) &          9 (0.78) &                NaN &         11 (0.72) \\
+        Mult\_VAE\_RecommenderWrapper &                15 (0.55) &    9 (0.62) &     10 (0.79) &     9 (0.66) &            10 (0.67) &           14 (0.77) &         11 (0.75) &                NaN &          9 (0.74) \\
                      NMFRecommender &                 6 (0.90) &         NaN &     11 (0.75) &     6 (0.81) &             8 (0.79) &            9 (0.90) &          7 (0.80) &           6 (0.73) &          7 (0.76) \\
                  P3alphaRecommender &                 3 (0.94) &   12 (0.54) &      4 (0.96) &     2 (0.95) &             4 (0.93) &            6 (0.93) &          6 (0.85) &           7 (0.73) &          6 (0.86) \\
                  PureSVDRecommender &                 8 (0.89) &    5 (0.71) &      8 (0.83) &     5 (0.87) &             7 (0.86) &           10 (0.88) &          8 (0.78) &           5 (0.78) &         12 (0.71) \\
                  RP3betaRecommender &                 5 (0.91) &   14 (0.29) &      6 (0.92) &     4 (0.93) &             3 (0.93) &            2 (0.98) &          3 (0.92) &           4 (0.84) &          3 (0.99) \\
-                             Random &                20 (0.02) &   17 (0.01) &     19 (0.02) &    13 (0.00) &            16 (0.00) &           20 (0.03) &         20 (0.03) &          12 (0.01) &         17 (0.01) \\
+                             Random &                20 (0.02) &   17 (0.01) &     20 (0.02) &    13 (0.00) &            16 (0.00) &           22 (0.03) &         20 (0.03) &          12 (0.01) &         18 (0.01) \\
           SLIMElasticNetRecommender &                 9 (0.87) &    1 (1.00) &      1 (1.00) &          NaN &             1 (1.00) &            1 (1.00) &          1 (1.00) &           1 (1.00) &          2 (0.99) \\
                     SLIM\_BPR\_Cython &                 7 (0.90) &    3 (0.89) &      9 (0.82) &          NaN &             5 (0.90) &            8 (0.91) &          5 (0.89) &           3 (0.98) &          4 (0.98) \\
-                           SlopeOne &                17 (0.29) &   15 (0.20) &     17 (0.08) &          NaN &                  NaN &           19 (0.10) &         19 (0.11) &                NaN &         19 (0.00) \\
-                             TopPop &                13 (0.62) &   10 (0.58) &     14 (0.59) &    11 (0.36) &            13 (0.38) &           16 (0.52) &         16 (0.49) &           9 (0.31) &         15 (0.64) \\
-         UNeuRec\_RecommenderWrapper &                16 (0.50) &         NaN &           NaN &          NaN &                  NaN &           15 (0.64) &         15 (0.50) &                NaN &               NaN \\
+                           SlopeOne &                17 (0.29) &   15 (0.20) &     18 (0.08) &          NaN &                  NaN &           21 (0.10) &         19 (0.11) &                NaN &         21 (0.00) \\
+      SpectralCF\_RecommenderWrapper &                      NaN &         NaN &           NaN &          NaN &                  NaN &           24 (0.01) &               NaN &                NaN &               NaN \\
+                             TopPop &                13 (0.62) &   10 (0.58) &     15 (0.59) &    11 (0.36) &            13 (0.38) &           18 (0.52) &         16 (0.49) &           9 (0.31) &         16 (0.64) \\
+         UNeuRec\_RecommenderWrapper &                16 (0.50) &         NaN &           NaN &          NaN &                  NaN &           17 (0.64) &         15 (0.50) &                NaN &               NaN \\
                           UserKNNCF &                10 (0.82) &    7 (0.64) &      7 (0.85) &     1 (1.00) &             9 (0.67) &           12 (0.82) &         12 (0.74) &          10 (0.20) &         10 (0.72) \\
 \bottomrule
 \end{tabular}
