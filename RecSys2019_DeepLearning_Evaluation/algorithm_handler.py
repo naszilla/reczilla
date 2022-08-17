@@ -588,12 +588,12 @@ def algorithm_handler(algorithm_name):
         elif alg is Two_Tower_Recommender:
             # TODO: make sure this is a reasonable parameter space
             space = {
-                "embedding_dim": Categorical([32, 64, 128, 256, 512]),
+                "embedding_dim": Categorical([256, 512, 1024, 2048]),
                 "learning_rate": Real(1e-4, 1e-1, prior="log-uniform"),
                 "batch_size": Categorical([32, 64, 128]),
             }
             default = {
-                "embedding_dim": 64,
+                "embedding_dim": 256,
                 "learning_rate": DEFAULT_LEARNING_RATE,
                 "batch_size": 32,
             }
