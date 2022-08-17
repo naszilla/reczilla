@@ -52,6 +52,12 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import (
 # Surprise Algorithms
 from SurpriseAlgorithms.Wrappers import CoClustering, SlopeOne
 
+
+
+# Deep learning algorithm
+
+from DNN_models.two_tower import Two_Tower_Recommender
+
 ######################################################################
 ##########                                                  ##########
 ##########              NEURAL NETWORK METHODS              ##########
@@ -67,13 +73,13 @@ from Conferences.IJCAI.NeuRec_our_interface.INeuRecWrapper import (
 from Conferences.RecSys.SpectralCF_our_interface.SpectralCF_RecommenderWrapper import (
     SpectralCF_RecommenderWrapper,
 )
-from Conferences.WWW.MultiVAE_our_interface.MultiVAE_RecommenderWrapper import (
-    Mult_VAE_RecommenderWrapper,
-)
-from Conferences.IJCAI.DELF_our_interface.DELFWrapper import (
-    DELF_MLP_RecommenderWrapper,
-    DELF_EF_RecommenderWrapper,
-)
+# from Conferences.WWW.MultiVAE_our_interface.MultiVAE_RecommenderWrapper import (
+#     Mult_VAE_RecommenderWrapper,
+# )
+# from Conferences.IJCAI.DELF_our_interface.DELFWrapper import (
+#     DELF_MLP_RecommenderWrapper,
+#     DELF_EF_RecommenderWrapper,
+# )
 from Conferences.IJCAI.ConvNCF_our_interface.ConvNCF_wrapper import (
     ConvNCF_RecommenderWrapper,
 )
@@ -114,6 +120,7 @@ ALGORITHM_NAME_LIST = [
     "DELF_EF_RecommenderWrapper",  # see run_IJCAI_17_DELF.py
     # "ConvNCF_RecommenderWrapper",  # see run_IJCAI_18_ConvNCF.py  # TODO: there are some bugs in this implementation.
     "MFBPR_Wrapper",  # see run_IJCAI_18_ConvNCF_CNN_embedding.py
+    "Two_Tower_Recommender",
     "CoClustering",
     "SlopeOne",
 ]
@@ -465,54 +472,54 @@ def algorithm_handler(algorithm_name):
 
             fit_keyword_args["epochs"] = DEFAULT_EPOCHS
 
-        elif alg is Mult_VAE_RecommenderWrapper:
-            # TODO: make sure this is a reasonable parameter space
-            space = {
-                "total_anneal_steps": Integer(1000, 1000000),
-                "lam": Real(
-                    1e-10, 1e-1, prior="log-uniform"
-                ),  # strength of l2 regularization
-                "lr": Real(1e-6, 1e-2, prior="log-uniform"),  # learning rate
-            }
-            default = {
-                "total_anneal_steps": 200000,
-                "lam": 0.0,
-                "lr": DEFAULT_LEARNING_RATE,
-            }
+        # elif alg is Mult_VAE_RecommenderWrapper:
+        #     # TODO: make sure this is a reasonable parameter space
+        #     space = {
+        #         "total_anneal_steps": Integer(1000, 1000000),
+        #         "lam": Real(
+        #             1e-10, 1e-1, prior="log-uniform"
+        #         ),  # strength of l2 regularization
+        #         "lr": Real(1e-6, 1e-2, prior="log-uniform"),  # learning rate
+        #     }
+        #     default = {
+        #         "total_anneal_steps": 200000,
+        #         "lam": 0.0,
+        #         "lr": DEFAULT_LEARNING_RATE,
+        #     }
 
-            fit_keyword_args[
-                "p_dims"
-            ] = None  # TODO: this uses default. define a reasonable parameter range
-            # fit_keyword_args["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
-            fit_keyword_args["epochs"] = 200
-            fit_keyword_args["batch_size"] = 500
+        #     fit_keyword_args[
+        #         "p_dims"
+        #     ] = None  # TODO: this uses default. define a reasonable parameter range
+        #     # fit_keyword_args["q_dims"] = None  # TODO: the fit function does not currently take q_dims as an arg
+        #     fit_keyword_args["epochs"] = 200
+        #     fit_keyword_args["batch_size"] = 500
 
-        elif alg is DELF_EF_RecommenderWrapper or alg is DELF_MLP_RecommenderWrapper:
-            # TODO: make sure this is a reasonable parameter space. see DELFWrapper._DELF_RecommenderWrapper.fit()
-            # TODO: we should understand what these parameters are, at a high level...
-            num_factors = 64
-            space = {
-                "learning_rate": Real(1e-6, 1e-2, prior="log-uniform"),
-                "num_negatives": Integer(3, 4),  # TODO: not sure what this is
-            }
-            default = {
-                "learning_rate": DEFAULT_LEARNING_RATE,
-                "num_negatives": 4,
-            }
-            fit_keyword_args["learner"] = "adam"
-            fit_keyword_args["verbose"] = False
-            fit_keyword_args["layers"] = (
-                num_factors * 4,
-                num_factors * 2,
-                num_factors,
-            )
-            fit_keyword_args["regularization_layers"] = (
-                0,
-                0,
-                0,
-            )
-            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
-            fit_keyword_args["batch_size"] = 256
+        # elif alg is DELF_EF_RecommenderWrapper or alg is DELF_MLP_RecommenderWrapper:
+        #     # TODO: make sure this is a reasonable parameter space. see DELFWrapper._DELF_RecommenderWrapper.fit()
+        #     # TODO: we should understand what these parameters are, at a high level...
+        #     num_factors = 64
+        #     space = {
+        #         "learning_rate": Real(1e-6, 1e-2, prior="log-uniform"),
+        #         "num_negatives": Integer(3, 4),  # TODO: not sure what this is
+        #     }
+        #     default = {
+        #         "learning_rate": DEFAULT_LEARNING_RATE,
+        #         "num_negatives": 4,
+        #     }
+        #     fit_keyword_args["learner"] = "adam"
+        #     fit_keyword_args["verbose"] = False
+        #     fit_keyword_args["layers"] = (
+        #         num_factors * 4,
+        #         num_factors * 2,
+        #         num_factors,
+        #     )
+        #     fit_keyword_args["regularization_layers"] = (
+        #         0,
+        #         0,
+        #         0,
+        #     )
+        #     fit_keyword_args["epochs"] = DEFAULT_EPOCHS
+        #     fit_keyword_args["batch_size"] = 256
 
         elif alg is ConvNCF_RecommenderWrapper:
             raise NotImplementedError("there are some bugs in the implementation.")
@@ -577,6 +584,20 @@ def algorithm_handler(algorithm_name):
             space = {}
             default = {}
             max_points = 1
+        
+        elif alg is Two_Tower_Recommender:
+            # TODO: make sure this is a reasonable parameter space
+            space = {
+                "embedding_dim": Categorical([32, 64, 128, 256, 512]),
+                "learning_rate": Real(1e-4, 1e-1, prior="log-uniform"),
+                "batch_size": Categorical([32, 64, 128]),
+            }
+            default = {
+                "embedding_dim": 64,
+                "learning_rate": DEFAULT_LEARNING_RATE,
+                "batch_size": 32,
+            }
+            fit_keyword_args["epochs"] = DEFAULT_EPOCHS
         else:
             raise Exception(f"algorithm_handler can't handle {algorithm_name}")
 

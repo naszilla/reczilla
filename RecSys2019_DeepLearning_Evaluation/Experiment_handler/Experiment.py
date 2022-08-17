@@ -463,6 +463,10 @@ class Experiment(object):
         }
 
         # start a process for running the search. use this to keep track of the time limit
+        import tensorflow as tf
+        tf.compat.v1.enable_eager_execution()
+
+        print(tf.__version__)
         p = multiprocessing.Process(
             target=parameter_search.search, args=search_args, kwargs=search_kwargs
         )

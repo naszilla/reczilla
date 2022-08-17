@@ -101,10 +101,8 @@ class Two_Tower_Recommender(BaseRecommender):
 
     def __init__(self, URM_train):
         super(Two_Tower_Recommender, self).__init__(URM_train)
-        self.task = 'Ranking'
         self.process_attributes = False
         self.transform_data()
-        self.get_models()
 
     def _compute_item_score(self, user_id_array, items_to_compute = None):
         import numpy as np
@@ -137,7 +135,7 @@ class Two_Tower_Recommender(BaseRecommender):
                                                     # `timestamp` will allow us to model the effect of time.
             }
         )
-        self.trainset_size = 0.8 * self.ratings_dataset.__len__().numpy()
+        self.trainset_size = int(0.8 * self.URM_train.count_nonzero())#self.ratings_dataset.__len__().numpy()
         self.ratings_dataset_shuffled = self.ratings_dataset.shuffle(
             # the new dataset will be sampled from a buffer window of first `buffer_size`
             # elements of the dataset
@@ -153,7 +151,7 @@ class Two_Tower_Recommender(BaseRecommender):
         self.testing_dataset = self.ratings_dataset_shuffled.skip(self.trainset_size)
         print("dataset set")
 
-    def get_query_model(self):
+    def get_query_model(self, embedding_dim = 32):
         user_id_lookup_layer = StringLookup(mask_token=None)
 
         # StringLookup layer is a non-trainable layer and its state (the vocabulary)
@@ -164,7 +162,7 @@ class Two_Tower_Recommender(BaseRecommender):
             )
         )
 
-        user_id_embedding_dim = 32
+        user_id_embedding_dim = embedding_dim
         # The larger it is, the higher the capacity of the model, but the slower it is
         # to fit and serve and more prone to overfitting.
 
@@ -187,12 +185,12 @@ class Two_Tower_Recommender(BaseRecommender):
         )
         
     
-    def get_candidate_model(self):
+    def get_candidate_model(self, embedding_dim = 32):
         item_id_lookup_layer = StringLookup(mask_token=None)
         item_id_lookup_layer.adapt(self.training_dataset.map(lambda x: x['item_id']))
 
         # Same as user_id_embedding_dim to be able to measure the similarity
-        item_id_embedding_dim = 32
+        item_id_embedding_dim = embedding_dim
 
         item_id_embedding_layer = tf.keras.layers.Embedding(
             input_dim=item_id_lookup_layer.vocab_size(),
@@ -216,45 +214,48 @@ class Two_Tower_Recommender(BaseRecommender):
         )
         self.loss_layer = tfrs.tasks.Retrieval(metrics=factorized_top_k_metrics)
 
-    def get_models(self):
+    def get_models(self, learning_rate = 1e-3, embedding_dim = 32):
         ### get individual models
-        self.get_query_model()
-        self.get_candidate_model()
+        self.get_query_model(embedding_dim = embedding_dim)
+        self.get_candidate_model(embedding_dim = embedding_dim)
         self.get_loss_layer()
 
         ### get retreival model
         retrieval_model = RetrievalModel(self.query_model,self.candidate_model,self.loss_layer)
-        optimizer_step_size = 0.1
-        retrieval_model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=optimizer_step_size))
+        retrieval_model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=learning_rate))
         self.retrieval_model = retrieval_model
 
         ### get ranking model
         ranking_model = RankingModel(self.query_model,self.candidate_model)
-        optimizer_step_size = 0.1
-        ranking_model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=optimizer_step_size))
+        ranking_model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=learning_rate))
         self.ranking_model = ranking_model
     
-    def fit(self):
-        num_epochs = 5
+    def fit(self, task = 'Ranking', epochs = 100, learning_rate = 1e-3, embedding_dim = 32, batch_size = 32):
+        self.task = task
+        self.get_models(learning_rate= learning_rate, embedding_dim = embedding_dim)
+        num_epochs = epochs
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
         if self.task=='Retreival':
-            retrieval_cached_ratings_trainset = self.training_dataset.shuffle(100_000).batch(32).cache()
+            retrieval_cached_ratings_trainset = self.training_dataset.shuffle(100_000).batch(batch_size).cache()
             retrieval_cached_ratings_testset = self.testing_dataset.batch(4096).cache()
             
             history_retreival = self.retrieval_model.fit(
                 retrieval_cached_ratings_trainset,
                 validation_data=retrieval_cached_ratings_testset,
                 validation_freq=1,
-                epochs=num_epochs
+                epochs=num_epochs,
+                callbacks = [callback]
             )
 
         elif self.task=='Ranking':
-            retrieval_cached_ratings_trainset = self.training_dataset.shuffle(100_000).batch(32).cache()
+            retrieval_cached_ratings_trainset = self.training_dataset.shuffle(100_000).batch(batch_size).cache()
             retrieval_cached_ratings_testset = self.testing_dataset.batch(4096).cache()
             history_ranking = self.ranking_model.fit(
                 retrieval_cached_ratings_trainset,
                 validation_data=retrieval_cached_ratings_testset,
                 validation_freq=1,
-                epochs=num_epochs
+                epochs=num_epochs,
+                callbacks = [callback]
             )
         num_users, num_items = self.URM_train.shape
         self.user_embeddings = self.query_model(tf.constant(np.arange(num_users).astype(str))).numpy()
