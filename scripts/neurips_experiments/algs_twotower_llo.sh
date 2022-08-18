@@ -70,7 +70,7 @@ do
     ${param_seed} \
     ${num_samples}
     /home/saiprasad \
-    ${experiment_base}-${count} \
+    /home/saiprasad/${dataset_name}-TwoTower \
     ${split_path_on_bucket}"
 
 
