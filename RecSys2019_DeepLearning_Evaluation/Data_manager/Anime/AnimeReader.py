@@ -3,14 +3,19 @@
 """
 TODO: the URL is to an unpublished dataset on Duncan's figshare site. change to public after checking licenses
 
+this dataset is identical to the kaggle dataset: https://www.kaggle.com/datasets/CooperUnion/anime-recommendations-database
+
 @author: Sujay Khandagale
 """
 
-import os, zipfile, shutil
+import os
+import shutil
+import zipfile
+
 import pandas as pd
-from Data_manager.Dataset import Dataset
 from Data_manager.DataReader import DataReader
 from Data_manager.DataReader_utils import download_from_URL, load_CSV_into_SparseBuilder
+from Data_manager.Dataset import Dataset
 
 
 class AnimeReader(DataReader):
@@ -22,18 +27,15 @@ class AnimeReader(DataReader):
 
     IS_IMPLICIT = False
 
-
     def _get_dataset_name_root(self):
         return self.DATASET_SUBFOLDER
-
-
 
     def _load_from_original_file(self):
         # Load data from original
 
         self._print("Loading original data")
 
-        zipFile_path =  self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
+        zipFile_path = self.DATASET_SPLIT_ROOT_FOLDER + self.DATASET_SUBFOLDER
 
         try:
 
@@ -49,21 +51,27 @@ class AnimeReader(DataReader):
 
         URM_path = dataFile.extract("rating.csv", path=zipFile_path + "decompressed/")
 
-        URM_all, item_original_ID_to_index, user_original_ID_to_index = load_CSV_into_SparseBuilder(URM_path, separator=",", header=True, remove_duplicates=True)
+        (
+            URM_all,
+            item_original_ID_to_index,
+            user_original_ID_to_index,
+        ) = load_CSV_into_SparseBuilder(
+            URM_path, separator=",", header=True, remove_duplicates=True
+        )
 
         loaded_URM_dict = {"URM_all": URM_all}
 
-        loaded_dataset = Dataset(dataset_name = self._get_dataset_name(),
-                                 URM_dictionary = loaded_URM_dict,
-                                 ICM_dictionary = None,
-                                 ICM_feature_mapper_dictionary = None,
-                                 UCM_dictionary = None,
-                                 UCM_feature_mapper_dictionary = None,
-                                 user_original_ID_to_index= user_original_ID_to_index,
-                                 item_original_ID_to_index= item_original_ID_to_index,
-                                 is_implicit = self.IS_IMPLICIT,
-                                 )
-
+        loaded_dataset = Dataset(
+            dataset_name=self._get_dataset_name(),
+            URM_dictionary=loaded_URM_dict,
+            ICM_dictionary=None,
+            ICM_feature_mapper_dictionary=None,
+            UCM_dictionary=None,
+            UCM_feature_mapper_dictionary=None,
+            user_original_ID_to_index=user_original_ID_to_index,
+            item_original_ID_to_index=item_original_ID_to_index,
+            is_implicit=self.IS_IMPLICIT,
+        )
 
         self._print("cleaning temporary files")
 
