@@ -43,7 +43,11 @@ We store all pre-split datasets in a GCP bucket. The location of each split has 
 gs://reczilla-results/dataset-splits/splits-v5/{dataset_name}/{split_type}
 ```
 
-(we used split_type=`DataSplitter_leave_k_out_last` in our experiments).
+(we used split_type=`DataSplitter_leave_k_out_last` in our experiments). The directory `splits-v5` is the latest set of predefined splits. 
+
+To copy a dataset split locally, you want to use something like the following:
+
+```gsutil cp "gs://reczilla-results/dataset-splits/splits-v5/AmazonCellPhonesAccessories/DataSplitter_leave_k_out_last/*" /home/shared/split/```
 
 ## Github ssh Credentials
 
