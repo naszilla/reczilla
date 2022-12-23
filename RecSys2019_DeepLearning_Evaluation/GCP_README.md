@@ -35,6 +35,12 @@ RecZilla resources:
 - conda environment `reczilla`, located in `/home/shared/miniconda3/`. You may need to run `conda init`.
 - a local version of the RecZilla repo: `/home/shared/reczilla`
 
+## Setting up SSH Config for GCP instances
+
+Use this command to automatically set up ssh config entries for all gcp instances:
+
+```gcloud compute config-ssh --project=research-collab-naszilla```
+
 ## Dataset Splits
 
 We store all pre-split datasets in a GCP bucket. The location of each split has the format:
