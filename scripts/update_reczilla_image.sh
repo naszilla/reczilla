@@ -4,6 +4,8 @@
 
 # this assumes that the disk name is the same as the instance name, which is usually true.
 
+# NOTE: we recommend that you run each of the commands here manually, rather than executing this script directly. We have experienced some issues while executing this script directly.
+
 zone=us-central1-a
 instance=update-reczilla
 project=research-collab-naszilla
