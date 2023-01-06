@@ -295,7 +295,7 @@ class SearchAbstractClass(object):
         start_time = time.time()
 
         # Evaluate recommender and get results for all cutoffs
-        result_dict, _ = self.evaluator_validation.evaluateRecommender(
+        result_dict, _, raw_preds = self.evaluator_validation.evaluateRecommender(
             recommender_instance
         )
         result_string = get_result_string(result_dict, n_decimals=7)
@@ -304,6 +304,7 @@ class SearchAbstractClass(object):
 
         return (
             result_dict,
+            raw_preds,
             result_string,
             recommender_instance,
             train_time,
@@ -317,7 +318,7 @@ class SearchAbstractClass(object):
         start_time = time.time()
 
         # Evaluate recommender and get results for the first cutoff
-        result_dict, result_string = self.evaluator_test.evaluateRecommender(recommender_instance)
+        result_dict, result_string, raw_preds = self.evaluator_test.evaluateRecommender(recommender_instance)
 
         evaluation_test_time = time.time() - start_time
 
@@ -326,7 +327,7 @@ class SearchAbstractClass(object):
                                                                                                          current_fit_parameters_dict,
                                                                                                          result_string))
 
-        return result_dict, result_string, evaluation_test_time
+        return result_dict, result_string, raw_preds, evaluation_test_time
 
 
 
@@ -365,12 +366,13 @@ class SearchAbstractClass(object):
         self.metadata_dict["time_on_last_train"] = train_time
 
         if self.evaluate_on_test in ["all", "best", "last"]:
-            result_dict_test, result_string, evaluation_test_time = self._evaluate_on_test(recommender_instance, fit_keyword_args, print_log = False)
+            result_dict_test, result_string, raw_preds, evaluation_test_time = self._evaluate_on_test(recommender_instance, fit_keyword_args, print_log = False)
 
             self._write_log("{}: Best config evaluated with evaluator_test with constructor data for final test. Config: {} - results:\n{}\n".format(self.ALGORITHM_NAME,
                                                                                                                                               self.metadata_dict["hyperparameters_best"],
                                                                                                                                               result_string))
             self.metadata_dict["result_on_last"] = result_dict_test
+            self.metadata_dict["raw_preds_on_last"] = raw_preds
             self.metadata_dict["time_on_last_test"] = evaluation_test_time
 
 
@@ -399,7 +401,7 @@ class SearchAbstractClass(object):
             self.metadata_dict["hyperparameters_list"][self.model_counter] = current_fit_parameters_dict.copy()
             self.metadata_dict["hyperparameters_source"][self.model_counter] = hyperparameters_source
 
-            result_dict, result_string, recommender_instance, train_time, evaluation_time = self._evaluate_on_validation(current_fit_parameters_dict)
+            result_dict, raw_preds, result_string, recommender_instance, train_time, evaluation_time = self._evaluate_on_validation(current_fit_parameters_dict)
 
             # use only the first cutoff to log result
             result_dict_first_cutoff = result_dict[list(result_dict.keys())[0]]
@@ -449,13 +451,13 @@ class SearchAbstractClass(object):
 
 
                 if self.evaluate_on_test in ["all", "best"]:
-                    result_dict_test, _, evaluation_test_time = self._evaluate_on_test(recommender_instance, current_fit_parameters_dict, print_log = True)
+                    result_dict_test, _, raw_preds, evaluation_test_time = self._evaluate_on_test(recommender_instance, current_fit_parameters_dict, print_log = True)
 
 
             else:
 
                 if self.evaluate_on_test in ["all"]:
-                    result_dict_test, _, evaluation_test_time = self._evaluate_on_test(recommender_instance, current_fit_parameters_dict, print_log = True)
+                    result_dict_test, _, raw_preds, evaluation_test_time = self._evaluate_on_test(recommender_instance, current_fit_parameters_dict, print_log = True)
 
                 self._write_log("{}: Config {} is suboptimal. Config: {} - results: {}\n".format(self.ALGORITHM_NAME,
                                                                                           self.model_counter,
@@ -471,7 +473,7 @@ class SearchAbstractClass(object):
 
 
             self.metadata_dict["result_on_validation_list"][self.model_counter] = result_dict.copy()
-
+            self.metadata_dict["raw_preds_on_validation"][self.model_counter] = result_dict.copy()
             self.metadata_dict["time_on_train_list"][self.model_counter] = train_time
             self.metadata_dict["time_on_validation_list"][self.model_counter] = evaluation_time
 
@@ -490,7 +492,7 @@ class SearchAbstractClass(object):
                 self.metadata_dict["result_on_test_best"] = result_dict_test.copy()
                 self.metadata_dict["result_on_test_list"][self.model_counter] = result_dict_test.copy()
                 self.metadata_dict["time_on_test_list"][self.model_counter] = evaluation_test_time
-
+                self.metadata_dict["test_best_raw_preds"] = raw_preds.copy()
                 self.metadata_dict["time_on_test_total"], self.metadata_dict["time_on_test_avg"] = \
                     _compute_avg_time_non_none_values(self.metadata_dict["time_on_test_list"])
 

@@ -250,7 +250,7 @@ class Evaluator(object):
         self._start_time_print = time.time()
         self._n_users_evaluated = 0
 
-        results_dict = self._run_evaluation_on_selected_users(recommender_object, self.users_to_evaluate)
+        results_dict, raw_preds = self._run_evaluation_on_selected_users(recommender_object, self.users_to_evaluate)
 
 
         if self._n_users_evaluated > 0:
@@ -283,7 +283,7 @@ class Evaluator(object):
 
         results_run_string = get_result_string(results_dict)
 
-        return (results_dict, results_run_string)
+        return (results_dict, results_run_string, raw_preds)
 
 
 
@@ -437,7 +437,9 @@ class EvaluatorHoldout(Evaluator):
         # Start from -block_size to ensure it to be 0 at the first block
         user_batch_start = 0
         user_batch_end = 0
-
+        users = []
+        recommendations = []
+        similaritys = []
         while user_batch_start < len(users_to_evaluate):
 
             user_batch_end = user_batch_start + block_size
@@ -454,14 +456,20 @@ class EvaluatorHoldout(Evaluator):
                                                                       remove_custom_items_flag=self.ignore_items_flag,
                                                                       return_scores = True
                                                                      )
-
+            ### combine predictions
+            users = users + list(test_user_batch_array)
+            recommendations = recommendations + recommended_items_batch_list
+            similaritys = similaritys + list(scores_batch)
             results_dict = self._compute_metrics_on_recommendation_list(test_user_batch_array = test_user_batch_array,
                                                          recommended_items_batch_list = recommended_items_batch_list,
                                                          scores_batch = scores_batch,
                                                          results_dict = results_dict)
 
-
-        return results_dict
+        print("***generated model recommendations*******************")
+        import pandas as pd
+        preds_df = pd.DataFrame({'UserID':users, 'item_recommendations':recommendations, 'item_similarity':similaritys})
+        preds_df['recommender_name'] = type(recommender_object).__name__
+        return results_dict, preds_df
 
 
 
